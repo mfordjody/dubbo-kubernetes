@@ -19,5 +19,5 @@ package wellknown
 // Network filter names
 const (
 	// HTTPConnectionManager network filter
-	HTTPConnectionManager = "envoy.filters.network.http_connection_manager"
+	HTTPConnectionManager = "filters.network.http_connection_manager"
 )

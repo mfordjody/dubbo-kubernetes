@@ -364,10 +364,6 @@ func Verify(certBytes, privKeyBytes, certChainBytes, rootCertBytes, crl []byte) 
 
 	// verify only if the CRL is provided
 	if len(crl) != 0 {
-		// envoy expects that if a CRL is provided for any certificate authority in a trust chain,
-		// a CRL must be provided for all certificate authorities in that chain.
-		// Failure to do so will result in verification failure for both revoked and unrevoked certificates
-		// from that chain.
 		var parsedCRLs []*x509.RevocationList
 		var signers []*x509.Certificate
 

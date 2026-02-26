@@ -39,8 +39,11 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/util/protomarshal"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
 	"github.com/apache/dubbo-kubernetes/pkg/xds"
-	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
+	// core "github.com/dubbo-kubernetes/xds-api/core/v1"
+	core "github.com/dubbo-kubernetes/xds-api/core/v1"
+	// discovery "github.com/dubbo-kubernetes/xds-api/service/discovery/v1"
+	discovery "github.com/dubbo-kubernetes/xds-api/service/discovery/v1"
+
 	"google.golang.org/protobuf/types/known/structpb"
 )
 

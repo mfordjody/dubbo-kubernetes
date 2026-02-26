@@ -22,14 +22,14 @@ import (
 	"strings"
 
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/util/protoconv"
-	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
+	discovery "github.com/dubbo-kubernetes/xds-api/service/discovery/v1"
 
 	networking "github.com/apache/dubbo-kubernetes/api/networking/v1alpha3"
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/model"
 	"github.com/apache/dubbo-kubernetes/pkg/config"
 	"github.com/apache/dubbo-kubernetes/pkg/config/host"
-	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
-	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
+	route "github.com/dubbo-kubernetes/xds-api/route/v1"
+	matcher "github.com/dubbo-kubernetes/xds-api/type/matcher/v1"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	sigsk8siogatewayapiapisv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
@@ -128,7 +128,6 @@ func buildHTTPRoute(node *model.Proxy, push *model.PushContext, routeName string
 					}
 				}
 			}
-			// Add HTTPRoute hostnames to domains (they will be matched by Envoy)
 			for hostnameStr := range httpRouteHostnames {
 				if hostnameStr != "*" {
 					domains = append(domains, hostnameStr)
@@ -227,7 +226,6 @@ func buildHTTPRoute(node *model.Proxy, push *model.PushContext, routeName string
 
 		// For Gateway Pod, we also need to collect HTTPRoutes with specific hostnames
 		// because Gateway Pods route traffic based on HTTPRoute hostnames in the request
-		// We'll add all HTTPRoutes to the domains list so Envoy can match them
 		if len(httpRoutes) > 0 {
 			log.Infof("Gateway Pod inbound listener found %d HTTPRoute(s) for port %s", len(httpRoutes), routeName)
 			// Collect all HTTPRoute hostnames and add them to domains

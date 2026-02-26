@@ -18,11 +18,11 @@ package pixiu
 
 import (
 	"fmt"
-	cluster "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
-	endpoint "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
-	listener "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
-	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
-	hcm "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	cluster "github.com/dubbo-kubernetes/xds-api/cluster/v1"
+	endpoint "github.com/dubbo-kubernetes/xds-api/endpoint/v1"
+	hcm "github.com/dubbo-kubernetes/xds-api/extensions/filters/v1/network/http_connection_manager"
+	listener "github.com/dubbo-kubernetes/xds-api/listener/v1"
+	route "github.com/dubbo-kubernetes/xds-api/route/v1"
 	"gopkg.in/yaml.v3"
 )
 
@@ -96,7 +96,6 @@ func (c *ConfigConverter) ConvertToPixiuConfig() ([]byte, error) {
 	return data, nil
 }
 
-// convertListener converts Envoy listener to Pixiu listener
 func (c *ConfigConverter) convertListener(name string, l *listener.Listener) *Listener {
 	// Only process listeners on port 80 (Gateway HTTP listener)
 	port := int(l.Address.GetSocketAddress().GetPortValue())
@@ -109,7 +108,7 @@ func (c *ConfigConverter) convertListener(name string, l *listener.Listener) *Li
 	var hcmFilter *hcm.HttpConnectionManager
 	for _, fc := range l.FilterChains {
 		for _, f := range fc.Filters {
-			if f.Name == "envoy.filters.network.http_connection_manager" {
+			if f.Name == "http_connection_manager" {
 				hcmAny := f.GetTypedConfig()
 				if hcmAny != nil {
 					hcmFilter = &hcm.HttpConnectionManager{}
@@ -168,7 +167,6 @@ func (c *ConfigConverter) convertListener(name string, l *listener.Listener) *Li
 	return pixiuListener
 }
 
-// convertCluster converts Envoy cluster to Pixiu cluster
 func (c *ConfigConverter) convertCluster(name string, cl *cluster.Cluster) *Cluster {
 	pixiuCluster := &Cluster{
 		Name:     name,
@@ -234,7 +232,6 @@ func (c *ConfigConverter) convertCluster(name string, cl *cluster.Cluster) *Clus
 	return pixiuCluster
 }
 
-// convertEndpoints converts Envoy endpoints to Pixiu endpoints
 func (c *ConfigConverter) convertEndpoints(assignment *endpoint.ClusterLoadAssignment) []Endpoint {
 	var endpoints []Endpoint
 

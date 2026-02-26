@@ -20,7 +20,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/model"
 	v3 "github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/xds/v3"
 	dubbolog "github.com/apache/dubbo-kubernetes/pkg/log"
-	tlsv3 "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
+	tlsv3 "github.com/dubbo-kubernetes/xds-api/extensions/transport_sockets/tls/v1"
 )
 
 var log = dubbolog.RegisterScope("grpcgen", "xDS Generator for Proxyless gRPC")

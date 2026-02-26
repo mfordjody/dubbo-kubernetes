@@ -21,16 +21,16 @@ import (
 	"strings"
 
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/util/protoconv"
-	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
+	discovery "github.com/dubbo-kubernetes/xds-api/service/discovery/v1"
 
 	networking "github.com/apache/dubbo-kubernetes/api/networking/v1alpha3"
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/model"
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/networking/util"
 	"github.com/apache/dubbo-kubernetes/pkg/config/host"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
-	cluster "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
-	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	tlsv3 "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
+	cluster "github.com/dubbo-kubernetes/xds-api/cluster/v1"
+	core "github.com/dubbo-kubernetes/xds-api/core/v1"
+	tlsv3 "github.com/dubbo-kubernetes/xds-api/extensions/transport_sockets/tls/v1"
 )
 
 type clusterBuilder struct {
@@ -385,7 +385,7 @@ func (b *clusterBuilder) applyTLSForCluster(c *cluster.Cluster, subset *networki
 	}
 
 	c.TransportSocket = &core.TransportSocket{
-		Name:       "envoy.transport_sockets.tls",
+		Name:       "transport_sockets.tls",
 		ConfigType: &core.TransportSocket_TypedConfig{TypedConfig: protoconv.MessageToAny(tlsContext)},
 	}
 	log.Infof("applied %v TLS transport socket to cluster %s (SNI=%s)", mode, c.Name, sni)

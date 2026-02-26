@@ -24,8 +24,8 @@ import (
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/xds/endpoints"
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/kind"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
-	endpoint "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
-	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
+	endpoint "github.com/dubbo-kubernetes/xds-api/endpoint/v1"
+	discovery "github.com/dubbo-kubernetes/xds-api/service/discovery/v1"
 )
 
 type EdsGenerator struct {
@@ -88,12 +88,6 @@ func (eds *EdsGenerator) GenerateDeltas(proxy *model.Proxy, req *model.PushReque
 
 func (eds *EdsGenerator) buildEndpoints(proxy *model.Proxy, req *model.PushRequest, w *model.WatchedResource) (model.Resources, model.XdsLogDetails) {
 	var edsUpdatedServices map[string]struct{}
-	// canSendPartialFullPushes determines if we can send a partial push (ie a subset of known CLAs).
-	// This is safe when only Services has changed, as this implies that only the CLAs for the
-	// associated Service changed. Note when a multi-network Service changes it triggers a push with
-	// ConfigsUpdated=ALL, so in this case we would not enable a partial push.
-	// Despite this code existing on the SotW code path, sending these partial pushes is still allowed;
-	// see https://www.envoyproxy.io/docs/envoy/latest/api-docs/xds_protocol#grouping-resources-into-responses
 	if !req.Full || canSendPartialFullPushes(req) {
 		// edsUpdatedServices = model.ConfigNamesOfKind(req.ConfigsUpdated, kind.ServiceEntry)
 		if len(edsUpdatedServices) > 0 {

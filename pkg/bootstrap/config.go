@@ -28,7 +28,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/constants"
 	"github.com/apache/dubbo-kubernetes/pkg/model"
 	"github.com/apache/dubbo-kubernetes/pkg/security"
-	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	core "github.com/dubbo-kubernetes/xds-api/core/v1"
 
 	dubbolog "github.com/apache/dubbo-kubernetes/pkg/log"
 )

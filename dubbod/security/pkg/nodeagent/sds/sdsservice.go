@@ -27,9 +27,9 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/security"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
 	"github.com/apache/dubbo-kubernetes/pkg/xds"
-	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
-	sds "github.com/envoyproxy/go-control-plane/envoy/service/secret/v3"
+	core "github.com/dubbo-kubernetes/xds-api/core/v1"
+	discovery "github.com/dubbo-kubernetes/xds-api/service/discovery/v1"
+	sds "github.com/dubbo-kubernetes/xds-api/service/secret/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -182,7 +182,6 @@ func (w *Watch) DeleteWatchedResource(string) {
 }
 
 func (w *Watch) GetID() string {
-	// This always maps to the same local Envoy instance.
 	return ""
 }
 

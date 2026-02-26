@@ -18,11 +18,11 @@ package model
 
 const (
 	APITypePrefix = "type.googleapis.com/"
-	ClusterType   = APITypePrefix + "envoy.config.cluster.v3.Cluster"
-	EndpointType  = APITypePrefix + "envoy.config.endpoint.v3.ClusterLoadAssignment"
-	ListenerType  = APITypePrefix + "envoy.config.listener.v3.Listener"
-	RouteType     = APITypePrefix + "envoy.config.route.v3.RouteConfiguration"
-	SecretType    = APITypePrefix + "envoy.extensions.transport_sockets.tls.v3.Secret"
+	ClusterType   = APITypePrefix + "cluster.v1.Cluster"
+	EndpointType  = APITypePrefix + "endpoint.v1.ClusterLoadAssignment"
+	ListenerType  = APITypePrefix + "listener.v1.Listener"
+	RouteType     = APITypePrefix + "route.v1.RouteConfiguration"
+	SecretType    = APITypePrefix + "extensions.transport_sockets.tls.v1.Secret"
 
 	HealthInfoType  = APITypePrefix + "dubbo.v1.HealthInformation"
 	ProxyConfigType = APITypePrefix + "dubbo.mesh.v1alpha1.ProxyConfig"

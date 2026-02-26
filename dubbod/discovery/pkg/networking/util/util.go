@@ -22,8 +22,8 @@ import (
 	"strings"
 
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/model"
-	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	listener "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
+	core "github.com/dubbo-kubernetes/xds-api/core/v1"
+	listener "github.com/dubbo-kubernetes/xds-api/listener/v1"
 )
 
 const (
