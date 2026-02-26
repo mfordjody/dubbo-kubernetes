@@ -36,12 +36,12 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/model"
 	"github.com/apache/dubbo-kubernetes/pkg/pixiu"
 	"github.com/apache/dubbo-kubernetes/pkg/uds"
-	cluster "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
-	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	endpoint "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
-	listener "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
-	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
-	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
+	cluster "github.com/dubbo-kubernetes/xds-api/cluster/v1"
+	core "github.com/dubbo-kubernetes/xds-api/core/v1"
+	endpoint "github.com/dubbo-kubernetes/xds-api/endpoint/v1"
+	listener "github.com/dubbo-kubernetes/xds-api/listener/v1"
+	route "github.com/dubbo-kubernetes/xds-api/route/v1"
+	discovery "github.com/dubbo-kubernetes/xds-api/service/discovery/v1"
 	"go.uber.org/atomic"
 	google_rpc "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc"
@@ -282,7 +282,6 @@ func (p *XdsProxy) handleStream(downstream adsStream) error {
 	for k, v := range p.xdsHeaders {
 		ctx = metadata.AppendToOutgoingContext(ctx, k, v)
 	}
-	// We must propagate upstream termination to Envoy. This ensures that we resume the full XDS sequence on new connection
 	return p.handleUpstream(ctx, con, xds)
 }
 
@@ -346,7 +345,6 @@ func (p *XdsProxy) handleUpstreamRequest(con *ProxyConnection) {
 	nodeReceived := atomic.NewBool(false)
 	go func() {
 		for {
-			// recv xds requests from envoy
 			req, err := con.downstream.Recv()
 			if err != nil {
 				proxyLog.Warnf("connection #%d downstream Recv error: %v", con.conID, err)

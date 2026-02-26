@@ -25,7 +25,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/model"
 	v3 "github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/xds/v3"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
-	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
+	discovery "github.com/dubbo-kubernetes/xds-api/service/discovery/v1"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
@@ -138,7 +138,6 @@ func (s *DiscoveryServer) receiveDelta(con *Connection, identities []string) {
 			return
 		}
 		if firstRequest {
-			// probe happens before envoy sends first xDS request
 			if req.TypeUrl == v3.HealthInfoType {
 				deltaLog.Warnf("%q %s send health check probe before normal xDS request", con.Peer(), con.ID())
 				continue

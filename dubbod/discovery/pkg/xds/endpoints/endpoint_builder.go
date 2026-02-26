@@ -25,14 +25,16 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/labels"
 	dubbolog "github.com/apache/dubbo-kubernetes/pkg/log"
 	"github.com/cespare/xxhash/v2"
-	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	endpoint "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
+	// core "github.com/dubbo-kubernetes/xds-api/core/v1"
+	core "github.com/dubbo-kubernetes/xds-api/core/v1"
+	// endpoint "github.com/dubbo-kubernetes/xds-api/endpoint/v1"
+	endpoint "github.com/dubbo-kubernetes/xds-api/endpoint/v1"
+
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 var log = dubbolog.RegisterScope("ads", "ads debugging")
 
-// EndpointBuilder builds Envoy endpoints from Dubbo endpoints
 type EndpointBuilder struct {
 	clusterName string
 	proxy       *model.Proxy
@@ -174,23 +176,6 @@ func (b *EndpointBuilder) BuildClusterLoadAssignment(endpointIndex *model.Endpoi
 			if b.subsetName != "" && !b.matchesSubset(ep.Labels) {
 				continue
 			}
-
-			// regardless of their health status. The client will decide whether to use them based on
-			// OverrideHostStatus in the Cluster configuration.
-			//
-			// However, if the service explicitly doesn't support unhealthy endpoints (publishNotReadyAddresses=false),
-			// we should still include them in EDS but mark them as UNHEALTHY. The client's OverrideHostStatus
-			// will determine if they can be used.
-			//
-			// included in EDS so the client knows they exist and can attempt to connect to them.
-			// The client will handle connection failures appropriately.
-			//
-			// Note: We only filter out unhealthy endpoints if the service explicitly doesn't support them
-			// AND we're not in a proxyless gRPC scenario. For proxyless gRPC, always include endpoints.
-			// For non-proxyless (Envoy), we follow the service's publishNotReadyAddresses setting.
-			// But since this is proxyless gRPC, we should always include endpoints.
-			// Actually, let's follow: always include endpoints, let the client decide.
-			// The OverrideHostStatus in Cluster config will control whether unhealthy endpoints can be used.
 
 			// Build LbEndpoint
 			lbEp := b.buildLbEndpoint(ep)

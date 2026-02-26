@@ -29,13 +29,13 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/dubboagent/grpcxds"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
 	"github.com/apache/dubbo-kubernetes/pkg/wellknown"
-	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	listener "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
-	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
-	routerv3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/router/v3"
-	hcmv3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
-	tlsv3 "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
-	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
+	core "github.com/dubbo-kubernetes/xds-api/core/v1"
+	routerv3 "github.com/dubbo-kubernetes/xds-api/extensions/filters/v1/http/router"
+	hcmv3 "github.com/dubbo-kubernetes/xds-api/extensions/filters/v1/network/http_connection_manager"
+	tlsv3 "github.com/dubbo-kubernetes/xds-api/extensions/transport_sockets/tls/v1"
+	listener "github.com/dubbo-kubernetes/xds-api/listener/v1"
+	route "github.com/dubbo-kubernetes/xds-api/route/v1"
+	discovery "github.com/dubbo-kubernetes/xds-api/service/discovery/v1"
 	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
@@ -238,7 +238,7 @@ func buildInboundListeners(node *model.Proxy, push *model.PushContext, names []s
 				},
 				HttpFilters: []*hcmv3.HttpFilter{
 					{
-						Name: "envoy.filters.http.router",
+						Name: "filters.http.router",
 						ConfigType: &hcmv3.HttpFilter_TypedConfig{
 							TypedConfig: protoconv.MessageToAny(&routerv3.Router{}),
 						},
@@ -276,7 +276,7 @@ func buildInboundListeners(node *model.Proxy, push *model.PushContext, names []s
 				},
 				HttpFilters: []*hcmv3.HttpFilter{
 					{
-						Name: "envoy.filters.http.router",
+						Name: "filters.http.router",
 						ConfigType: &hcmv3.HttpFilter_TypedConfig{
 							TypedConfig: protoconv.MessageToAny(&routerv3.Router{}),
 						},
@@ -366,7 +366,7 @@ func buildDownstreamTransportSocket(mode model.MutualTLSMode) *core.TransportSoc
 		// The ValidationContextType in CommonTlsContext handles client cert validation
 	}
 	return &core.TransportSocket{
-		Name:       "envoy.transport_sockets.tls",
+		Name:       "transport_sockets.tls",
 		ConfigType: &core.TransportSocket_TypedConfig{TypedConfig: protoconv.MessageToAny(tlsContext)},
 	}
 }
@@ -531,7 +531,7 @@ func buildOutboundListeners(node *model.Proxy, push *model.PushContext, filter l
 				},
 				HttpFilters: []*hcmv3.HttpFilter{
 					{
-						Name: "envoy.filters.http.router",
+						Name: "filters.http.router",
 						ConfigType: &hcmv3.HttpFilter_TypedConfig{
 							TypedConfig: protoconv.MessageToAny(&routerv3.Router{}),
 						},

@@ -31,11 +31,11 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
 	dubboversion "github.com/apache/dubbo-kubernetes/pkg/version"
 	"github.com/apache/dubbo-kubernetes/pkg/xds"
-	cluster "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
-	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	listener "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
-	hcmv3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
-	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
+	cluster "github.com/dubbo-kubernetes/xds-api/cluster/v1"
+	core "github.com/dubbo-kubernetes/xds-api/core/v1"
+	hcmv3 "github.com/dubbo-kubernetes/xds-api/extensions/filters/v1/network/http_connection_manager"
+	listener "github.com/dubbo-kubernetes/xds-api/listener/v1"
+	discovery "github.com/dubbo-kubernetes/xds-api/service/discovery/v1"
 )
 
 type DubboControlPlaneInstance struct {
@@ -191,11 +191,6 @@ func (s *DiscoveryServer) pushXds(con *Connection, w *model.WatchedResource, req
 		}
 	}
 
-	// If delta is set, client is requesting new resources or removing old ones. We should just generate the
-	// new resources it needs, rather than the entire set of known resources.
-	// Note: we do not need to account for unsubscribed resources as these are handled by parent removal;
-	// See https://www.envoyproxy.io/docs/envoy/latest/api-docs/xds_protocol#deleting-resources.
-	// This means if there are only removals, we will not respond.
 	var logFiltered string
 	if !req.Delta.IsEmpty() && !con.proxy.IsProxylessGrpc() {
 		logFiltered = " filtered:" + strconv.Itoa(len(w.ResourceNames)-len(req.Delta.Subscribed))
@@ -672,7 +667,7 @@ func extractRouteNamesFromLDS(listeners model.Resources) []string {
 		// Check FilterChains for HttpConnectionManager with RDS (used by Gateway Pod inbound listeners)
 		for _, fc := range ll.FilterChains {
 			for _, filter := range fc.Filters {
-				if filter.Name == "envoy.filters.network.http_connection_manager" {
+				if filter.Name == "http_connection_manager" {
 					hcm := &hcmv3.HttpConnectionManager{}
 					if err := filter.GetTypedConfig().UnmarshalTo(hcm); err != nil {
 						log.Debugf("failed to unmarshal HttpConnectionManager for listener %s: %v", r.Name, err)

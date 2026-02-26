@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/apache/dubbo-kubernetes/pkg/cluster"
-	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	core "github.com/dubbo-kubernetes/xds-api/core/v1"
 	"strconv"
 
 	meshv1alpha1 "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
@@ -48,14 +48,12 @@ const (
 type NodeMetaProxyConfig meshv1alpha1.ProxyConfig
 
 type Node struct {
-	// ID of the Envoy node
 	ID string
 	// Metadata is the typed node metadata
 	Metadata *BootstrapNodeMetadata
 	// RawMetadata is the untyped node metadata
 	RawMetadata map[string]any
-	// Locality from Envoy bootstrap
-	Locality *core.Locality
+	Locality    *core.Locality
 }
 
 type NodeMetadata struct {

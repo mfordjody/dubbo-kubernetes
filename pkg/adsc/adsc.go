@@ -38,11 +38,11 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/security"
 	"github.com/apache/dubbo-kubernetes/pkg/util/protomarshal"
 	"github.com/apache/dubbo-kubernetes/pkg/wellknown"
-	cluster "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
-	endpoint "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
-	listener "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
-	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
-	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
+	cluster "github.com/dubbo-kubernetes/xds-api/cluster/v1"
+	endpoint "github.com/dubbo-kubernetes/xds-api/endpoint/v1"
+	listener "github.com/dubbo-kubernetes/xds-api/listener/v1"
+	route "github.com/dubbo-kubernetes/xds-api/route/v1"
+	discovery "github.com/dubbo-kubernetes/xds-api/service/discovery/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
@@ -82,7 +82,6 @@ type Config struct {
 	SecretManager security.SecretManager
 	GrpcOpts      []grpc.DialOption
 	// XDSRootCAFile explicitly set the root CA to be used for the XDS connection.
-	// Mirrors Envoy file.
 	XDSRootCAFile string
 	// XDSSAN is the expected SAN of the XDS server. If not set, the ProxyConfig.DiscoveryAddress is used.
 	XDSSAN string
@@ -620,7 +619,6 @@ func (a *ADSC) handleEDS(eds []*endpoint.ClusterLoadAssignment) {
 
 	log.Infof("eds: %d size=%d ep=%d", len(eds), edsSize, ep)
 	if a.initialLoad == 0 && !a.initialLds {
-		// first load - Envoy loads listeners after endpoints
 		_ = a.stream.Send(&discovery.DiscoveryRequest{
 			TypeUrl: v3.ListenerType,
 		})

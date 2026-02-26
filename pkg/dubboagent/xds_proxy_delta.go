@@ -23,8 +23,8 @@ import (
 
 	"github.com/apache/dubbo-kubernetes/pkg/channels"
 	"github.com/apache/dubbo-kubernetes/pkg/model"
-	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
+	core "github.com/dubbo-kubernetes/xds-api/core/v1"
+	discovery "github.com/dubbo-kubernetes/xds-api/service/discovery/v1"
 	"go.uber.org/atomic"
 	google_rpc "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc"
@@ -66,7 +66,6 @@ func (p *XdsProxy) DeltaAggregatedResources(downstream DeltaDiscoveryStream) err
 	for k, v := range p.xdsHeaders {
 		ctx = metadata.AppendToOutgoingContext(ctx, k, v)
 	}
-	// We must propagate upstream termination to Envoy. This ensures that we resume the full XDS sequence on new connection
 	return p.handleDeltaUpstream(ctx, con, xds)
 }
 
@@ -105,7 +104,6 @@ func (p *XdsProxy) handleDeltaUpstream(ctx context.Context, con *ProxyConnection
 		case err := <-con.upstreamError:
 			return err
 		case err := <-con.downstreamError:
-			// On downstream error, we will return. This propagates the error to downstream envoy which will trigger reconnect
 			return err
 		case <-con.stopChan:
 			return nil
@@ -118,7 +116,6 @@ func (p *XdsProxy) handleUpstreamDeltaRequest(con *ProxyConnection) {
 	nodeReceived := atomic.NewBool(false)
 	go func() {
 		for {
-			// recv delta xds requests from envoy
 			req, err := con.downstreamDeltas.Recv()
 			if err != nil {
 				downstreamErr(con, err)

@@ -43,7 +43,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/filewatcher"
 	"github.com/apache/dubbo-kubernetes/pkg/pixiu"
 	"github.com/apache/dubbo-kubernetes/pkg/security"
-	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	core "github.com/dubbo-kubernetes/xds-api/core/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -301,7 +301,6 @@ func (a *Agent) FindRootCAForXDS() (string, error) {
 		rootCAPath = path.Join(DubboCACertPath, constants.CACertNamespaceConfigMapDataName)
 	}
 
-	// Additional checks for root CA cert existence. Fail early, instead of obscure envoy errors
 	if fileExists(rootCAPath) {
 		return rootCAPath, nil
 	}
@@ -503,8 +502,6 @@ func (a *Agent) generateGRPCBootstrapWithNode() (*model.Node, error) {
 
 	log.Infof("Dubbo SAN: %v", node.Metadata.DubboSubjectAltName)
 
-	// GRPC bootstrap requires this. Original implementation injected this via env variable, but
-	// this interfere with envoy, we should be able to use both envoy for TCP/HTTP and proxyless.
 	node.Metadata.Generator = "grpc"
 
 	if err := os.MkdirAll(filepath.Dir(absBootstrapPath), 0o700); err != nil {
