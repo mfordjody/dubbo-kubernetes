@@ -39,6 +39,7 @@ import (
 var processStartTime = time.Now()
 
 type DiscoveryServer struct {
+	discovery.UnimplementedAggregatedDiscoveryServiceServer
 	Env                 *model.Environment
 	serverReady         atomic.Bool
 	DiscoveryStartTime  time.Time
