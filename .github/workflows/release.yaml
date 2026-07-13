@@ -32,6 +32,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Release content is maintained in releasenotes/<version>.md (the
+      # single editable source); a missing file fails the release.
+      - name: Verify and extract release notes
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          ./release/release-notes.sh verify "${TAG}"
+          ./release/release-notes.sh extract-notes "${TAG}" > /tmp/release-body.md
+          echo "Release body:"
+          cat /tmp/release-body.md
+
       - name: Create GitHub Release if missing
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -43,7 +54,7 @@ jobs:
             gh release create "${TAG}" \
               --title "${TAG}" \
               --prerelease \
-              --generate-notes
+              --notes-file /tmp/release-body.md
           fi
 
   build_and_upload:
@@ -147,3 +158,58 @@ jobs:
             "${{ steps.package_ctl.outputs.name }}.sha256" \
             "${{ steps.package_dubbo.outputs.name }}" \
             "${{ steps.package_dubbo.outputs.name }}.sha256"
+
+  # Opens a PR against the website repository that adds the release
+  # announcement and bumps all embedded version numbers. Requires the
+  # WEBSITE_SYNC_TOKEN secret (a token with write access to the website
+  # repo); the job is skipped when the secret is not configured.
+  sync_website:
+    name: Sync Website Announcement
+    needs: create_release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      WEBSITE_SYNC_TOKEN: ${{ secrets.WEBSITE_SYNC_TOKEN }}
+      WEBSITE_REPO: kdubbo/kdubbo.github.io
+      TAG: ${{ github.ref_name }}
+    steps:
+      - name: Checkout code
+        if: env.WEBSITE_SYNC_TOKEN != ''
+        uses: actions/checkout@v4
+
+      - name: Checkout website
+        if: env.WEBSITE_SYNC_TOKEN != ''
+        uses: actions/checkout@v4
+        with:
+          repository: kdubbo/kdubbo.github.io
+          token: ${{ secrets.WEBSITE_SYNC_TOKEN }}
+          path: website
+
+      - name: Sync announcement and version numbers
+        if: env.WEBSITE_SYNC_TOKEN != ''
+        run: |
+          ./release/sync-website.sh "${TAG}" website
+
+      - name: Open website pull request
+        if: env.WEBSITE_SYNC_TOKEN != ''
+        env:
+          GH_TOKEN: ${{ secrets.WEBSITE_SYNC_TOKEN }}
+        run: |
+          cd website
+          if git diff --quiet; then
+            echo "Website already up to date for ${TAG}; nothing to sync."
+            exit 0
+          fi
+          BRANCH="release-announcement-${TAG}"
+          git config user.name "dubbo-kubernetes-bot"
+          git config user.email "dev@dubbo.apache.org"
+          git checkout -b "${BRANCH}"
+          git add -A
+          git commit -m "Announce release ${TAG}"
+          git push -f origin "${BRANCH}"
+          gh pr create \
+            --repo "${WEBSITE_REPO}" \
+            --head "${BRANCH}" \
+            --title "Announce release ${TAG}" \
+            --body "Automated announcement + version bump for release ${TAG}, generated from releasenotes/${TAG}.md." \
+            || echo "PR already exists"

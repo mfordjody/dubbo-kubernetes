@@ -48,4 +48,8 @@ func TestNewHandlerServesAssetsAndFallsBackToIndex(t *testing.T) {
 	if !strings.Contains(indexResponse.Body.String(), `<base href="/gui/" />`) {
 		t.Fatalf("index response did not render the GUI base path")
 	}
+	if !strings.Contains(indexResponse.Body.String(), "window.html = htm.bind(h);") ||
+		!strings.Contains(indexResponse.Body.String(), "window.render = render;") {
+		t.Fatalf("index response did not initialize the GUI runtime")
+	}
 }

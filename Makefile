@@ -133,6 +133,22 @@ lint-helm:
 	done
 
 # ------------------------------------------------------------------------
+# Release
+# ------------------------------------------------------------------------
+
+WEBSITE_DIR ?= $(abspath ..)/kdubbo.github.io
+
+.PHONY: release-notes-verify
+release-notes-verify:
+	@test -n "$(VERSION)" || { echo "usage: make release-notes-verify VERSION=x.y.z"; exit 1; }
+	release/release-notes.sh verify $(VERSION)
+
+.PHONY: sync-website
+sync-website:
+	@test -n "$(VERSION)" || { echo "usage: make sync-website VERSION=x.y.z [WEBSITE_DIR=...]"; exit 1; }
+	release/sync-website.sh $(VERSION) $(WEBSITE_DIR)
+
+# ------------------------------------------------------------------------
 # Misc
 # ------------------------------------------------------------------------
 
