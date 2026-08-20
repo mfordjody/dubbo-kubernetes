@@ -19,7 +19,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"testing"
 
 	telemetryconfig "github.com/apache/dubbo-kubernetes/pkg/config/telemetry"
@@ -375,7 +374,7 @@ func TestParseInjectEnvsForRemoteClusterPath(t *testing.T) {
 	}
 }
 
-func TestInstallerGRPCEngineTemplateConfiguresXDSClientForDubbodImage(t *testing.T) {
+func TestInstallerGRPCEngineTemplateDoesNotOverrideDubbodImageCommand(t *testing.T) {
 	_, currentFile, _, ok := runtime.Caller(0)
 	if !ok {
 		t.Fatalf("runtime.Caller() failed")
@@ -441,10 +440,7 @@ func TestInstallerGRPCEngineTemplateConfiguresXDSClientForDubbodImage(t *testing
 	}
 
 	container := mergedPod.Spec.Containers[0]
-	wantArgs := []string{"grpc-outbound", "--watch"}
-	if strings.Join(container.Args, ",") != strings.Join(wantArgs, ",") {
-		t.Fatalf("args = %v, want %v", container.Args, wantArgs)
-	}
+	assertNoArgs(t, mergedPod)
 	for name, want := range req.proxyEnvs {
 		if !hasEnv(container.Env, name, want) {
 			t.Fatalf("%s env missing override %q", name, want)

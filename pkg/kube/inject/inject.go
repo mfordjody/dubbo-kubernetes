@@ -28,9 +28,7 @@ import (
 
 	"github.com/apache/dubbo-kubernetes/pkg/config/constants"
 	telemetryconfig "github.com/apache/dubbo-kubernetes/pkg/config/telemetry"
-	common_features "github.com/apache/dubbo-kubernetes/pkg/features"
 	"github.com/kdubbo/api/annotation"
-	meshv1alpha1 "github.com/kdubbo/api/mesh/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -74,10 +72,7 @@ type TemplateData struct {
 	DeploymentMeta            types.NamespacedName
 	ObjectMeta                metav1.ObjectMeta
 	Spec                      corev1.PodSpec
-	ProxyConfig               *meshv1alpha1.ProxyConfig
-	MeshConfig                *meshv1alpha1.MeshConfig
 	Revision                  string
-	CompliancePolicy          string
 	TracingDisabled           bool
 	TracingOTLPEndpoint       string
 	TracingSamplingRatio      string
@@ -93,8 +88,6 @@ type InjectionStatus struct {
 
 func RunTemplate(params InjectionParameters) (mergedPod *corev1.Pod, templatePod *corev1.Pod, err error) {
 	metadata := &params.pod.ObjectMeta
-	meshConfig := params.meshConfig
-
 	if err := validateAnnotations(metadata.GetAnnotations()); err != nil {
 		log.Errorf("Injection failed due to invalid annotations: %v", err)
 		return nil, nil, err
@@ -110,10 +103,7 @@ func RunTemplate(params InjectionParameters) (mergedPod *corev1.Pod, templatePod
 		DeploymentMeta:            params.deployMeta,
 		ObjectMeta:                strippedPod.ObjectMeta,
 		Spec:                      strippedPod.Spec,
-		ProxyConfig:               params.proxyConfig,
-		MeshConfig:                meshConfig,
 		Revision:                  params.revision,
-		CompliancePolicy:          common_features.CompliancePolicy,
 		TracingDisabled:           params.telemetry.Configured && params.telemetry.Disabled(),
 		TracingOTLPEndpoint:       tracingOTLPEndpoint(params.telemetry),
 		TracingSamplingRatio:      params.telemetry.SamplingRatioString(),

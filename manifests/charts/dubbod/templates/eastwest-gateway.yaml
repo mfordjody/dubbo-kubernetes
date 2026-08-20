@@ -22,7 +22,7 @@
 {{- if $eastWestGatewayEnabled }}
 {{- $serviceType := coalesce $eastWestGateway.serviceType $defaultEastWestGateway.serviceType "LoadBalancer" }}
 {{- $port := int (coalesce $eastWestGateway.port $defaultEastWestGateway.port 15443) }}
-{{- $targetPort := int (coalesce $eastWestGateway.targetPort $defaultEastWestGateway.targetPort 15080) }}
+{{- $targetPort := int (coalesce $eastWestGateway.targetPort $defaultEastWestGateway.targetPort 25080) }}
 {{- $nodePort := int (coalesce $eastWestGateway.nodePort $defaultEastWestGateway.nodePort 0) }}
 {{- $xdsAddress := coalesce $eastWestGateway.xdsAddress $defaultEastWestGateway.xdsAddress "" }}
 apiVersion: gateway.networking.k8s.io/v1

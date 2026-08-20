@@ -84,7 +84,7 @@ func TestBuildEastWestGatewayManifest(t *testing.T) {
 		namespace:   "dubbo-system",
 		serviceType: "NodePort",
 		port:        15443,
-		targetPort:  15080,
+		targetPort:  25080,
 		nodePort:    32443,
 		xdsAddress:  "http://192.168.15.164:32010",
 	})

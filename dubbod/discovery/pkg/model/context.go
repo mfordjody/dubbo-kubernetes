@@ -196,20 +196,21 @@ func (e *Environment) Init() {
 
 type Proxy struct {
 	sync.RWMutex
-	XdsResourceGenerator XdsResourceGenerator
-	LastPushContext      *PushContext
-	LastPushTime         time.Time
-	Type                 NodeType
-	WatchedResources     map[string]*WatchedResource
-	ID                   string
-	DNSDomain            string
-	Metadata             *NodeMetadata
-	IPAddresses          []string
-	XdsNode              *core.Node
-	ConfigNamespace      string
-	ServiceTargets       []ServiceTarget
-	ipMode               IPMode
-	GlobalUnicastIP      string
+	XdsResourceGenerator    XdsResourceGenerator
+	LastPushContext         *PushContext
+	LastPushTime            time.Time
+	Type                    NodeType
+	WatchedResources        map[string]*WatchedResource
+	ID                      string
+	DNSDomain               string
+	Metadata                *NodeMetadata
+	AuthenticatedIdentities []string
+	IPAddresses             []string
+	XdsNode                 *core.Node
+	ConfigNamespace         string
+	ServiceTargets          []ServiceTarget
+	ipMode                  IPMode
+	GlobalUnicastIP         string
 }
 
 func (node *Proxy) GetWatchedResource(typeURL string) *WatchedResource {

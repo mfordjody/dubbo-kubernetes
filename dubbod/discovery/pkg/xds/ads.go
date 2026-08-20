@@ -177,6 +177,7 @@ func (s *DiscoveryServer) initConnection(node *core.Node, con *Connection, ident
 	}
 
 	proxy.LastPushContext = s.globalPushContext()
+	proxy.AuthenticatedIdentities = append([]string(nil), identities...)
 	con.SetID(connectionID(proxy.ID))
 	con.node = node
 	con.proxy = proxy
@@ -302,11 +303,15 @@ func (s *DiscoveryServer) Stream(stream DiscoveryStream) error {
 		return status.Errorf(codes.ResourceExhausted, "request rate limit exceeded: %v", err)
 	}
 
-	// TODO authenticate
+	ids, err := s.authenticate(ctx)
+	if err != nil {
+		return status.Error(codes.Unauthenticated, err.Error())
+	}
 
 	s.globalPushContext().InitContext(s.Env, nil, nil)
 	con := newConnection(peerAddr, stream)
 	con.s = s
+	con.ids = ids
 	return xds.Stream(con)
 }
 
@@ -356,10 +361,6 @@ func (s *DiscoveryServer) pushConnection(con *Connection, pushEv *Event) error {
 
 func (s *DiscoveryServer) processRequest(req *discovery.DiscoveryRequest, con *Connection) error {
 	stype := v1.GetShortType(req.TypeUrl)
-	if req.TypeUrl == v1.HealthInfoType {
-		return nil
-	}
-
 	shouldRespond, delta := xds.ShouldRespond(con.proxy, con.ID(), req)
 
 	// Log NEW requests (will respond) at INFO level so every grpcurl request is visible
@@ -449,10 +450,6 @@ func (s *DiscoveryServer) processDeltaRequest(req *discovery.DeltaDiscoveryReque
 	stype := v1.GetShortType(req.TypeUrl)
 	deltaLog.Debugf("%s: REQ %s resources sub:%d unsub:%d nonce:%s", stype,
 		con.ID(), len(req.ResourceNamesSubscribe), len(req.ResourceNamesUnsubscribe), req.ResponseNonce)
-
-	if req.TypeUrl == v1.HealthInfoType {
-		return nil
-	}
 
 	shouldRespond := shouldRespondDelta(con, req)
 	if !shouldRespond {

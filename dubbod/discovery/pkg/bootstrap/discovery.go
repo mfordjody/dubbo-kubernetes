@@ -42,7 +42,6 @@ func InitGenerators(
 	generators["grpc/"+v1.ListenerType] = generators["grpc"]
 	generators["grpc/"+v1.RouteType] = generators["grpc"]
 	generators["grpc/"+v1.ClusterType] = generators["grpc"]
-
 	generators["api"] = apigen.NewGenerator(env.ConfigStore)
 	generators["api/"+v1.EndpointType] = edsGen
 

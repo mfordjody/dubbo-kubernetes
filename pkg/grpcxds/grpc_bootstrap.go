@@ -254,7 +254,7 @@ func extractMeta(node *model.Node) (*structpb.Struct, error) {
 	// This is needed because dubbo-discovery expects ClusterName as a string, not a oneof object
 	if proxyConfigRaw, ok := rawMeta["PROXY_CONFIG"].(map[string]any); ok {
 		if clusterNameRaw, ok := proxyConfigRaw["ClusterName"].(map[string]any); ok {
-			// Convert {"ServiceCluster": "dubbo-proxy"} to just "dubbo-proxy"
+			// Convert the ServiceCluster oneof object to its string value.
 			if serviceCluster, ok := clusterNameRaw["ServiceCluster"].(string); ok {
 				proxyConfigRaw["ClusterName"] = serviceCluster
 			}

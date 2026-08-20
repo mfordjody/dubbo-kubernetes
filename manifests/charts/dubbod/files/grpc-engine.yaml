@@ -94,11 +94,6 @@ spec:
     - name: OTEL_RESOURCE_ATTRIBUTES
       value: {{ .TracingResourceAttributes | quote }}
 {{- end }}
-{{- if and (gt (len .Spec.Containers) 0) (contains "kdubbo/dubbod" ((index .Spec.Containers 0).Image | default "")) }}
-    args:
-    - grpc-outbound
-    - --watch
-{{- end }}
     volumeMounts:
     - name: dubbo-xds
       mountPath: /etc/dubbo/proxy

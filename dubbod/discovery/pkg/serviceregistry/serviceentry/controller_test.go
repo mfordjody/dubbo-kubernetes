@@ -63,7 +63,7 @@ func TestControllerReconcilesServiceEntryAndWorkloadEntry(t *testing.T) {
 		Location:   networking.ServiceEntry_MESH_INTERNAL,
 		Resolution: networking.ServiceEntry_STATIC,
 		Ports: []*networking.ServicePort{{
-			Name: "grpc", Number: 50051, Protocol: "GRPC", TargetPort: 15000,
+			Name: "grpc", Number: 50051, Protocol: "GRPC", TargetPort: 25020,
 		}},
 		WorkloadSelector: &typev1alpha3.WorkloadSelector{MatchLabels: map[string]string{"app": "reviews"}},
 	}}

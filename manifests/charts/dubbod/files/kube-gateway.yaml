@@ -144,7 +144,7 @@ spec:
         - name: DXGATE_BOOTSTRAP
           value: /etc/dxgate/bootstrap.json
         - name: DXGATE_HTTP_ADDR
-          value: 0.0.0.0:15080
+          value: 0.0.0.0:25080
         - name: DXGATE_UI_ADDR
           value: 0.0.0.0:26021
         - name: DXGATE_GATEWAY_NAME
@@ -208,7 +208,7 @@ spec:
               fieldPath: spec.nodeName
         ports:
         - name: http
-          containerPort: 15080
+          containerPort: 25080
         - name: admin
           containerPort: 26021
         readinessProbe:

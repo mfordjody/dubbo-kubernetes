@@ -327,16 +327,30 @@ func (c *inherentGRPCWorkloadController) reconcile(key types.NamespacedName) err
 		return err
 	}
 
+	changed := false
 	if current == nil {
 		if _, err := secrets.Create(context.Background(), desired, metav1.CreateOptions{}); err != nil {
 			return err
 		}
+		changed = true
 	} else if !reflect.DeepEqual(current.Data, desired.Data) || !reflect.DeepEqual(current.OwnerReferences, desired.OwnerReferences) {
 		current.Data = desired.Data
 		current.OwnerReferences = desired.OwnerReferences
 		if _, err := secrets.Update(context.Background(), current, metav1.UpdateOptions{}); err != nil {
 			return err
 		}
+		changed = true
+	}
+	if changed && c.server != nil && c.server.XDSServer != nil {
+		c.server.XDSServer.Push(&discoverymodel.PushRequest{
+			Full: true,
+			ConfigsUpdated: sets.New(discoverymodel.ConfigKey{
+				Kind:      kind.Secret,
+				Name:      secretName,
+				Namespace: pod.Namespace,
+			}),
+			Reason: discoverymodel.NewReasonStats(discoverymodel.ConfigUpdate),
+		})
 	}
 
 	c.scheduleRotation(key, expireAt)

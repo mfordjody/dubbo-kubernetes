@@ -426,7 +426,7 @@ func TestDeploymentControllerBuildDxgateBootstrapConfigUsesXDSAddressAnnotation(
 				xdsAddressAnnotation: "http://192.168.15.164:32010",
 			},
 		},
-	}, "dxgate-gateway", []corev1.ServicePort{{Name: "http-eastwest", Port: 15443, TargetPort: intstr.FromInt(15080)}})
+	}, "dxgate-gateway", []corev1.ServicePort{{Name: "http-eastwest", Port: 15443, TargetPort: intstr.FromInt(25080)}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -442,7 +442,7 @@ func TestDeploymentControllerBuildDxgateBootstrapConfigUsesXDSAddressAnnotation(
 		t.Fatalf("clusterID = %q, want remote", cfg.ClusterID)
 	}
 	if diff := cmp.Diff(
-		[]string{"xds.dubbo.apache.org/grpc/lds/inbound/0.0.0.0:15080"},
+		[]string{"xds.dubbo.apache.org/grpc/lds/inbound/0.0.0.0:25080"},
 		cfg.ListenerNames,
 	); diff != "" {
 		t.Fatalf("listener names (-want +got):\n%s", diff)
@@ -463,7 +463,7 @@ func TestExtractServicePortsTargetsGRPCInbound(t *testing.T) {
 	if len(ports) != 1 {
 		t.Fatalf("expected only the http listener port, got %#v", ports)
 	}
-	if ports[0].Name != "http" || ports[0].Port != 8080 || ports[0].TargetPort.IntValue() != 15080 {
+	if ports[0].Name != "http" || ports[0].Port != 8080 || ports[0].TargetPort.IntValue() != 25080 {
 		t.Fatalf("unexpected http service port: %#v", ports[0])
 	}
 }
@@ -487,8 +487,8 @@ func TestExtractServicePortsTargetsGRPCInboundForEastWestGateway(t *testing.T) {
 	if len(ports) != 1 {
 		t.Fatalf("ports = %d, want 1", len(ports))
 	}
-	if ports[0].TargetPort.IntValue() != 15080 {
-		t.Fatalf("targetPort = %s, want 15080", ports[0].TargetPort.String())
+	if ports[0].TargetPort.IntValue() != 25080 {
+		t.Fatalf("targetPort = %s, want 25080", ports[0].TargetPort.String())
 	}
 	if ports[0].NodePort != 32443 {
 		t.Fatalf("nodePort = %d, want 32443", ports[0].NodePort)
@@ -673,7 +673,7 @@ func TestKubeGatewayTemplateRendersDxgateResources(t *testing.T) {
 		},
 		DeploymentName:      "public-dubbo",
 		ServiceAccount:      "public-dubbo",
-		Ports:               []corev1.ServicePort{{Name: "http", Port: 80, TargetPort: intstr.FromInt(15080)}},
+		Ports:               []corev1.ServicePort{{Name: "http", Port: 80, TargetPort: intstr.FromInt(25080)}},
 		ServiceType:         corev1.ServiceTypeLoadBalancer,
 		Revision:            "default",
 		BootstrapConfig:     "{\n  \"xds_address\": \"http://dubbod.dubbo-system.svc:26010\",\n  \"listener_names\": [\n    \"public-dubbo.app.svc.cluster.local:80\"\n  ],\n  \"cluster_id\": \"Kubernetes\",\n  \"dns_domain\": \"cluster.local\"\n}\n",
@@ -750,11 +750,11 @@ func TestKubeGatewayTemplateRendersDxgateResources(t *testing.T) {
 		t.Fatalf("deployment did not render stable dxgate instance label:\n%s", rendered[4])
 	}
 	if !strings.Contains(rendered[4], "DXGATE_HTTP_ADDR") ||
-		!strings.Contains(rendered[4], "value: 0.0.0.0:15080") ||
-		!strings.Contains(rendered[4], "containerPort: 15080") {
+		!strings.Contains(rendered[4], "value: 0.0.0.0:25080") ||
+		!strings.Contains(rendered[4], "containerPort: 25080") {
 		t.Fatalf("deployment did not bind dxgate to the managed gateway targetPort:\n%s", rendered[4])
 	}
-	if !strings.Contains(rendered[5], "targetPort: 15080") {
+	if !strings.Contains(rendered[5], "targetPort: 25080") {
 		t.Fatalf("service did not target the managed gateway listener:\n%s", rendered[5])
 	}
 	if !strings.Contains(rendered[5], `inherent.dubbo.apache.org/inject: "false"`) {
@@ -801,7 +801,7 @@ func TestKubeGatewayTemplateRendersHighAvailabilityResources(t *testing.T) {
 		},
 		DeploymentName:      "public-dubbo",
 		ServiceAccount:      "public-dubbo",
-		Ports:               []corev1.ServicePort{{Name: "http", Port: 80, TargetPort: intstr.FromInt(15080)}},
+		Ports:               []corev1.ServicePort{{Name: "http", Port: 80, TargetPort: intstr.FromInt(25080)}},
 		ServiceType:         corev1.ServiceTypeLoadBalancer,
 		Replicas:            gatewayReplicas(gatewayv1.Gateway{}),
 		Revision:            "default",
@@ -936,7 +936,7 @@ func TestKubeGatewayTemplateRendersActivationEnv(t *testing.T) {
 			},
 			DeploymentName:  "public-dubbo",
 			ServiceAccount:  "public-dubbo",
-			Ports:           []corev1.ServicePort{{Name: "http", Port: 80, TargetPort: intstr.FromInt(15080)}},
+			Ports:           []corev1.ServicePort{{Name: "http", Port: 80, TargetPort: intstr.FromInt(25080)}},
 			ServiceType:     corev1.ServiceTypeLoadBalancer,
 			Revision:        "default",
 			DxgateImage:     "kdubbo/dxgate:test",

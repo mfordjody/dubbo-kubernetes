@@ -139,10 +139,6 @@ func (s *DiscoveryServer) receiveDelta(con *Connection, identities []string) {
 			return
 		}
 		if firstRequest {
-			if req.TypeUrl == v1.HealthInfoType {
-				deltaLog.Warnf("%q %s send health check probe before normal xDS request", con.Peer(), con.ID())
-				continue
-			}
 			firstRequest = false
 			if req.Node == nil || req.Node.Id == "" {
 				con.ErrorCh() <- status.New(codes.InvalidArgument, "missing node information").Err()

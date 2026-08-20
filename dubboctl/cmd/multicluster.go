@@ -22,7 +22,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/apache/dubbo-kubernetes/pkg/kube/inject"
+	"github.com/apache/dubbo-kubernetes/pkg/inherent/contract"
 	"github.com/apache/dubbo-kubernetes/pkg/kube/multicluster"
 	"github.com/spf13/cobra"
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
@@ -151,7 +151,7 @@ func generateEastWestGatewayCmd() *cobra.Command {
 		namespace:   "dubbo-system",
 		serviceType: "LoadBalancer",
 		port:        15443,
-		targetPort:  inject.InherentGatewayInboundPort,
+		targetPort:  contract.GatewayInboundPort,
 	}
 	command := &cobra.Command{
 		Use:   "generate-eastwest-gateway",

@@ -48,6 +48,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/gvr"
 	telemetryconfig "github.com/apache/dubbo-kubernetes/pkg/config/telemetry"
 	"github.com/apache/dubbo-kubernetes/pkg/grpcxds"
+	"github.com/apache/dubbo-kubernetes/pkg/inherent/contract"
 	"github.com/apache/dubbo-kubernetes/pkg/kube"
 	"github.com/apache/dubbo-kubernetes/pkg/kube/controllers"
 	"github.com/apache/dubbo-kubernetes/pkg/kube/inject"
@@ -1512,7 +1513,7 @@ func gatewayServiceTargetPort(gw gateway.Gateway) intstr.IntOrString {
 	if port, ok := positiveIntAnnotation(gw, serviceTargetPortAnnotation); ok {
 		return intstr.FromInt(port)
 	}
-	return intstr.FromInt(inject.InherentGatewayInboundPort)
+	return intstr.FromInt(contract.GatewayInboundPort)
 }
 
 func gatewayServiceNodePort(gw gateway.Gateway) int32 {

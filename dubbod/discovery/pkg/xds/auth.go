@@ -18,9 +18,33 @@ package xds
 
 import (
 	"context"
+	"fmt"
+
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/peer"
 )
 
 func (s *DiscoveryServer) authenticate(ctx context.Context) ([]string, error) {
-	// TODO
-	return nil, nil
+	p, ok := peer.FromContext(ctx)
+	if !ok || p.AuthInfo == nil {
+		return nil, nil
+	}
+	tlsInfo, ok := p.AuthInfo.(credentials.TLSInfo)
+	if !ok {
+		return nil, nil
+	}
+	if len(tlsInfo.State.VerifiedChains) == 0 {
+		return nil, fmt.Errorf("xDS client certificate was not verified")
+	}
+	leaf := tlsInfo.State.VerifiedChains[0][0]
+	identities := make([]string, 0, len(leaf.URIs))
+	for _, uri := range leaf.URIs {
+		if uri != nil {
+			identities = append(identities, uri.String())
+		}
+	}
+	if len(identities) == 0 {
+		return nil, fmt.Errorf("xDS client certificate has no URI SAN identity")
+	}
+	return identities, nil
 }

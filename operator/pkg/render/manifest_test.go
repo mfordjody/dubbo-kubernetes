@@ -365,7 +365,7 @@ func TestGenerateManifestEastWestGatewayConfig(t *testing.T) {
 		"values.global.multicluster.eastWestGateway.enabled=true",
 		"values.global.multicluster.eastWestGateway.serviceType=NodePort",
 		"values.global.multicluster.eastWestGateway.port=15443",
-		"values.global.multicluster.eastWestGateway.targetPort=15080",
+		"values.global.multicluster.eastWestGateway.targetPort=25080",
 		"values.global.multicluster.eastWestGateway.nodePort=32443",
 		"values.global.multicluster.eastWestGateway.xdsAddress=http://192.168.15.164:32010",
 		"values.global.multicluster.eastWestGateway.gateways[0].clusterName=remote",
@@ -380,8 +380,8 @@ func TestGenerateManifestEastWestGatewayConfig(t *testing.T) {
 	if got := gateway.GetAnnotations()["gateway.dubbo.apache.org/service-type"]; got != "NodePort" {
 		t.Fatalf("east-west gateway service-type annotation = %q, want NodePort", got)
 	}
-	if got := gateway.GetAnnotations()["gateway.dubbo.apache.org/target-port"]; got != "15080" {
-		t.Fatalf("east-west gateway target-port annotation = %q, want 15080", got)
+	if got := gateway.GetAnnotations()["gateway.dubbo.apache.org/target-port"]; got != "25080" {
+		t.Fatalf("east-west gateway target-port annotation = %q, want 25080", got)
 	}
 	if got := gateway.GetAnnotations()["gateway.dubbo.apache.org/node-port"]; got != "32443" {
 		t.Fatalf("east-west gateway node-port annotation = %q, want 32443", got)

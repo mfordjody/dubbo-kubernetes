@@ -183,7 +183,7 @@ func buildHTTPRoute(node *model.Proxy, push *model.PushContext, routeName string
 	gatewayListenerPort := parsedPort
 	var gatewayName, gatewayNamespace string
 	// Resolve the listener's Service port from the generated Gateway Service.
-	// dxgate binds the Service targetPort (15080 by default), while Gateway API
+	// dxgate binds the Service targetPort (25080 by default), while Gateway API
 	// parentRefs and HTTPRoutes refer to the public listener port (for example 80).
 	for _, st := range node.ServiceTargets {
 		if st.Service == nil {

@@ -112,7 +112,7 @@ func (n *NodeMetaProxyConfig) UnmarshalJSON(data []byte) error {
 
 	// Convert ClusterName from string to oneof object if needed
 	if clusterNameStr, ok := raw["ClusterName"].(string); ok {
-		// Convert string "dubbo-proxy" to oneof object {"ServiceCluster": "dubbo-proxy"}
+		// Convert a string service cluster to its oneof object representation.
 		raw["ClusterName"] = map[string]any{"ServiceCluster": clusterNameStr}
 	}
 

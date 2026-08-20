@@ -46,9 +46,6 @@ const (
 	InherentGRPCKeepaliveTimeout                = "10s"
 	InherentGRPCConfigFileName                  = "dubbo-grpc-xds.json"
 	InherentGRPCConfigPath                      = InherentXDSMountPath + "/" + InherentGRPCConfigFileName
-	// InherentGatewayInboundPort is the managed dxgate listener. Application
-	// workloads keep their own declared ports in proxyless mode.
-	InherentGatewayInboundPort = 15080
 )
 
 var InherentInjectTemplatesAnnoName = annotation.OrgApacheDubboInjectTemplates.Name

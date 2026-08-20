@@ -19,12 +19,11 @@ package v1
 import "github.com/apache/dubbo-kubernetes/pkg/model"
 
 const (
-	ClusterType    = model.ClusterType
-	ListenerType   = model.ListenerType
-	EndpointType   = model.EndpointType
-	RouteType      = model.RouteType
-	SecretType     = model.SecretType
-	HealthInfoType = model.HealthInfoType
+	ClusterType  = model.ClusterType
+	ListenerType = model.ListenerType
+	EndpointType = model.EndpointType
+	RouteType    = model.RouteType
+	SecretType   = model.SecretType
 )
 
 func GetShortType(typeURL string) string {

@@ -339,12 +339,12 @@ func TestGatewayInboundTargetPortIncludesActivationRoutes(t *testing.T) {
 			Service: activator,
 			Port: model.ServiceInstancePort{
 				ServicePort: activator.Ports[0],
-				TargetPort:  15080,
+				TargetPort:  25080,
 			},
 		}},
 	}
 
-	rc := buildHTTPRoute(proxy, push, "15080")
+	rc := buildHTTPRoute(proxy, push, "25080")
 	if rc == nil {
 		t.Fatal("buildHTTPRoute() returned nil")
 	}

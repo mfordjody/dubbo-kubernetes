@@ -107,7 +107,7 @@ func TestColdActivationRewritesInherentEDSAndSwitchesBack(t *testing.T) {
 	index := model.NewEndpointIndex(model.DisabledCache{})
 	index.UpdateServiceEndpoints(model.ShardKey{}, string(activatorHost), "app", []*model.DubboEndpoint{{
 		Addresses:       []string{"10.0.0.9"},
-		EndpointPort:    15080,
+		EndpointPort:    25080,
 		ServicePortName: "http",
 		HealthStatus:    model.Healthy,
 	}}, false)
@@ -118,8 +118,8 @@ func TestColdActivationRewritesInherentEDSAndSwitchesBack(t *testing.T) {
 	if got := firstEndpointAddress(t, cold); got != "10.0.0.9" {
 		t.Fatalf("cold endpoint address = %q, want Activator 10.0.0.9", got)
 	}
-	if got := firstEndpointPort(t, cold); got != 15080 {
-		t.Fatalf("cold endpoint port = %d, want Activator inbound 15080", got)
+	if got := firstEndpointPort(t, cold); got != 25080 {
+		t.Fatalf("cold endpoint port = %d, want Activator inbound 25080", got)
 	}
 	if cold.GetClusterName() != clusterName {
 		t.Fatalf("cold cluster name = %q, want original target %q", cold.GetClusterName(), clusterName)
@@ -157,7 +157,7 @@ func TestColdActivationDoesNotRewriteRouterEDS(t *testing.T) {
 	index := model.NewEndpointIndex(model.DisabledCache{})
 	index.UpdateServiceEndpoints(model.ShardKey{}, string(activatorHost), "app", []*model.DubboEndpoint{{
 		Addresses:       []string{"10.0.0.9"},
-		EndpointPort:    15080,
+		EndpointPort:    25080,
 		ServicePortName: "http",
 		HealthStatus:    model.Healthy,
 	}}, false)
@@ -191,7 +191,7 @@ func TestColdActivationRequiresDeclaredBackendIdentity(t *testing.T) {
 	index := model.NewEndpointIndex(model.DisabledCache{})
 	index.UpdateServiceEndpoints(model.ShardKey{}, string(activatorHost), "app", []*model.DubboEndpoint{{
 		Addresses:       []string{"10.0.0.9"},
-		EndpointPort:    15080,
+		EndpointPort:    25080,
 		ServicePortName: "http",
 		HealthStatus:    model.Healthy,
 	}}, false)

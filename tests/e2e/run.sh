@@ -518,7 +518,7 @@ if [[ "${ACTIVATION_E2E}" == "1" ]]; then
       "${KUBECTL[@]}" get --raw \
         "/api/v1/namespaces/${APP_NS}/pods/${pod}:26021/proxy/debug/config" \
         | jq -e '.listeners[]
-          | select(.bind == "0.0.0.0:15080")
+          | select(.bind == "0.0.0.0:25080")
           | .virtual_hosts[]
           | select(.name == "activation|payment.e2e.svc.cluster.local|8080")' \
         >/dev/null \

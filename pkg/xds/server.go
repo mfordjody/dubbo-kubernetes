@@ -174,10 +174,6 @@ func Receive(ctx ConnectionContext) {
 			return
 		}
 		if firstRequest {
-			if req.TypeUrl == model.HealthInfoType {
-				xdsLog.Warnf("%q %s send health check probe before normal xDS request", con.peerAddr, con.conID)
-				continue
-			}
 			firstRequest = false
 			if req.Node == nil || req.Node.Id == "" {
 				con.errorChan <- status.New(codes.InvalidArgument, "missing node information").Err()

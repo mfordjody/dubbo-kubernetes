@@ -44,7 +44,7 @@ func NewListener(path string) (net.Listener, error) {
 		return nil, fmt.Errorf("failed to listen on unix socket %q: %v", path, err)
 	}
 
-	// Update file permission so that dubbo-proxy has permission to access it.
+	// Allow the local data-plane consumer to access the socket.
 	if _, err := os.Stat(path); err != nil {
 		return nil, fmt.Errorf("uds file %q doesn't exist", path)
 	}

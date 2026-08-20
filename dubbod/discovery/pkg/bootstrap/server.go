@@ -36,6 +36,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/keycertbundle"
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/model"
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/networking/core"
+	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/networking/grpcgen"
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/server"
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/serviceregistry/aggregate"
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/serviceregistry/provider"
@@ -242,6 +243,7 @@ func NewServer(args *DubboArgs, initFuncs ...func(*Server)) (*Server, error) {
 	}
 
 	InitGenerators(s.XDSServer, configGen)
+	s.initSDSServer()
 
 	if err := s.initManagement(); err != nil {
 		return nil, fmt.Errorf("error initializing management API: %v", err)
@@ -708,8 +710,6 @@ func (s *Server) initControllers(args *DubboArgs) error {
 
 	s.initMulticluster(args)
 
-	s.initSDSServer()
-
 	if err := s.initConfigController(args); err != nil {
 		return fmt.Errorf("error initializing config controller: %v", err)
 	}
@@ -840,11 +840,10 @@ func (s *Server) initSDSServer() {
 		return
 	}
 	if !features.EnableXDSIdentityCheck {
-		// Make sure we have security
-		log.Warnf("skipping Kubernetes credential reader; DUBBO_ENABLE_XDS_IDENTITY_CHECK must be set to true for this feature.")
+		log.Warnf("skipping SDS registration; DUBBO_ENABLE_XDS_IDENTITY_CHECK must be set to true")
 		return
 	}
-	// TODO ConfigUpdated Multicluster get secret and configmap
+	s.XDSServer.Generators["grpc/"+sec_model.SecretType] = grpcgen.NewSecretGenerator(s.kubeClient.Kube())
 }
 
 // isK8SSigning returns whether K8S (as a RA) is used to sign certs instead of private keys known by Dubbod
