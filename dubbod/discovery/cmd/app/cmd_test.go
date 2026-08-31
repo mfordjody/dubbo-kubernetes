@@ -25,6 +25,27 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/log"
 )
 
+func TestRootCommandIntrospectionFlagsHaveNoLegacyIdentifiers(t *testing.T) {
+	root := NewRootCommand()
+	execute, _, err := root.Find([]string{"execute"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	usages := execute.PersistentFlags().FlagUsages()
+	lower := strings.ToLower(usages)
+	for _, banned := range []string{"ctrl" + "z", "control" + "z"} {
+		if strings.Contains(lower, banned) {
+			t.Fatalf("execute flags still contain %q:\n%s", banned, usages)
+		}
+	}
+	if execute.PersistentFlags().Lookup("introspection_port") == nil {
+		t.Fatalf("missing introspection_port; flags=\n%s", usages)
+	}
+	if execute.PersistentFlags().Lookup("introspection_address") == nil {
+		t.Fatalf("missing introspection_address; flags=\n%s", usages)
+	}
+}
+
 func TestRootCommandRegistersRenamedCommands(t *testing.T) {
 	root := NewRootCommand()
 	commands := map[string]bool{}

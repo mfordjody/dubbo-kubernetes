@@ -21,7 +21,7 @@ import (
 
 	kubecontroller "github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/serviceregistry/kube/controller"
 	"github.com/apache/dubbo-kubernetes/pkg/config/constants"
-	"github.com/apache/dubbo-kubernetes/pkg/ctrlz"
+	"github.com/apache/dubbo-kubernetes/pkg/introspection"
 	"github.com/apache/dubbo-kubernetes/pkg/keepalive"
 	"github.com/apache/dubbo-kubernetes/pkg/kube/krt"
 )
@@ -39,16 +39,16 @@ type InjectionOptions struct {
 }
 
 type DubboArgs struct {
-	ServerOptions    DiscoveryServerOptions
-	RegistryOptions  RegistryOptions
-	InjectionOptions InjectionOptions
-	MeshConfigFile   string
-	PodName          string
-	Namespace        string
-	CtrlZOptions     *ctrlz.Options
-	KeepaliveOptions *keepalive.Options
-	KrtDebugger      *krt.DebugHandler `json:"-"`
-	Revision         string
+	ServerOptions        DiscoveryServerOptions
+	RegistryOptions      RegistryOptions
+	InjectionOptions     InjectionOptions
+	MeshConfigFile       string
+	PodName              string
+	Namespace            string
+	IntrospectionOptions *introspection.Options
+	KeepaliveOptions     *keepalive.Options
+	KrtDebugger          *krt.DebugHandler `json:"-"`
+	Revision             string
 }
 
 type DiscoveryServerOptions struct {

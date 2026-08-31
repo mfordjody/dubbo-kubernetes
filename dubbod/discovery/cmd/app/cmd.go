@@ -24,7 +24,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/serviceregistry/provider"
 	"github.com/apache/dubbo-kubernetes/pkg/cmd"
 	"github.com/apache/dubbo-kubernetes/pkg/config/constants"
-	"github.com/apache/dubbo-kubernetes/pkg/ctrlz"
+	"github.com/apache/dubbo-kubernetes/pkg/introspection"
 	dubbolog "github.com/apache/dubbo-kubernetes/pkg/log"
 	"github.com/spf13/cobra"
 )
@@ -106,7 +106,7 @@ func newExecuteCommand() *cobra.Command {
 
 func addFlags(c *cobra.Command) {
 	serverArgs = bootstrap.NewDubboArgs(func(p *bootstrap.DubboArgs) {
-		p.CtrlZOptions = ctrlz.DefaultOptions()
+		p.IntrospectionOptions = introspection.DefaultOptions()
 		p.InjectionOptions = bootstrap.InjectionOptions{
 			InjectionDirectory: "./var/lib/dubbo/inject",
 		}
@@ -176,7 +176,7 @@ func addFlags(c *cobra.Command) {
 	c.PersistentFlags().StringToStringVar(&serverArgs.RegistryOptions.KubeOptions.ClusterAliases, "clusterAliases", map[string]string{},
 		"Alias names for clusters. Example: alias1=cluster1,alias2=cluster2")
 
-	serverArgs.CtrlZOptions.AttachCobraFlags(c)
+	serverArgs.IntrospectionOptions.AttachCobraFlags(c)
 
 	serverArgs.KeepaliveOptions.AttachCobraFlags(c)
 }

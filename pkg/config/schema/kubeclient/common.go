@@ -46,7 +46,7 @@ type ClientGetter interface {
 	// Dynamic client.
 	Dynamic() dynamic.Interface
 
-	// Dubbo returns the Istio kube client.
+	// Dubbo returns the Dubbo kube client.
 	Dubbo() dubboclient.Interface
 
 	// Metadata returns the Metadata kube client.

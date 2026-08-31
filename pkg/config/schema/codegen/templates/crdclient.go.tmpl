@@ -91,7 +91,7 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 				return nil, err
 		}
 		return c.{{.ClientGetter}}().{{ .ClientGroupPath }}().{{ .ClientTypePath }}({{if not .Resource.ClusterScoped}}orig.Namespace{{end}}).
-				Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "pilot-discovery"})
+				Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "dubbod"})
 	{{- end }}
 {{- end }}
 	default:

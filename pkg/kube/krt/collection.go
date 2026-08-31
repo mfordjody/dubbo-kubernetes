@@ -1,8 +1,10 @@
-// Copyright Istio Authors
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+// Licensed to the Apache Software Foundation (ASF) under one or more
+// contributor license agreements.  See the NOTICE file distributed with
+// this work for additional information regarding copyright ownership.
+// The ASF licenses this file to You under the Apache License, Version 2.0
+// (the "License"); you may not use this file except in compliance with
+// the License.  You may obtain a copy of the License at
 //
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
@@ -19,7 +21,7 @@ import (
 	"sync"
 
 	"github.com/apache/dubbo-kubernetes/pkg/kube/controllers"
-	istiolog "github.com/apache/dubbo-kubernetes/pkg/log"
+	dubbolog "github.com/apache/dubbo-kubernetes/pkg/log"
 	"github.com/apache/dubbo-kubernetes/pkg/maps"
 	"github.com/apache/dubbo-kubernetes/pkg/queue"
 	"github.com/apache/dubbo-kubernetes/pkg/slices"
@@ -186,7 +188,7 @@ type manyCollection[I, O any] struct {
 	parent Collection[I]
 
 	// log is a logger for the collection, with additional labels already added to identify it.
-	log *istiolog.Logger
+	log *dubbolog.Logger
 	// This can be acquired with blockNewEvents held, but only with strict ordering (mu inside blockNewEvents)
 	// mu protects all items grouped below(collectionState, dependencyState, indexes).
 	// This is acquired for reads and writes of data.

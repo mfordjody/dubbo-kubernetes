@@ -49,8 +49,8 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/mesh"
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/collections"
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/kind"
-	"github.com/apache/dubbo-kubernetes/pkg/ctrlz"
 	"github.com/apache/dubbo-kubernetes/pkg/filewatcher"
+	"github.com/apache/dubbo-kubernetes/pkg/introspection"
 	dubbokeepalive "github.com/apache/dubbo-kubernetes/pkg/keepalive"
 	kubelib "github.com/apache/dubbo-kubernetes/pkg/kube"
 	"github.com/apache/dubbo-kubernetes/pkg/kube/inject"
@@ -297,8 +297,8 @@ func NewServer(args *DubboArgs, initFuncs ...func(*Server)) (*Server, error) {
 
 	s.startCA(caOpts)
 
-	if args.CtrlZOptions != nil {
-		_, _ = ctrlz.Run(args.CtrlZOptions)
+	if args.IntrospectionOptions != nil {
+		_, _ = introspection.Run(args.IntrospectionOptions)
 	}
 
 	if s.kubeClient != nil {

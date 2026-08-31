@@ -133,7 +133,7 @@ func compactDubboArgs(args *DubboArgs) string {
 		formatQuotedField("kubeconfig", args.RegistryOptions.KubeConfig),
 		formatQuotedField("config_dir", args.RegistryOptions.FileDir),
 		formatStringField("injection_dir", args.InjectionOptions.InjectionDirectory),
-		formatStringField("ctrlz", ctrlzAddress(args)),
+		formatStringField("introspection", introspectionAddress(args)),
 		formatCompositeField("server", serverAddressSummary(args)),
 		formatCompositeField("kube", kubeOptionsSummary(args)),
 		formatCompositeField("keepalive", keepaliveSummary(args)),
@@ -142,11 +142,11 @@ func compactDubboArgs(args *DubboArgs) string {
 	return compactParts(parts...)
 }
 
-func ctrlzAddress(args *DubboArgs) string {
-	if args == nil || args.CtrlZOptions == nil {
+func introspectionAddress(args *DubboArgs) string {
+	if args == nil || args.IntrospectionOptions == nil {
 		return ""
 	}
-	return fmt.Sprintf("%s:%d", args.CtrlZOptions.Address, args.CtrlZOptions.Port)
+	return args.IntrospectionOptions.ListenAddress()
 }
 
 func serverAddressSummary(args *DubboArgs) string {
