@@ -14,21 +14,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package ctrlz
+package introspection
 
 import (
-	"fmt"
-	dubbolog "github.com/apache/dubbo-kubernetes/pkg/log"
-	"github.com/spf13/cobra"
 	"net"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
+
+	dubbolog "github.com/apache/dubbo-kubernetes/pkg/log"
+	"github.com/spf13/cobra"
 )
 
-var log = dubbolog.RegisterScope("ctrlz", "ctrlz debugging")
+var log = dubbolog.RegisterScope("introspection", "process introspection listener")
 
-const DefaultControlZPort = 9876
+const (
+	DefaultPort = 9876
+
+	PortFlagName    = "introspection_port"
+	AddressFlagName = "introspection_address"
+
+	portFlagHelp    = "The IP port to use for the process introspection listener"
+	addressFlagHelp = "The IP address to listen on for the process introspection listener. Use '*' to indicate all addresses."
+)
 
 type Options struct {
 	Port    uint16
@@ -42,18 +51,18 @@ type Server struct {
 }
 
 func (s *Server) listen() {
-	log.Infof("ControlZ available at %s", s.httpServer.Addr)
+	log.Infof("introspection available at %s", s.httpServer.Addr)
 	err := s.httpServer.Serve(s.listener)
-	log.Infof("ControlZ terminated: %v", err)
+	log.Infof("introspection terminated: %v", err)
 	s.shutdown.Done()
 }
 
 func (s *Server) Close() {
-	log.Info("Closing ControlZ")
+	log.Info("closing introspection")
 
 	if s.listener != nil {
 		if err := s.listener.Close(); err != nil {
-			log.Warnf("Error closing ControlZ: %v", err)
+			log.Warnf("error closing introspection: %v", err)
 		}
 		s.shutdown.Wait()
 	}
@@ -61,21 +70,28 @@ func (s *Server) Close() {
 
 func DefaultOptions() *Options {
 	return &Options{
-		Port:    DefaultControlZPort,
+		Port:    DefaultPort,
 		Address: "localhost",
 	}
 }
 
-func Run(o *Options) (*Server, error) {
+// ListenAddress is host:port the introspection listener binds, including
+// the wildcard-host form produced when Address is "*".
+func (o *Options) ListenAddress() string {
+	if o == nil {
+		return ""
+	}
 	addr := o.Address
 	if addr == "*" {
 		addr = ""
 	}
+	return net.JoinHostPort(addr, strconv.Itoa(int(o.Port)))
+}
 
-	// Canonicalize the address and resolve a dynamic port if necessary
-	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", addr, o.Port))
+func Run(o *Options) (*Server, error) {
+	listener, err := net.Listen("tcp", o.ListenAddress())
 	if err != nil {
-		log.Errorf("Unable to start ControlZ: %v", err)
+		log.Errorf("unable to start introspection: %v", err)
 		return nil, err
 	}
 
@@ -95,8 +111,6 @@ func Run(o *Options) (*Server, error) {
 }
 
 func (o *Options) AttachCobraFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().Uint16Var(&o.Port, "ctrlz_port", o.Port,
-		"The IP port to use for the ControlZ introspection facility")
-	cmd.PersistentFlags().StringVar(&o.Address, "ctrlz_address", o.Address,
-		"The IP Address to listen on for the ControlZ introspection facility. Use '*' to indicate all addresses.")
+	cmd.PersistentFlags().Uint16Var(&o.Port, PortFlagName, o.Port, portFlagHelp)
+	cmd.PersistentFlags().StringVar(&o.Address, AddressFlagName, o.Address, addressFlagHelp)
 }

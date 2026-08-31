@@ -293,7 +293,7 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 			return nil, err
 		}
 		return c.Dubbo().SecurityV1alpha3().AuthorizationPolicies(orig.Namespace).
-			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "pilot-discovery"})
+			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "dubbod"})
 	case gvk.BackendTLSPolicy:
 		oldRes := &sigsk8siogatewayapiapisv1.BackendTLSPolicy{
 			ObjectMeta: origMeta,
@@ -308,7 +308,7 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 			return nil, err
 		}
 		return c.GatewayAPI().GatewayV1().BackendTLSPolicies(orig.Namespace).
-			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "pilot-discovery"})
+			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "dubbod"})
 	case gvk.CircuitBreakerPolicy:
 		oldRes := &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.CircuitBreakerPolicy{
 			ObjectMeta: origMeta,
@@ -323,7 +323,7 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 			return nil, err
 		}
 		return c.Dubbo().NetworkingV1alpha3().CircuitBreakerPolicies(orig.Namespace).
-			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "pilot-discovery"})
+			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "dubbod"})
 	case gvk.DxgateService:
 		oldRes := &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.DxgateService{
 			ObjectMeta: origMeta,
@@ -338,7 +338,7 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 			return nil, err
 		}
 		return c.Dubbo().NetworkingV1alpha3().DxgateServices(orig.Namespace).
-			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "pilot-discovery"})
+			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "dubbod"})
 	case gvk.FaultInjectionPolicy:
 		oldRes := &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.FaultInjectionPolicy{
 			ObjectMeta: origMeta,
@@ -353,7 +353,7 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 			return nil, err
 		}
 		return c.Dubbo().NetworkingV1alpha3().FaultInjectionPolicies(orig.Namespace).
-			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "pilot-discovery"})
+			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "dubbod"})
 	case gvk.GatewayClass:
 		oldRes := &sigsk8siogatewayapiapisv1.GatewayClass{
 			ObjectMeta: origMeta,
@@ -368,7 +368,7 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 			return nil, err
 		}
 		return c.GatewayAPI().GatewayV1().GatewayClasses().
-			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "pilot-discovery"})
+			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "dubbod"})
 	case gvk.HTTPRoute:
 		oldRes := &sigsk8siogatewayapiapisv1.HTTPRoute{
 			ObjectMeta: origMeta,
@@ -383,7 +383,7 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 			return nil, err
 		}
 		return c.GatewayAPI().GatewayV1().HTTPRoutes(orig.Namespace).
-			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "pilot-discovery"})
+			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "dubbod"})
 	case gvk.KubernetesGateway:
 		oldRes := &sigsk8siogatewayapiapisv1.Gateway{
 			ObjectMeta: origMeta,
@@ -398,7 +398,7 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 			return nil, err
 		}
 		return c.GatewayAPI().GatewayV1().Gateways(orig.Namespace).
-			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "pilot-discovery"})
+			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "dubbod"})
 	case gvk.PeerAuthentication:
 		oldRes := &apigithubcomapachedubbokubernetesapisecurityv1alpha3.PeerAuthentication{
 			ObjectMeta: origMeta,
@@ -413,7 +413,7 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 			return nil, err
 		}
 		return c.Dubbo().SecurityV1alpha3().PeerAuthentications(orig.Namespace).
-			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "pilot-discovery"})
+			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "dubbod"})
 	case gvk.ReferenceGrant:
 		oldRes := &sigsk8siogatewayapiapisv1beta1.ReferenceGrant{
 			ObjectMeta: origMeta,
@@ -428,7 +428,7 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 			return nil, err
 		}
 		return c.GatewayAPI().GatewayV1beta1().ReferenceGrants(orig.Namespace).
-			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "pilot-discovery"})
+			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "dubbod"})
 	case gvk.RequestAuthentication:
 		oldRes := &apigithubcomapachedubbokubernetesapisecurityv1alpha3.RequestAuthentication{
 			ObjectMeta: origMeta,
@@ -443,7 +443,7 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 			return nil, err
 		}
 		return c.Dubbo().SecurityV1alpha3().RequestAuthentications(orig.Namespace).
-			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "pilot-discovery"})
+			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "dubbod"})
 	case gvk.ServiceActivationPolicy:
 		oldRes := &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.ServiceActivationPolicy{
 			ObjectMeta: origMeta,
@@ -458,7 +458,7 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 			return nil, err
 		}
 		return c.Dubbo().NetworkingV1alpha3().ServiceActivationPolicies(orig.Namespace).
-			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "pilot-discovery"})
+			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "dubbod"})
 	case gvk.ServiceEntry:
 		oldRes := &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.ServiceEntry{
 			ObjectMeta: origMeta,
@@ -473,7 +473,7 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 			return nil, err
 		}
 		return c.Dubbo().NetworkingV1alpha3().ServiceEntries(orig.Namespace).
-			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "pilot-discovery"})
+			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "dubbod"})
 	case gvk.Telemetry:
 		oldRes := &apigithubcomapachedubbokubernetesapitelemetryv1alpha3.Telemetry{
 			ObjectMeta: origMeta,
@@ -488,7 +488,7 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 			return nil, err
 		}
 		return c.Dubbo().TelemetryV1alpha3().Telemetries(orig.Namespace).
-			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "pilot-discovery"})
+			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "dubbod"})
 	case gvk.WorkloadEntry:
 		oldRes := &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.WorkloadEntry{
 			ObjectMeta: origMeta,
@@ -503,7 +503,7 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 			return nil, err
 		}
 		return c.Dubbo().NetworkingV1alpha3().WorkloadEntries(orig.Namespace).
-			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "pilot-discovery"})
+			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "dubbod"})
 	default:
 		return nil, fmt.Errorf("unsupported type: %v", orig.GroupVersionKind)
 	}
