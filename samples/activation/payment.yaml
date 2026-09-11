@@ -48,7 +48,7 @@ spec:
     spec:
       containers:
         - name: payment
-          image: docker.io/kdubbo/examples-payment:latest
+          image: docker.io/dubml/examples-payment:latest
           ports:
             - containerPort: 8080
           readinessProbe:

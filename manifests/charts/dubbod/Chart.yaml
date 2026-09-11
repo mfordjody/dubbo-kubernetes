@@ -32,5 +32,5 @@ maintainers:
     email: zhongxjian@apache.org
 sources:
   - https://dubbo.apache.org
-  - https://github.com/kdubbo
+  - https://github.com/dubml
   - https://github.com/apache/dubbo-kubernetes

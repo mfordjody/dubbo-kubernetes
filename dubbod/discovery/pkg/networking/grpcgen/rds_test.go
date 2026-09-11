@@ -31,8 +31,8 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/collections"
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/gvk"
 	"github.com/apache/dubbo-kubernetes/pkg/kube/krt"
-	networking "github.com/kdubbo/api/networking/v1alpha3"
-	route "github.com/kdubbo/xds-api/route/v1"
+	networking "github.com/dubml/api/networking/v1alpha3"
+	route "github.com/dubml/xds-api/route/v1"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	gatewayv1 "sigs.k8s.io/gateway-api/apis/v1"
@@ -270,14 +270,14 @@ func TestGatewayRDSRoutesActivationAuthorityToOriginalCluster(t *testing.T) {
 	activator := newRDSTestService(
 		model.ActivationGatewayServiceName,
 		"app",
-		"dxgate-gateway.app.svc.cluster.local",
+		"transit-gateway.app.svc.cluster.local",
 		80,
 	)
 	push := newRDSTestPushContext(t, []config.Config{
 		newActivationPolicyConfig("payment", "app", "payment"),
 	}, []*model.Service{target, activator})
 	proxy := &model.Proxy{
-		ID:              "router~10.0.0.9~dxgate-gateway.app~app.svc.cluster.local",
+		ID:              "router~10.0.0.9~transit-gateway.app~app.svc.cluster.local",
 		Type:            model.Router,
 		ConfigNamespace: "app",
 		ServiceTargets: []model.ServiceTarget{{
@@ -289,7 +289,7 @@ func TestGatewayRDSRoutesActivationAuthorityToOriginalCluster(t *testing.T) {
 		}},
 	}
 
-	rc := buildHTTPRoute(proxy, push, "outbound|80||dxgate-gateway.app.svc.cluster.local")
+	rc := buildHTTPRoute(proxy, push, "outbound|80||transit-gateway.app.svc.cluster.local")
 	if rc == nil {
 		t.Fatal("buildHTTPRoute() returned nil")
 	}
@@ -322,17 +322,17 @@ func TestGatewayInboundTargetPortIncludesActivationRoutes(t *testing.T) {
 	activator := newRDSTestService(
 		model.ActivationGatewayServiceName,
 		"app",
-		"dxgate-gateway.app.svc.cluster.local",
+		"transit-gateway.app.svc.cluster.local",
 		80,
 	)
 	activator.Attributes.Labels = map[string]string{
-		"gateway.networking.k8s.io/gateway-name": "dxgate-gateway",
+		"gateway.networking.k8s.io/gateway-name": "transit-gateway",
 	}
 	push := newRDSTestPushContext(t, []config.Config{
 		newActivationPolicyConfig("payment", "app", "payment"),
 	}, []*model.Service{target, activator})
 	proxy := &model.Proxy{
-		ID:              "dxgate-gateway.app",
+		ID:              "transit-gateway.app",
 		Type:            model.Router,
 		ConfigNamespace: "app",
 		ServiceTargets: []model.ServiceTarget{{
@@ -356,16 +356,16 @@ func TestGatewayInboundTargetPortIncludesActivationRoutes(t *testing.T) {
 	t.Fatalf("activation virtual host not found on Gateway targetPort: %v", rc.GetVirtualHosts())
 }
 
-func TestBuildAgentConfigCompilesDxgateServiceHTTPRoute(t *testing.T) {
-	routeConfig := newDxgateHTTPRouteConfig("anthropic", "app", "/anthropic", "/v1/chat/completions")
+func TestBuildAgentConfigCompilesTransitServiceHTTPRoute(t *testing.T) {
+	routeConfig := newTransitHTTPRouteConfig("anthropic", "app", "/anthropic", "/v1/chat/completions")
 	serviceConfig := config.Config{
 		Meta: config.Meta{
-			GroupVersionKind: gvk.DxgateService,
+			GroupVersionKind: gvk.TransitService,
 			Name:             "anthropic",
 			Namespace:        "app",
 		},
-		Spec: &networking.DxgateService{
-			Service: &networking.DxgateService_Ai{Ai: &networking.AIService{
+		Spec: &networking.TransitService{
+			Service: &networking.TransitService_Ai{Ai: &networking.AIService{
 				Provider: &networking.AIProvider{
 					Provider: &networking.AIProvider_Anthropic{Anthropic: &networking.AnthropicProvider{
 						Model: "claude-test",
@@ -375,7 +375,7 @@ func TestBuildAgentConfigCompilesDxgateServiceHTTPRoute(t *testing.T) {
 				Models:   []string{"claude-test"},
 				Endpoint: "http://anthropic-mock.app.svc:8080",
 			}},
-			Policies: &networking.DxgateServicePolicies{
+			Policies: &networking.TransitServicePolicies{
 				Timeout: durationpb.New(5 * time.Second),
 				Retry:   &networking.RetryPolicy{Attempts: 2, StatusCodes: []uint32{503}},
 			},
@@ -416,15 +416,15 @@ func TestBuildAgentConfigCompilesDxgateServiceHTTPRoute(t *testing.T) {
 }
 
 func TestBuildAgentConfigExpandsMCPFederationTargets(t *testing.T) {
-	routeConfig := newDxgateHTTPRouteConfig("company-tools", "app", "/mcp", "")
+	routeConfig := newTransitHTTPRouteConfig("company-tools", "app", "/mcp", "")
 	serviceConfig := config.Config{
 		Meta: config.Meta{
-			GroupVersionKind: gvk.DxgateService,
+			GroupVersionKind: gvk.TransitService,
 			Name:             "company-tools",
 			Namespace:        "app",
 		},
-		Spec: &networking.DxgateService{
-			Service: &networking.DxgateService_Mcp{Mcp: &networking.MCPService{
+		Spec: &networking.TransitService{
+			Service: &networking.TransitService_Mcp{Mcp: &networking.MCPService{
 				Targets: []*networking.MCPTarget{
 					{
 						Name: "orders",
@@ -481,9 +481,9 @@ func newRDSTestPushContext(t *testing.T, configs []config.Config, services []*mo
 	return push
 }
 
-func newDxgateHTTPRouteConfig(backendName, namespace, path, rewrite string) config.Config {
-	group := gatewayv1.Group(dxgateServiceGroup)
-	kind := gatewayv1.Kind(dxgateServiceKind)
+func newTransitHTTPRouteConfig(backendName, namespace, path, rewrite string) config.Config {
+	group := gatewayv1.Group(transitServiceGroup)
+	kind := gatewayv1.Kind(transitServiceKind)
 	pathType := gatewayv1.PathMatchPathPrefix
 	method := gatewayv1.HTTPMethodPost
 	weight := int32(100)

@@ -27,12 +27,12 @@ spec:
   restartPolicy: Never
   initContainers:
     - name: wait-for-bootstrap
-      image: kdubbo/activation-e2e:latest
+      image: dubml/activation-e2e:latest
       imagePullPolicy: IfNotPresent
       args: ["sleep"]
   containers:
     - name: client
-      image: kdubbo/activation-client:latest
+      image: dubml/activation-client:latest
       imagePullPolicy: IfNotPresent
       args:
         - grpc-outbound

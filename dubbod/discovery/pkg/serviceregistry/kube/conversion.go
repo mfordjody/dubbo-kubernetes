@@ -23,7 +23,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/constants"
 	"github.com/apache/dubbo-kubernetes/pkg/config/host"
 	"github.com/apache/dubbo-kubernetes/pkg/spiffe"
-	meshv1alpha1 "github.com/kdubbo/api/mesh/v1alpha1"
+	meshv1alpha1 "github.com/dubml/api/mesh/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 )
 

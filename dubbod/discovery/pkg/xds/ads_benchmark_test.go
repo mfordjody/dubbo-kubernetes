@@ -31,8 +31,8 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/kube/krt"
 	dubbolog "github.com/apache/dubbo-kubernetes/pkg/log"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
-	endpoint "github.com/kdubbo/xds-api/endpoint/v1"
-	discovery "github.com/kdubbo/xds-api/service/discovery/v1"
+	endpoint "github.com/dubml/xds-api/endpoint/v1"
+	discovery "github.com/dubml/xds-api/service/discovery/v1"
 )
 
 type inherentPushScale struct {

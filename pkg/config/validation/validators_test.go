@@ -25,10 +25,10 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"github.com/apache/dubbo-kubernetes/pkg/config"
-	networking "github.com/kdubbo/api/networking/v1alpha3"
-	security "github.com/kdubbo/api/security/v1alpha3"
-	telemetry "github.com/kdubbo/api/telemetry/v1alpha3"
-	typev1alpha3 "github.com/kdubbo/api/type/v1alpha3"
+	networking "github.com/dubml/api/networking/v1alpha3"
+	security "github.com/dubml/api/security/v1alpha3"
+	telemetry "github.com/dubml/api/telemetry/v1alpha3"
+	typev1alpha3 "github.com/dubml/api/type/v1alpha3"
 )
 
 func makeConfig(spec config.Spec) config.Config {
@@ -423,10 +423,10 @@ func TestValidateFaultInjectionPolicy(t *testing.T) {
 	}
 }
 
-func TestValidateDxgateService(t *testing.T) {
-	openAI := func() *networking.DxgateService {
-		return &networking.DxgateService{
-			Service: &networking.DxgateService_Ai{Ai: &networking.AIService{
+func TestValidateTransitService(t *testing.T) {
+	openAI := func() *networking.TransitService {
+		return &networking.TransitService{
+			Service: &networking.TransitService_Ai{Ai: &networking.AIService{
 				Provider: &networking.AIProvider{
 					Provider: &networking.AIProvider_Openai{Openai: &networking.OpenAIProvider{}},
 				},
@@ -435,9 +435,9 @@ func TestValidateDxgateService(t *testing.T) {
 			}},
 		}
 	}
-	mcp := func() *networking.DxgateService {
-		return &networking.DxgateService{
-			Service: &networking.DxgateService_Mcp{Mcp: &networking.MCPService{
+	mcp := func() *networking.TransitService {
+		return &networking.TransitService{
+			Service: &networking.TransitService_Mcp{Mcp: &networking.MCPService{
 				Targets: []*networking.MCPTarget{{
 					Name: "tools",
 					Static: &networking.StaticBackend{
@@ -448,9 +448,9 @@ func TestValidateDxgateService(t *testing.T) {
 			}},
 		}
 	}
-	a2a := func() *networking.DxgateService {
-		return &networking.DxgateService{
-			Service: &networking.DxgateService_A2A{A2A: &networking.A2AService{
+	a2a := func() *networking.TransitService {
+		return &networking.TransitService{
+			Service: &networking.TransitService_A2A{A2A: &networking.A2AService{
 				BackendRef: &networking.BackendReference{Name: "review-agent"},
 				Port:       9090,
 			}},
@@ -458,23 +458,23 @@ func TestValidateDxgateService(t *testing.T) {
 	}
 	cases := []struct {
 		name    string
-		spec    *networking.DxgateService
+		spec    *networking.TransitService
 		wantErr bool
 	}{
 		{name: "openai", spec: openAI()},
 		{name: "mcp", spec: mcp()},
 		{name: "a2a", spec: a2a()},
-		{name: "missing service", spec: &networking.DxgateService{}, wantErr: true},
+		{name: "missing service", spec: &networking.TransitService{}, wantErr: true},
 		{
 			name: "ai provider missing",
-			spec: &networking.DxgateService{
-				Service: &networking.DxgateService_Ai{Ai: &networking.AIService{}},
+			spec: &networking.TransitService{
+				Service: &networking.TransitService_Ai{Ai: &networking.AIService{}},
 			},
 			wantErr: true,
 		},
 		{
 			name: "bad ai endpoint",
-			spec: func() *networking.DxgateService {
+			spec: func() *networking.TransitService {
 				s := openAI()
 				s.GetAi().Endpoint = "llm:8080"
 				return s
@@ -483,14 +483,14 @@ func TestValidateDxgateService(t *testing.T) {
 		},
 		{
 			name: "empty mcp targets",
-			spec: &networking.DxgateService{
-				Service: &networking.DxgateService_Mcp{Mcp: &networking.MCPService{}},
+			spec: &networking.TransitService{
+				Service: &networking.TransitService_Mcp{Mcp: &networking.MCPService{}},
 			},
 			wantErr: true,
 		},
 		{
 			name: "duplicate mcp target",
-			spec: func() *networking.DxgateService {
+			spec: func() *networking.TransitService {
 				s := mcp()
 				s.GetMcp().Targets = append(s.GetMcp().Targets, s.GetMcp().Targets[0])
 				return s
@@ -499,7 +499,7 @@ func TestValidateDxgateService(t *testing.T) {
 		},
 		{
 			name: "a2a ambiguous target",
-			spec: func() *networking.DxgateService {
+			spec: func() *networking.TransitService {
 				s := a2a()
 				s.GetA2A().Host = "agent.example.com"
 				return s
@@ -508,9 +508,9 @@ func TestValidateDxgateService(t *testing.T) {
 		},
 		{
 			name: "bad policy",
-			spec: func() *networking.DxgateService {
+			spec: func() *networking.TransitService {
 				s := openAI()
-				s.Policies = &networking.DxgateServicePolicies{
+				s.Policies = &networking.TransitServicePolicies{
 					Retry:   &networking.RetryPolicy{Attempts: 0, StatusCodes: []uint32{200}},
 					Timeout: durationpb.New(-time.Second),
 				}
@@ -521,7 +521,7 @@ func TestValidateDxgateService(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := ValidateDxgateService(makeConfig(tc.spec))
+			_, err := ValidateTransitService(makeConfig(tc.spec))
 			if (err != nil) != tc.wantErr {
 				t.Fatalf("got err=%v, wantErr=%v", err, tc.wantErr)
 			}

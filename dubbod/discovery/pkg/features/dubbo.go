@@ -58,9 +58,9 @@ var (
 		"Gateway API controller name. dubbod will only reconcile Gateway API resources referencing a GatewayClass with this controller name").Get()
 	GatewayAPIDefaultGatewayClass = env.Register("DUBBO_GATEWAY_API_DEFAULT_GATEWAYCLASS_NAME", "dubbo",
 		"Name of the default GatewayClass").Get()
-	DxgateImage = env.Register("DUBBO_DXGATE_IMAGE", "kdubbo/dxgate:latest",
+	TransitImage = env.Register("DUBBO_TRANSIT_IMAGE", "dubml/transit:latest",
 		"Container image used for managed Dubbo Gateway API data-plane deployments").Get()
-	DxgateReplicas = env.Register("DUBBO_DXGATE_REPLICAS", 2,
+	TransitReplicas = env.Register("DUBBO_TRANSIT_REPLICAS", 2,
 		"Default replica count for managed Dubbo Gateway API data-plane deployments. Two or more keeps a"+
 			" gateway serving while one replica is drained; individual gateways override it with the"+
 			" gateway.dubbo.apache.org/replicas annotation").Get()

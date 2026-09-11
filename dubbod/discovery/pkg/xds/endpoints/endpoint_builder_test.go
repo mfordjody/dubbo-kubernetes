@@ -30,9 +30,9 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/gvk"
 	"github.com/apache/dubbo-kubernetes/pkg/kube/krt"
 	"github.com/apache/dubbo-kubernetes/pkg/kube/multicluster"
-	networking "github.com/kdubbo/api/networking/v1alpha3"
-	security "github.com/kdubbo/api/security/v1alpha3"
-	endpoint "github.com/kdubbo/xds-api/endpoint/v1"
+	networking "github.com/dubml/api/networking/v1alpha3"
+	security "github.com/dubml/api/security/v1alpha3"
+	endpoint "github.com/dubml/xds-api/endpoint/v1"
 )
 
 func TestBuildClusterLoadAssignmentKeepsAppPortWithoutDUBBOMutual(t *testing.T) {
@@ -88,7 +88,7 @@ func TestBuildClusterLoadAssignmentKeepsNativeAppPortWithStrictMTLS(t *testing.T
 
 func TestColdActivationRewritesInherentEDSAndSwitchesBack(t *testing.T) {
 	targetHost := host.Name("payment.app.svc.cluster.local")
-	activatorHost := host.Name("dxgate-gateway.app.svc.cluster.local")
+	activatorHost := host.Name("transit-gateway.app.svc.cluster.local")
 	target := newEndpointTestService("payment", "app", string(targetHost), 8080)
 	activator := newEndpointTestService(model.ActivationGatewayServiceName, "app", string(activatorHost), 80)
 	push := newEndpointTestPushContext(t, []config.Config{{
@@ -139,7 +139,7 @@ func TestColdActivationRewritesInherentEDSAndSwitchesBack(t *testing.T) {
 
 func TestColdActivationDoesNotRewriteRouterEDS(t *testing.T) {
 	targetHost := host.Name("payment.app.svc.cluster.local")
-	activatorHost := host.Name("dxgate-gateway.app.svc.cluster.local")
+	activatorHost := host.Name("transit-gateway.app.svc.cluster.local")
 	target := newEndpointTestService("payment", "app", string(targetHost), 8080)
 	activator := newEndpointTestService(model.ActivationGatewayServiceName, "app", string(activatorHost), 80)
 	push := newEndpointTestPushContext(t, []config.Config{{
@@ -173,7 +173,7 @@ func TestColdActivationDoesNotRewriteRouterEDS(t *testing.T) {
 
 func TestColdActivationRequiresDeclaredBackendIdentity(t *testing.T) {
 	targetHost := host.Name("payment.app.svc.cluster.local")
-	activatorHost := host.Name("dxgate-gateway.app.svc.cluster.local")
+	activatorHost := host.Name("transit-gateway.app.svc.cluster.local")
 	target := newEndpointTestService("payment", "app", string(targetHost), 8080)
 	activator := newEndpointTestService(model.ActivationGatewayServiceName, "app", string(activatorHost), 80)
 	push := newEndpointTestPushContext(t, []config.Config{{

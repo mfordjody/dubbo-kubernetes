@@ -25,7 +25,7 @@ import (
 	caerror "github.com/apache/dubbo-kubernetes/dubbod/security/pkg/pki/error"
 	"github.com/apache/dubbo-kubernetes/dubbod/security/pkg/pki/util"
 	"github.com/apache/dubbo-kubernetes/pkg/security"
-	pb "github.com/kdubbo/api/security/v1alpha3"
+	pb "github.com/dubml/api/security/v1alpha3"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

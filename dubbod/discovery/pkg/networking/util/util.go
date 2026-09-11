@@ -22,8 +22,8 @@ import (
 	"strings"
 
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/model"
-	core "github.com/kdubbo/xds-api/core/v1"
-	listener "github.com/kdubbo/xds-api/listener/v1"
+	core "github.com/dubml/xds-api/core/v1"
+	listener "github.com/dubml/xds-api/listener/v1"
 )
 
 const (

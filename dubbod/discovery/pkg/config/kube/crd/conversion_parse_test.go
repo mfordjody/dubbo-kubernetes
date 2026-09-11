@@ -19,7 +19,7 @@ import (
 	"testing"
 
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/gvk"
-	networking "github.com/kdubbo/api/networking/v1alpha3"
+	networking "github.com/dubml/api/networking/v1alpha3"
 )
 
 func TestParseInputsServiceEntryAndWorkloadEntry(t *testing.T) {

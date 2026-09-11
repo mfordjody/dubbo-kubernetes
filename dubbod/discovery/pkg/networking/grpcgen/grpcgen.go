@@ -22,7 +22,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/kind"
 	dubbolog "github.com/apache/dubbo-kubernetes/pkg/log"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
-	tlsv1 "github.com/kdubbo/xds-api/extensions/transport_sockets/tls/v1"
+	tlsv1 "github.com/dubml/xds-api/extensions/transport_sockets/tls/v1"
 )
 
 var log = dubbolog.RegisterScope("grpcgen", "xDS Generator for Inherent gRPC")

@@ -28,10 +28,10 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/gvk"
 	telemetryconfig "github.com/apache/dubbo-kubernetes/pkg/config/telemetry"
 	"github.com/apache/dubbo-kubernetes/pkg/kube/inject"
+	networking "github.com/dubml/api/networking/v1alpha3"
+	apitelemetry "github.com/dubml/api/telemetry/v1alpha3"
+	typeapi "github.com/dubml/api/type/v1alpha3"
 	"github.com/google/go-cmp/cmp"
-	networking "github.com/kdubbo/api/networking/v1alpha3"
-	apitelemetry "github.com/kdubbo/api/telemetry/v1alpha3"
-	typeapi "github.com/kdubbo/api/type/v1alpha3"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	corev1 "k8s.io/api/core/v1"
@@ -42,7 +42,7 @@ import (
 	gatewayv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
-func TestBuildDxgateRuntimeConfigFromHTTPRoute(t *testing.T) {
+func TestBuildTransitRuntimeConfigFromHTTPRoute(t *testing.T) {
 	pathType := gatewayv1.PathMatchPathPrefix
 	path := "/orders"
 	backendPort := gatewayv1.PortNumber(8080)
@@ -125,7 +125,7 @@ func TestBuildDxgateRuntimeConfigFromHTTPRoute(t *testing.T) {
 		},
 	}
 
-	raw, hash, err := buildDxgateRuntimeConfig(gw, []*gatewayv1.HTTPRoute{route}, nil, nil, nil, "cluster.local")
+	raw, hash, err := buildTransitRuntimeConfig(gw, []*gatewayv1.HTTPRoute{route}, nil, nil, nil, "cluster.local")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -133,7 +133,7 @@ func TestBuildDxgateRuntimeConfigFromHTTPRoute(t *testing.T) {
 		t.Fatal("expected runtime config hash")
 	}
 
-	var cfg dxgateRuntimeConfig
+	var cfg transitRuntimeConfig
 	if err := yaml.Unmarshal([]byte(raw), &cfg); err != nil {
 		t.Fatal(err)
 	}
@@ -145,7 +145,7 @@ func TestBuildDxgateRuntimeConfigFromHTTPRoute(t *testing.T) {
 		t.Fatalf("unexpected listener bind: %s", got)
 	}
 	routeCfg := cfg.Listeners[0].VirtualHosts[0].Routes[0]
-	if diff := cmp.Diff([]dxgateWeightedCluster{
+	if diff := cmp.Diff([]transitWeightedCluster{
 		{Name: "app-orders-0-0", Weight: 80},
 		{Name: "app-orders-0-1", Weight: 20},
 	}, routeCfg.WeightedClusters); diff != "" {
@@ -154,7 +154,7 @@ func TestBuildDxgateRuntimeConfigFromHTTPRoute(t *testing.T) {
 	if got := cfg.Clusters[0].Endpoints[0].Address; got != "orders-v1.app.svc.cluster.local" {
 		t.Fatalf("unexpected backend address: %s", got)
 	}
-	if got := routeCfg.Matches[0].Path; got != (dxgatePathMatch{Type: "prefix", Value: "/orders"}) {
+	if got := routeCfg.Matches[0].Path; got != (transitPathMatch{Type: "prefix", Value: "/orders"}) {
 		t.Fatalf("unexpected path match: %#v", got)
 	}
 	if got := routeCfg.Matches[0].Headers; len(got) != 1 || got[0].Name != "x-env" || got[0].Value != "prod" {
@@ -162,7 +162,7 @@ func TestBuildDxgateRuntimeConfigFromHTTPRoute(t *testing.T) {
 	}
 }
 
-func TestBuildDxgateRuntimeConfigAppliesCircuitBreakerPolicy(t *testing.T) {
+func TestBuildTransitRuntimeConfigAppliesCircuitBreakerPolicy(t *testing.T) {
 	backendPort := gatewayv1.PortNumber(9080)
 	gw := gatewayv1.Gateway{
 		ObjectMeta: metav1.ObjectMeta{Name: "public", Namespace: "app", ResourceVersion: "10"},
@@ -223,11 +223,11 @@ func TestBuildDxgateRuntimeConfigAppliesCircuitBreakerPolicy(t *testing.T) {
 		},
 	}
 
-	raw, _, err := buildDxgateRuntimeConfig(gw, []*gatewayv1.HTTPRoute{route}, nil, nil, policies, "cluster.local")
+	raw, _, err := buildTransitRuntimeConfig(gw, []*gatewayv1.HTTPRoute{route}, nil, nil, policies, "cluster.local")
 	if err != nil {
 		t.Fatal(err)
 	}
-	var cfg dxgateRuntimeConfig
+	var cfg transitRuntimeConfig
 	if err := yaml.Unmarshal([]byte(raw), &cfg); err != nil {
 		t.Fatal(err)
 	}
@@ -250,7 +250,7 @@ func TestBuildDxgateRuntimeConfigAppliesCircuitBreakerPolicy(t *testing.T) {
 	}
 }
 
-func TestBuildDxgateRuntimeConfigFiltersUnattachedHTTPRoutes(t *testing.T) {
+func TestBuildTransitRuntimeConfigFiltersUnattachedHTTPRoutes(t *testing.T) {
 	backendPort := gatewayv1.PortNumber(8080)
 	gw := gatewayv1.Gateway{
 		ObjectMeta: metav1.ObjectMeta{Name: "public", Namespace: "app"},
@@ -281,11 +281,11 @@ func TestBuildDxgateRuntimeConfigFiltersUnattachedHTTPRoutes(t *testing.T) {
 		},
 	}
 
-	raw, _, err := buildDxgateRuntimeConfig(gw, []*gatewayv1.HTTPRoute{route}, nil, nil, nil, "cluster.local")
+	raw, _, err := buildTransitRuntimeConfig(gw, []*gatewayv1.HTTPRoute{route}, nil, nil, nil, "cluster.local")
 	if err != nil {
 		t.Fatal(err)
 	}
-	var cfg dxgateRuntimeConfig
+	var cfg transitRuntimeConfig
 	if err := yaml.Unmarshal([]byte(raw), &cfg); err != nil {
 		t.Fatal(err)
 	}
@@ -294,7 +294,7 @@ func TestBuildDxgateRuntimeConfigFiltersUnattachedHTTPRoutes(t *testing.T) {
 	}
 }
 
-func TestBuildDxgateRuntimeConfigExternalNameBackendTLS(t *testing.T) {
+func TestBuildTransitRuntimeConfigExternalNameBackendTLS(t *testing.T) {
 	backendPort := gatewayv1.PortNumber(443)
 	hostname := gatewayv1.Hostname("httpbin-egress.app.svc.cluster.local")
 	wellKnown := gatewayv1.WellKnownCACertificatesSystem
@@ -361,11 +361,11 @@ func TestBuildDxgateRuntimeConfigExternalNameBackendTLS(t *testing.T) {
 		},
 	}
 
-	raw, _, err := buildDxgateRuntimeConfig(gw, []*gatewayv1.HTTPRoute{route}, []*corev1.Service{service}, []*gatewayv1.BackendTLSPolicy{policy}, nil, "cluster.local")
+	raw, _, err := buildTransitRuntimeConfig(gw, []*gatewayv1.HTTPRoute{route}, []*corev1.Service{service}, []*gatewayv1.BackendTLSPolicy{policy}, nil, "cluster.local")
 	if err != nil {
 		t.Fatal(err)
 	}
-	var cfg dxgateRuntimeConfig
+	var cfg transitRuntimeConfig
 	if err := yaml.Unmarshal([]byte(raw), &cfg); err != nil {
 		t.Fatal(err)
 	}
@@ -384,8 +384,8 @@ func TestBuildDxgateRuntimeConfigExternalNameBackendTLS(t *testing.T) {
 	}
 }
 
-func TestBuildDxgateBootstrapConfig(t *testing.T) {
-	raw, hash, err := buildDxgateBootstrapConfig(
+func TestBuildTransitBootstrapConfig(t *testing.T) {
+	raw, hash, err := buildTransitBootstrapConfig(
 		"https://dubbod.dubbo-system.svc:26012",
 		[]string{"public-dubbo.app.svc.cluster.local:80"},
 		"Kubernetes",
@@ -398,7 +398,7 @@ func TestBuildDxgateBootstrapConfig(t *testing.T) {
 		t.Fatal("expected bootstrap config hash")
 	}
 
-	var cfg dxgateBootstrapConfig
+	var cfg transitBootstrapConfig
 	if err := json.Unmarshal([]byte(raw), &cfg); err != nil {
 		t.Fatal(err)
 	}
@@ -415,21 +415,21 @@ func TestBuildDxgateBootstrapConfig(t *testing.T) {
 
 func TestManagedGatewayRequiresSecureADS(t *testing.T) {
 	controller := &DeploymentController{systemNamespace: "dubbo-system"}
-	raw, _, err := controller.buildDxgateBootstrapConfig(gatewayv1.Gateway{}, "gateway", nil)
+	raw, _, err := controller.buildTransitBootstrapConfig(gatewayv1.Gateway{}, "gateway", nil)
 	if err != nil || !strings.Contains(raw, "https://dubbod.dubbo-system.svc:26012") {
 		t.Fatalf("managed gateway must default to authenticated ADS: %s, %v", raw, err)
 	}
-	if _, _, err := buildDxgateBootstrapConfig("http://dubbod.dubbo-system.svc:26010", nil, "", ""); err == nil {
+	if _, _, err := buildTransitBootstrapConfig("http://dubbod.dubbo-system.svc:26010", nil, "", ""); err == nil {
 		t.Fatal("managed gateway must reject plaintext ADS")
 	}
 }
 
-func TestDeploymentControllerBuildDxgateBootstrapConfigUsesXDSAddressAnnotation(t *testing.T) {
+func TestDeploymentControllerBuildTransitBootstrapConfigUsesXDSAddressAnnotation(t *testing.T) {
 	controller := &DeploymentController{
 		clusterID:       "remote",
 		systemNamespace: "dubbo-system",
 	}
-	raw, _, err := controller.buildDxgateBootstrapConfig(gatewayv1.Gateway{
+	raw, _, err := controller.buildTransitBootstrapConfig(gatewayv1.Gateway{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "eastwest",
 			Namespace: "dubbo-system",
@@ -437,12 +437,12 @@ func TestDeploymentControllerBuildDxgateBootstrapConfigUsesXDSAddressAnnotation(
 				xdsAddressAnnotation: "https://dubbod.remote.example:32012",
 			},
 		},
-	}, "dxgate-gateway", []corev1.ServicePort{{Name: "http-eastwest", Port: 15443, TargetPort: intstr.FromInt(15080)}})
+	}, "transit-gateway", []corev1.ServicePort{{Name: "http-eastwest", Port: 15443, TargetPort: intstr.FromInt(15080)}})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var cfg dxgateBootstrapConfig
+	var cfg transitBootstrapConfig
 	if err := json.Unmarshal([]byte(raw), &cfg); err != nil {
 		t.Fatal(err)
 	}
@@ -567,7 +567,7 @@ func TestObservabilityConfigForGatewayDefaults(t *testing.T) {
 	if cfg.OtelEndpoint != "" {
 		t.Fatalf("otel endpoint = %q, want empty", cfg.OtelEndpoint)
 	}
-	if cfg.OtelServiceName != "dxgate.app.public" {
+	if cfg.OtelServiceName != "transit.app.public" {
 		t.Fatalf("otel service name = %q", cfg.OtelServiceName)
 	}
 	if cfg.OtelSampling != "100" {
@@ -596,7 +596,7 @@ func TestObservabilityConfigForGatewayAccessLogAnnotations(t *testing.T) {
 	if cfg.OtelEndpoint != "" {
 		t.Fatalf("otel endpoint = %q", cfg.OtelEndpoint)
 	}
-	if cfg.OtelServiceName != "dxgate.app.public" {
+	if cfg.OtelServiceName != "transit.app.public" {
 		t.Fatalf("otel service name = %q", cfg.OtelServiceName)
 	}
 	if cfg.OtelSampling != "100" {
@@ -631,8 +631,8 @@ func TestObservabilityConfigForGatewayInvalidAccessLogAnnotationsFallBack(t *tes
 
 func TestGetDefaultNameKeepsCanonicalActivatorAndIsolatesOtherGateways(t *testing.T) {
 	spec := &gatewayv1.GatewaySpec{GatewayClassName: "dubbo"}
-	if got := getDefaultName("dxgate-gateway", spec, false); got != "dxgate-gateway" {
-		t.Fatalf("canonical name = %q, want dxgate-gateway", got)
+	if got := getDefaultName("transit-gateway", spec, false); got != "transit-gateway" {
+		t.Fatalf("canonical name = %q, want transit-gateway", got)
 	}
 	if got := getDefaultName("public", spec, false); got != "public-dubbo" {
 		t.Fatalf("derived name = %q, want public-dubbo", got)
@@ -650,7 +650,7 @@ func TestManagedGatewayResourceCleanupRequiresMatchingGateway(t *testing.T) {
 	if !isManagedGatewayResourceFor(labels, "public") {
 		t.Fatal("matching managed resource was not recognized")
 	}
-	if isManagedGatewayResourceFor(labels, "dxgate-gateway") {
+	if isManagedGatewayResourceFor(labels, "transit-gateway") {
 		t.Fatal("cleanup would delete another Gateway's resources")
 	}
 }
@@ -662,7 +662,7 @@ func TestGetLegacyDefaultNameKeepsOldGatewayDerivedName(t *testing.T) {
 	}
 }
 
-func TestKubeGatewayTemplateRendersDxgateResources(t *testing.T) {
+func TestKubeGatewayTemplateRendersTransitResources(t *testing.T) {
 	templatePath := filepath.Join("..", "..", "..", "..", "..", "..", "manifests", "charts", "dubbod", "files", "kube-gateway.yaml")
 	raw, err := os.ReadFile(templatePath)
 	if err != nil {
@@ -689,11 +689,11 @@ func TestKubeGatewayTemplateRendersDxgateResources(t *testing.T) {
 		Revision:            "default",
 		BootstrapConfig:     "{\n  \"xds_address\": \"https://dubbod.dubbo-system.svc:26012\",\n  \"listener_names\": [\n    \"public-dubbo.app.svc.cluster.local:80\"\n  ],\n  \"cluster_id\": \"Kubernetes\",\n  \"dns_domain\": \"cluster.local\"\n}\n",
 		BootstrapConfigHash: "abc123",
-		DxgateImage:         "kdubbo/dxgate:test",
+		TransitImage:        "dubml/transit:test",
 		SystemNamespace:     "dubbo-system",
 		ClusterID:           "Kubernetes",
 		DomainSuffix:        "cluster.local",
-		OtelServiceName:     "dxgate.app.public",
+		OtelServiceName:     "transit.app.public",
 		OtelSampling:        "100",
 		AccessLog:           "true",
 		AccessLogFormat:     "text",
@@ -715,21 +715,21 @@ func TestKubeGatewayTemplateRendersDxgateResources(t *testing.T) {
 		t.Fatalf("hardcoded gateway template still contains template delimiters:\n%s", strings.Join(rendered, "\n---\n"))
 	}
 	if !strings.Contains(rendered[0], "bootstrap.json") || !strings.Contains(rendered[0], `"xds_address": "https://dubbod.dubbo-system.svc:26012"`) {
-		t.Fatalf("configmap did not render dxgate bootstrap:\n%s", rendered[0])
+		t.Fatalf("configmap did not render transit bootstrap:\n%s", rendered[0])
 	}
 	if !strings.Contains(rendered[1], "automountServiceAccountToken: true") ||
 		!strings.Contains(rendered[2], "resources: [\"secrets\"]") ||
 		!strings.Contains(rendered[3], "kind: RoleBinding") {
 		t.Fatalf("credential Secret RBAC not rendered:\n%s", strings.Join(rendered[1:4], "\n---\n"))
 	}
-	if !strings.Contains(rendered[4], "image: kdubbo/dxgate:test") {
-		t.Fatalf("deployment did not render dxgate image:\n%s", rendered[4])
+	if !strings.Contains(rendered[4], "image: dubml/transit:test") {
+		t.Fatalf("deployment did not render transit image:\n%s", rendered[4])
 	}
-	if !strings.Contains(rendered[4], "DXGATE_BOOTSTRAP") || strings.Contains(rendered[4], "DXGATE_STATIC_CONFIG") {
+	if !strings.Contains(rendered[4], "TRANSIT_BOOTSTRAP") || strings.Contains(rendered[4], "TRANSIT_STATIC_CONFIG") {
 		t.Fatalf("deployment did not switch from static config to bootstrap:\n%s", rendered[4])
 	}
 	if !strings.Contains(rendered[4], `inherent.dubbo.apache.org/inject: "true"`) {
-		t.Fatalf("deployment pod template did not enable inherent injection for dxgate mTLS certs:\n%s", rendered[4])
+		t.Fatalf("deployment pod template did not enable inherent injection for transit mTLS certs:\n%s", rendered[4])
 	}
 	if !strings.Contains(rendered[4], "inject.dubbo.apache.org/templates: grpc-engine") {
 		t.Fatalf("deployment pod template did not request grpc-engine injection:\n%s", rendered[4])
@@ -739,18 +739,18 @@ func TestKubeGatewayTemplateRendersDxgateResources(t *testing.T) {
 		!strings.Contains(rendered[4], `prometheus.io/port: "26021"`) {
 		t.Fatalf("deployment pod template did not render prometheus scrape annotations:\n%s", rendered[4])
 	}
-	if strings.Contains(rendered[4], "DXGATE_OTEL_ENDPOINT") {
+	if strings.Contains(rendered[4], "TRANSIT_OTEL_ENDPOINT") {
 		t.Fatalf("deployment rendered OTEL endpoint without annotation:\n%s", rendered[4])
 	}
 	for _, want := range []string{
-		"DXGATE_GATEWAY_NAME",
+		"TRANSIT_GATEWAY_NAME",
 		`value: "public"`,
-		"DXGATE_OTEL_SERVICE_NAME",
-		`value: "dxgate.app.public"`,
-		"DXGATE_OTEL_SAMPLING_PERCENTAGE",
+		"TRANSIT_OTEL_SERVICE_NAME",
+		`value: "transit.app.public"`,
+		"TRANSIT_OTEL_SAMPLING_PERCENTAGE",
 		`value: "100"`,
-		"DXGATE_ACCESS_LOG",
-		"DXGATE_ACCESS_LOG_FORMAT",
+		"TRANSIT_ACCESS_LOG",
+		"TRANSIT_ACCESS_LOG_FORMAT",
 		`value: "text"`,
 	} {
 		if !strings.Contains(rendered[4], want) {
@@ -758,12 +758,12 @@ func TestKubeGatewayTemplateRendersDxgateResources(t *testing.T) {
 		}
 	}
 	if !strings.Contains(rendered[4], "app.kubernetes.io/instance: public-dubbo") {
-		t.Fatalf("deployment did not render stable dxgate instance label:\n%s", rendered[4])
+		t.Fatalf("deployment did not render stable transit instance label:\n%s", rendered[4])
 	}
-	if !strings.Contains(rendered[4], "DXGATE_HTTP_ADDR") ||
+	if !strings.Contains(rendered[4], "TRANSIT_HTTP_ADDR") ||
 		!strings.Contains(rendered[4], "value: 0.0.0.0:15080") ||
 		!strings.Contains(rendered[4], "containerPort: 15080") {
-		t.Fatalf("deployment did not bind dxgate to the managed gateway targetPort:\n%s", rendered[4])
+		t.Fatalf("deployment did not bind transit to the managed gateway targetPort:\n%s", rendered[4])
 	}
 	if !strings.Contains(rendered[5], "targetPort: 15080") {
 		t.Fatalf("service did not target the managed gateway listener:\n%s", rendered[5])
@@ -772,7 +772,7 @@ func TestKubeGatewayTemplateRendersDxgateResources(t *testing.T) {
 		t.Fatalf("service did not opt out of inherent targetPort rewriting:\n%s", rendered[5])
 	}
 	if !strings.Contains(rendered[5], "app.kubernetes.io/instance: public-dubbo") {
-		t.Fatalf("service did not render stable dxgate instance selector:\n%s", rendered[5])
+		t.Fatalf("service did not render stable transit instance selector:\n%s", rendered[5])
 	}
 
 	input.OtelEndpoint = "http://tracing.dubbo-system.svc:4317"
@@ -780,9 +780,9 @@ func TestKubeGatewayTemplateRendersDxgateResources(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(rendered[4], "DXGATE_OTEL_ENDPOINT") ||
+	if !strings.Contains(rendered[4], "TRANSIT_OTEL_ENDPOINT") ||
 		!strings.Contains(rendered[4], `value: "http://tracing.dubbo-system.svc:4317"`) {
-		t.Fatalf("deployment did not render dxgate OTEL endpoint:\n%s", rendered[4])
+		t.Fatalf("deployment did not render transit OTEL endpoint:\n%s", rendered[4])
 	}
 
 }
@@ -818,7 +818,7 @@ func TestKubeGatewayTemplateRendersHighAvailabilityResources(t *testing.T) {
 		Revision:            "default",
 		BootstrapConfig:     "{}\n",
 		BootstrapConfigHash: "abc123",
-		DxgateImage:         "kdubbo/dxgate:test",
+		TransitImage:        "dubml/transit:test",
 	}
 
 	rendered, err := controller.render("gateway", input)
@@ -950,7 +950,7 @@ func TestKubeGatewayTemplateRendersActivationEnv(t *testing.T) {
 			Ports:           []corev1.ServicePort{{Name: "http", Port: 80, TargetPort: intstr.FromInt(15080)}},
 			ServiceType:     corev1.ServiceTypeLoadBalancer,
 			Revision:        "default",
-			DxgateImage:     "kdubbo/dxgate:test",
+			TransitImage:    "dubml/transit:test",
 			SystemNamespace: "dubbo-system",
 			ClusterID:       "Kubernetes",
 			DomainSuffix:    "cluster.local",
@@ -967,11 +967,11 @@ func TestKubeGatewayTemplateRendersActivationEnv(t *testing.T) {
 		t.Fatal(err)
 	}
 	deployment := rendered[4]
-	if !strings.Contains(deployment, "DXGATE_ACTIVATION_CONTROL_PLANE") ||
+	if !strings.Contains(deployment, "TRANSIT_ACTIVATION_CONTROL_PLANE") ||
 		!strings.Contains(deployment, "dubbod-activation-replicas.dubbo-system.svc.cluster.local:26030") {
 		t.Fatalf("deployment did not render the activation control plane:\n%s", deployment)
 	}
-	if !strings.Contains(deployment, `name: DXGATE_ACTIVATION_HOLD_TIMEOUT`) ||
+	if !strings.Contains(deployment, `name: TRANSIT_ACTIVATION_HOLD_TIMEOUT`) ||
 		!strings.Contains(deployment, `value: "30"`) {
 		t.Fatalf("deployment did not render the activation hold timeout:\n%s", deployment)
 	}
@@ -986,7 +986,7 @@ func TestKubeGatewayTemplateRendersActivationEnv(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(off[4], "DXGATE_ACTIVATION") {
+	if strings.Contains(off[4], "TRANSIT_ACTIVATION") {
 		t.Fatalf("activation env leaked into a gateway with activation disabled:\n%s", off[4])
 	}
 }

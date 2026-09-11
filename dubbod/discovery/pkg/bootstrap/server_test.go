@@ -21,13 +21,13 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/kind"
 )
 
-func TestConfigKindForSchemaIdentifierIncludesDxgateService(t *testing.T) {
-	got, found := configKindForSchemaIdentifier("DxgateService")
+func TestConfigKindForSchemaIdentifierIncludesTransitService(t *testing.T) {
+	got, found := configKindForSchemaIdentifier("TransitService")
 	if !found {
-		t.Fatal("DxgateService schema identifier was not mapped")
+		t.Fatal("TransitService schema identifier was not mapped")
 	}
-	if got != kind.DxgateService {
-		t.Fatalf("kind = %v, want %v", got, kind.DxgateService)
+	if got != kind.TransitService {
+		t.Fatalf("kind = %v, want %v", got, kind.TransitService)
 	}
 }
 

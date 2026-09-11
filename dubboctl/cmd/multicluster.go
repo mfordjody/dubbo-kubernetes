@@ -177,7 +177,7 @@ func generateEastWestGatewayCmd() *cobra.Command {
 	flags.Int32Var(&args.port, "port", args.port, "Externally reachable east-west Gateway port")
 	flags.IntVar(&args.targetPort, "target-port", args.targetPort, "Managed gateway listener port")
 	flags.Int32Var(&args.nodePort, "node-port", 0, "Optional managed gateway Service nodePort")
-	flags.StringVar(&args.xdsAddress, "xds-address", "", "ADS address used by the remote dxgate data plane")
+	flags.StringVar(&args.xdsAddress, "xds-address", "", "ADS address used by the remote transit data plane")
 	_ = command.MarkFlagRequired("xds-address")
 	return command
 }

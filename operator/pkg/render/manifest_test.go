@@ -122,15 +122,15 @@ func TestGenerateManifestPassesGatewayReplicaDefault(t *testing.T) {
 			}
 			for _, raw := range env {
 				entry := raw.(map[string]interface{})
-				if name, _, _ := unstructured.NestedString(entry, "name"); name != "DUBBO_DXGATE_REPLICAS" {
+				if name, _, _ := unstructured.NestedString(entry, "name"); name != "DUBBO_TRANSIT_REPLICAS" {
 					continue
 				}
 				if value, _, _ := unstructured.NestedString(entry, "value"); value != test.want {
-					t.Fatalf("DUBBO_DXGATE_REPLICAS = %q, want %q", value, test.want)
+					t.Fatalf("DUBBO_TRANSIT_REPLICAS = %q, want %q", value, test.want)
 				}
 				return
 			}
-			t.Fatal("DUBBO_DXGATE_REPLICAS not rendered")
+			t.Fatal("DUBBO_TRANSIT_REPLICAS not rendered")
 		})
 	}
 }
@@ -489,7 +489,7 @@ func TestGenerateManifestRejectsRemovedInstallSurface(t *testing.T) {
 		},
 		{
 			name: "removed proxy image value",
-			set:  "values.global.proxy.image=kdubbo/dubbod:test",
+			set:  "values.global.proxy.image=dubml/dubbod:test",
 		},
 		{
 			name: "removed inherent value",

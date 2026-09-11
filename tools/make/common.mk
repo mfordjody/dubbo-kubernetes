@@ -35,7 +35,7 @@ GOIMPORTS_VERSION      ?= latest
 TOOL_BIN               ?= $(CURDIR)/$(BIN_DIR)/tools
 OPERATOR_APIS_DIR      := operator/pkg/apis
 
-HUB       ?= kdubbo
+HUB       ?= dubml
 IMAGE_TAG ?= debug
 IMAGE     ?= $(HUB)/dubbod:$(IMAGE_TAG)
 

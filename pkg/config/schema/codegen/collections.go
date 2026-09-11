@@ -175,7 +175,7 @@ func toGetter(protoPackage string) string {
 
 func isDubboAPI(protoPackage string) bool {
 	return strings.Contains(protoPackage, "github.com/apache/dubbo-kubernetes/api") ||
-		strings.Contains(protoPackage, "github.com/kdubbo/api")
+		strings.Contains(protoPackage, "github.com/dubml/api")
 }
 
 func toGroup(protoPackage string, version string) string {
@@ -199,7 +199,7 @@ func toImport(p string) string {
 }
 
 func toDubboImport(protoPackage string, version string) string {
-	aliasPackage := strings.Replace(protoPackage, "github.com/kdubbo/api", "github.com/apache/dubbo-kubernetes/api", 1)
+	aliasPackage := strings.Replace(protoPackage, "github.com/dubml/api", "github.com/apache/dubbo-kubernetes/api", 1)
 	p := strings.Split(aliasPackage, "/")
 	base := strings.Join(p[:len(p)-1], "")
 	dmp := strings.ReplaceAll(strings.ReplaceAll(base, ".", ""), "-", "") + version

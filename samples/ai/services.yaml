@@ -9,7 +9,7 @@ stringData:
   client: mock-client-key
 ---
 apiVersion: networking.dubbo.apache.org/v1alpha3
-kind: DxgateService
+kind: TransitService
 metadata:
   name: openai
 spec:
@@ -35,7 +35,7 @@ spec:
       statusCodes: [502, 503, 504]
 ---
 apiVersion: networking.dubbo.apache.org/v1alpha3
-kind: DxgateService
+kind: TransitService
 metadata:
   name: anthropic
 spec:
@@ -52,7 +52,7 @@ spec:
       /v1/chat/completions: COMPLETIONS
 ---
 apiVersion: networking.dubbo.apache.org/v1alpha3
-kind: DxgateService
+kind: TransitService
 metadata:
   name: tools
 spec:
@@ -70,7 +70,7 @@ spec:
         tools: [calendar]
 ---
 apiVersion: networking.dubbo.apache.org/v1alpha3
-kind: DxgateService
+kind: TransitService
 metadata:
   name: planner
 spec:

@@ -33,7 +33,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/kube/kclient"
 	"github.com/apache/dubbo-kubernetes/pkg/kube/kubetypes"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
-	meshapi "github.com/kdubbo/api/mesh/v1alpha1"
+	meshapi "github.com/dubml/api/mesh/v1alpha1"
 
 	dubbolog "github.com/apache/dubbo-kubernetes/pkg/log"
 )

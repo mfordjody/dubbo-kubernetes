@@ -13,7 +13,6 @@ const (
 	DNSName
 	DaemonSet
 	Deployment
-	DxgateService
 	EndpointSlice
 	Endpoints
 	FaultInjectionPolicy
@@ -38,6 +37,7 @@ const (
 	ServiceEntry
 	StatefulSet
 	Telemetry
+	TransitService
 	ValidatingWebhookConfiguration
 	WorkloadEntry
 )
@@ -62,8 +62,6 @@ func (k Kind) String() string {
 		return "DaemonSet"
 	case Deployment:
 		return "Deployment"
-	case DxgateService:
-		return "DxgateService"
 	case EndpointSlice:
 		return "EndpointSlice"
 	case Endpoints:
@@ -112,6 +110,8 @@ func (k Kind) String() string {
 		return "StatefulSet"
 	case Telemetry:
 		return "Telemetry"
+	case TransitService:
+		return "TransitService"
 	case ValidatingWebhookConfiguration:
 		return "ValidatingWebhookConfiguration"
 	case WorkloadEntry:
@@ -141,8 +141,6 @@ func FromString(s string) Kind {
 		return DaemonSet
 	case "Deployment":
 		return Deployment
-	case "DxgateService":
-		return DxgateService
 	case "EndpointSlice":
 		return EndpointSlice
 	case "Endpoints":
@@ -191,6 +189,8 @@ func FromString(s string) Kind {
 		return StatefulSet
 	case "Telemetry":
 		return Telemetry
+	case "TransitService":
+		return TransitService
 	case "ValidatingWebhookConfiguration":
 		return ValidatingWebhookConfiguration
 	case "WorkloadEntry":

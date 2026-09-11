@@ -22,29 +22,29 @@
 #
 # Environment knobs:
 #   CLUSTER_NAME    kind cluster name           (default: dubbo-e2e)
-#   IMAGE           dubbod image to build/load  (default: kdubbo/dubbod:debug)
+#   IMAGE           dubbod image to build/load  (default: dubml/dubbod:debug)
 #   DUBBOD_REPLICAS control plane replicas      (default: 2, exercises HA)
 #   UPGRADE_FROM_VERSION previous release to install before upgrading (default: 0.4.3)
 #   UPGRADE_FROM_CHART   local previous chart path; skips release download
-#   UPGRADE_FROM_IMAGE   image expected by the previous chart (default: kdubbo/dubbod:debug)
+#   UPGRADE_FROM_IMAGE   image expected by the previous chart (default: dubml/dubbod:debug)
 #   SKIP_BUILD      set to 1 to reuse an already-built ${IMAGE}
 #   KEEP_CLUSTER    set to 1 to keep the kind cluster after the run
 #   KIND            path to the kind binary      (default: kind)
 #   KIND_NODE_IMAGE kind node image override     (default: kind release default)
 #   ACTIVATION_E2E  install KEDA and run real scale-to-zero E2E (default: 0)
 #   AI_MESH_E2E     run no-key HTTP/LLM/MCP/A2A E2E (default: 0)
-#   DXGATE_IMAGE    prebuilt dxgate image used by managed Gateways
+#   TRANSIT_IMAGE    prebuilt transit image used by managed Gateways
 #   KEDA_VERSION    pinned KEDA chart/app version (default: 2.20.2)
 
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CLUSTER_NAME="${CLUSTER_NAME:-dubbo-e2e}"
-IMAGE="${IMAGE:-kdubbo/dubbod:debug}"
+IMAGE="${IMAGE:-dubml/dubbod:debug}"
 DUBBOD_REPLICAS="${DUBBOD_REPLICAS:-2}"
 UPGRADE_FROM_VERSION="${UPGRADE_FROM_VERSION:-0.4.3}"
 UPGRADE_FROM_CHART="${UPGRADE_FROM_CHART:-}"
-UPGRADE_FROM_IMAGE="${UPGRADE_FROM_IMAGE:-kdubbo/dubbod:debug}"
+UPGRADE_FROM_IMAGE="${UPGRADE_FROM_IMAGE:-dubml/dubbod:debug}"
 SYSTEM_NS="dubbo-system"
 APP_NS="e2e"
 KUBECTL=(kubectl --context "kind-${CLUSTER_NAME}")
@@ -54,10 +54,10 @@ KIND="${KIND:-kind}"
 KIND_NODE_IMAGE="${KIND_NODE_IMAGE:-}"
 ACTIVATION_E2E="${ACTIVATION_E2E:-0}"
 AI_MESH_E2E="${AI_MESH_E2E:-0}"
-DXGATE_IMAGE="${DXGATE_IMAGE:-kdubbo/dxgate:latest}"
-AGENT_MOCK_IMAGE="${AGENT_MOCK_IMAGE:-kdubbo/agent-mock:latest}"
-ACTIVATION_APP_IMAGE="${ACTIVATION_APP_IMAGE:-kdubbo/activation-e2e:latest}"
-ACTIVATION_CLIENT_IMAGE="${ACTIVATION_CLIENT_IMAGE:-kdubbo/activation-client:latest}"
+TRANSIT_IMAGE="${TRANSIT_IMAGE:-dubml/transit:latest}"
+AGENT_MOCK_IMAGE="${AGENT_MOCK_IMAGE:-dubml/agent-mock:latest}"
+ACTIVATION_APP_IMAGE="${ACTIVATION_APP_IMAGE:-dubml/activation-e2e:latest}"
+ACTIVATION_CLIENT_IMAGE="${ACTIVATION_CLIENT_IMAGE:-dubml/activation-client:latest}"
 KEDA_VERSION="${KEDA_VERSION:-2.20.2}"
 
 log() { echo "--- $*"; }
@@ -103,8 +103,8 @@ trap cleanup EXIT
 
 apply_activation_fixture() {
   sed \
-    -e "s#kdubbo/activation-e2e:latest#${ACTIVATION_APP_IMAGE}#g" \
-    -e "s#kdubbo/activation-client:latest#${ACTIVATION_CLIENT_IMAGE}#g" \
+    -e "s#dubml/activation-e2e:latest#${ACTIVATION_APP_IMAGE}#g" \
+    -e "s#dubml/activation-client:latest#${ACTIVATION_CLIENT_IMAGE}#g" \
     "$1" \
     | "${KUBECTL[@]}" apply -f -
 }
@@ -172,8 +172,8 @@ if [[ "${IMAGE}" != "${UPGRADE_FROM_IMAGE}" ]]; then
   "${KIND}" load docker-image "${UPGRADE_FROM_IMAGE}" --name "${CLUSTER_NAME}"
 fi
 if [[ "${ACTIVATION_E2E}" == "1" || "${AI_MESH_E2E}" == "1" ]]; then
-  docker image inspect "${DXGATE_IMAGE}" >/dev/null 2>&1 \
-    || fail "data-plane E2E requires prebuilt ${DXGATE_IMAGE}"
+  docker image inspect "${TRANSIT_IMAGE}" >/dev/null 2>&1 \
+    || fail "data-plane E2E requires prebuilt ${TRANSIT_IMAGE}"
 fi
 if [[ "${ACTIVATION_E2E}" == "1" ]]; then
   if [[ "${SKIP_BUILD:-0}" != "1" ]]; then
@@ -186,7 +186,7 @@ if [[ "${ACTIVATION_E2E}" == "1" ]]; then
   docker tag "${IMAGE}" "${ACTIVATION_CLIENT_IMAGE}"
   log "loading activation data-plane images into kind"
   "${KIND}" load docker-image \
-    "${DXGATE_IMAGE}" \
+    "${TRANSIT_IMAGE}" \
     "${ACTIVATION_APP_IMAGE}" \
     "${ACTIVATION_CLIENT_IMAGE}" \
     --name "${CLUSTER_NAME}"
@@ -201,7 +201,7 @@ if [[ "${AI_MESH_E2E}" == "1" ]]; then
   fi
   log "loading AI mesh data-plane images into kind"
   "${KIND}" load docker-image \
-    "${DXGATE_IMAGE}" \
+    "${TRANSIT_IMAGE}" \
     "${AGENT_MOCK_IMAGE}" \
     --name "${CLUSTER_NAME}"
 fi
@@ -238,7 +238,7 @@ install_dubbod() {
   if [[ "${chart}" == "${ROOT}/manifests/charts/dubbod" ]]; then
     chart_values=(
       --set-string "image=${image}"
-      --set-string "gateway.image=${DXGATE_IMAGE}"
+      --set-string "gateway.image=${TRANSIT_IMAGE}"
     )
   else
     # 0.4.3 predates Inherent. These values target its immutable legacy
@@ -246,7 +246,7 @@ install_dubbod() {
     chart_values=(
       --set "global.proxyless.cni.enabled=false"
       --set-string "global.proxyless.cni.image=${image}"
-      --set-string "global.gateway.image=${DXGATE_IMAGE}"
+      --set-string "global.gateway.image=${TRANSIT_IMAGE}"
     )
   fi
   helm upgrade --install dubbod "${chart}" \
@@ -395,7 +395,7 @@ log "asserting a managed gateway is told where to report demand"
 check_gateway_deployment() { "${KUBECTL[@]}" -n "${APP_NS}" get deploy public-dubbo >/dev/null; }
 retry "managed gateway deployment" check_gateway_deployment
 GATEWAY_ENV="$("${KUBECTL[@]}" -n "${APP_NS}" get deploy public-dubbo \
-  -o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="DXGATE_ACTIVATION_CONTROL_PLANE")].value}')"
+  -o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="TRANSIT_ACTIVATION_CONTROL_PLANE")].value}')"
 [[ "${GATEWAY_ENV}" == dubbod-activation-replicas.* ]] \
   || fail "gateway reports to '${GATEWAY_ENV}', want the headless activation Service"
 # Reports are attributed per reporter; without a distinct identity two gateway
@@ -407,7 +407,7 @@ GATEWAY_ENV="$("${KUBECTL[@]}" -n "${APP_NS}" get deploy public-dubbo \
 
 if [[ "${AI_MESH_E2E}" == "1" ]]; then
   log "applying mesh-native HTTP, OpenAI, Anthropic, MCP, and A2A sample"
-  sed "s#kdubbo/agent-mock:latest#${AGENT_MOCK_IMAGE}#g" \
+  sed "s#dubml/agent-mock:latest#${AGENT_MOCK_IMAGE}#g" \
     "${ROOT}/samples/ai-mesh/backends.yaml" \
     | "${KUBECTL[@]}" -n "${APP_NS}" apply -f -
   "${KUBECTL[@]}" -n "${APP_NS}" apply -f "${ROOT}/samples/ai-mesh/services.yaml"
@@ -417,15 +417,15 @@ if [[ "${AI_MESH_E2E}" == "1" ]]; then
   "${KUBECTL[@]}" -n "${APP_NS}" rollout status deploy/public-dubbo --timeout=300s \
     || fail "mesh gateway deployment did not become ready"
 
-  "${KUBECTL[@]}" get crd dxgateservices.networking.dubbo.apache.org >/dev/null \
-    || fail "DxgateService CRD is missing"
+  "${KUBECTL[@]}" get crd transitservices.networking.dubbo.apache.org >/dev/null \
+    || fail "TransitService CRD is missing"
   "${KUBECTL[@]}" -n "${APP_NS}" get role public-dubbo-credentials >/dev/null \
-    || fail "dxgate credential Role is missing"
+    || fail "transit credential Role is missing"
   "${KUBECTL[@]}" -n "${APP_NS}" get rolebinding public-dubbo-credentials >/dev/null \
-    || fail "dxgate credential RoleBinding is missing"
+    || fail "transit credential RoleBinding is missing"
   "${KUBECTL[@]}" auth can-i get secret/agent-credentials \
     --as="system:serviceaccount:${APP_NS}:public-dubbo" -n "${APP_NS}" \
-    | grep -qx yes || fail "dxgate ServiceAccount cannot resolve referenced Secret"
+    | grep -qx yes || fail "transit ServiceAccount cannot resolve referenced Secret"
 
   log "port-forwarding mesh gateway"
   "${KUBECTL[@]}" -n "${APP_NS}" port-forward svc/public-dubbo 18081:80 >/dev/null 2>&1 &
@@ -448,7 +448,7 @@ if [[ "${AI_MESH_E2E}" == "1" ]]; then
     || fail "ordinary /users route returned the wrong backend response"
   [[ "$(ai_get /orders | jq -r .path)" == "/orders" ]] \
     || fail "ordinary /orders route returned the wrong backend response"
-  retry "OpenAI DxgateService route and Secret resolution" ai_openai
+  retry "OpenAI TransitService route and Secret resolution" ai_openai
   OPENAI_RESPONSE="$(ai_openai)"
   [[ "$(jq -r .choices[0].message.content <<<"${OPENAI_RESPONSE}")" == "openai-mock" ]] \
     || fail "OpenAI mock response was not proxied"
@@ -488,15 +488,15 @@ if [[ "${AI_MESH_E2E}" == "1" ]]; then
           ([.routes[] | .protocol] | sort | join(",")) == "a2a,llm,llm,mcp"
         ' >/dev/null
   }
-  retry "compiled AgentConfig visible in dxgate /debug/config" check_agent_config_programmed
+  retry "compiled AgentConfig visible in transit /debug/config" check_agent_config_programmed
   log "mesh-native HTTP, LLM, MCP, and A2A E2E passed"
 fi
 
 if [[ "${ACTIVATION_E2E}" == "1" ]]; then
   log "asserting multiple Gateways have isolated resources"
-  "${KUBECTL[@]}" -n "${APP_NS}" get deploy dxgate-gateway public-dubbo >/dev/null \
+  "${KUBECTL[@]}" -n "${APP_NS}" get deploy transit-gateway public-dubbo >/dev/null \
     || fail "canonical and public Gateway deployments do not coexist"
-  "${KUBECTL[@]}" -n "${APP_NS}" rollout status deploy/dxgate-gateway --timeout=300s \
+  "${KUBECTL[@]}" -n "${APP_NS}" rollout status deploy/transit-gateway --timeout=300s \
     || fail "canonical Activator gateway did not become ready"
   "${KUBECTL[@]}" -n "${APP_NS}" rollout status deploy/public-dubbo --timeout=300s \
     || fail "second managed gateway did not become ready"
@@ -510,7 +510,7 @@ if [[ "${ACTIVATION_E2E}" == "1" ]]; then
   check_all_activators_have_payment_route() {
     local pod pods
     pods="$("${KUBECTL[@]}" -n "${APP_NS}" get pods \
-      -l gateway.networking.k8s.io/gateway-name=dxgate-gateway \
+      -l gateway.networking.k8s.io/gateway-name=transit-gateway \
       --field-selector=status.phase=Running \
       -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}')"
     [[ "$(wc -w <<<"${pods}")" -ge 2 ]] || return 1
@@ -549,13 +549,13 @@ if [[ "${ACTIVATION_E2E}" == "1" ]]; then
     --wait=false
   "${KUBECTL[@]}" -n "${APP_NS}" delete pod \
     "$("${KUBECTL[@]}" -n "${APP_NS}" get pod \
-      -l gateway.networking.k8s.io/gateway-name=dxgate-gateway \
+      -l gateway.networking.k8s.io/gateway-name=transit-gateway \
       -o jsonpath='{.items[0].metadata.name}')" \
     --wait=false
 
   "${KUBECTL[@]}" -n "${SYSTEM_NS}" rollout status deploy/dubbod --timeout=180s \
     || fail "control-plane replica did not recover"
-  "${KUBECTL[@]}" -n "${APP_NS}" rollout status deploy/dxgate-gateway --timeout=180s \
+  "${KUBECTL[@]}" -n "${APP_NS}" rollout status deploy/transit-gateway --timeout=180s \
     || fail "Activator replica did not recover"
   retry "all Activator replicas retain the payment route after failover" \
     check_all_activators_have_payment_route
@@ -571,12 +571,12 @@ if [[ "${ACTIVATION_E2E}" == "1" ]]; then
       "${KUBECTL[@]}" get --raw \
         "/api/v1/namespaces/${APP_NS}/pods/${pod}:26021/proxy/metrics"
     done < <("${KUBECTL[@]}" -n "${APP_NS}" get pods \
-      -l gateway.networking.k8s.io/gateway-name=dxgate-gateway \
+      -l gateway.networking.k8s.io/gateway-name=transit-gateway \
       -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}')
   }
   activation_payment_requests_total() {
     activation_metrics \
-      | awk '/^dxgate_http_route_requests_total\{/ && /cluster="outbound\|8080\|\|payment\.e2e\.svc\.cluster\.local"/ { total += $NF } END { print total + 0 }'
+      | awk '/^transit_http_route_requests_total\{/ && /cluster="outbound\|8080\|\|payment\.e2e\.svc\.cluster\.local"/ { total += $NF } END { print total + 0 }'
   }
   # held_requests is an instantaneous gauge and can return to zero before a
   # polling assertion observes it. The durable proof is the complete sequence:

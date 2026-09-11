@@ -20,8 +20,8 @@ import (
 	"testing"
 	"time"
 
-	api "github.com/kdubbo/api/telemetry/v1alpha3"
-	typeapi "github.com/kdubbo/api/type/v1alpha3"
+	api "github.com/dubml/api/telemetry/v1alpha3"
+	typeapi "github.com/dubml/api/type/v1alpha3"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 

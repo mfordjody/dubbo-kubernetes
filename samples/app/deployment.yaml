@@ -206,5 +206,5 @@ spec:
       serviceAccountName: nginx
       containers:
       - name: app
-        image: kdubbo/dubbod:debug
+        image: dubml/dubbod:debug
         imagePullPolicy: IfNotPresent

@@ -20,8 +20,8 @@ import (
 	"testing"
 	"time"
 
-	networking "github.com/kdubbo/api/networking/v1alpha3"
-	clientnetworking "github.com/kdubbo/client-go/pkg/apis/networking/v1alpha3"
+	networking "github.com/dubml/api/networking/v1alpha3"
+	clientnetworking "github.com/dubml/client-go/pkg/apis/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

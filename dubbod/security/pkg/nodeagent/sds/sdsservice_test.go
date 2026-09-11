@@ -27,9 +27,9 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/security"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
 	"github.com/apache/dubbo-kubernetes/pkg/xds"
-	core "github.com/kdubbo/xds-api/core/v1"
-	tlsv1 "github.com/kdubbo/xds-api/extensions/transport_sockets/tls/v1"
-	discovery "github.com/kdubbo/xds-api/service/discovery/v1"
+	core "github.com/dubml/xds-api/core/v1"
+	tlsv1 "github.com/dubml/xds-api/extensions/transport_sockets/tls/v1"
+	discovery "github.com/dubml/xds-api/service/discovery/v1"
 	"google.golang.org/grpc/metadata"
 )
 

@@ -24,7 +24,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/gvk"
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/kind"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
-	networking "github.com/kdubbo/api/networking/v1alpha3"
+	networking "github.com/dubml/api/networking/v1alpha3"
 )
 
 func TestPushRequestCopyMergePreservesQueuedUpdates(t *testing.T) {

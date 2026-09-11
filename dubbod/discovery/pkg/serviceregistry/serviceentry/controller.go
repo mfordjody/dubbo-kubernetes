@@ -34,8 +34,8 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/visibility"
 	"github.com/apache/dubbo-kubernetes/pkg/slices"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
-	meta "github.com/kdubbo/api/meta/v1alpha1"
-	networking "github.com/kdubbo/api/networking/v1alpha3"
+	meta "github.com/dubml/api/meta/v1alpha1"
+	networking "github.com/dubml/api/networking/v1alpha3"
 )
 
 type Options struct {

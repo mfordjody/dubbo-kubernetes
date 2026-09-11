@@ -29,8 +29,8 @@ import (
 	"time"
 
 	"github.com/apache/dubbo-kubernetes/pkg/model"
-	core "github.com/kdubbo/xds-api/core/v1"
-	discovery "github.com/kdubbo/xds-api/service/discovery/v1"
+	core "github.com/dubml/xds-api/core/v1"
+	discovery "github.com/dubml/xds-api/service/discovery/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -63,7 +63,7 @@ func verify(dir, target, serverName string) error {
 	if err := protojson.Unmarshal(envelope.Node, node); err != nil {
 		return err
 	}
-	// dxgate builds a Router node from the shared workload bootstrap.
+	// transit builds a Router node from the shared workload bootstrap.
 	parts := strings.Split(node.Id, "~")
 	if len(parts) != 4 {
 		return fmt.Errorf("unexpected bootstrap node ID format")

@@ -29,7 +29,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/dubbod/security/pkg/pki/util"
 	caserver "github.com/apache/dubbo-kubernetes/dubbod/security/pkg/server/ca"
 	"github.com/apache/dubbo-kubernetes/pkg/slices"
-	meshv1alpha1 "github.com/kdubbo/api/mesh/v1alpha1"
+	meshv1alpha1 "github.com/dubml/api/mesh/v1alpha1"
 	clientset "k8s.io/client-go/kubernetes"
 )
 

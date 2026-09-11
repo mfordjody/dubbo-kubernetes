@@ -25,7 +25,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/util/protomarshal"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
 	"github.com/hashicorp/go-multierror"
-	meshv1alpha1 "github.com/kdubbo/api/mesh/v1alpha1"
+	meshv1alpha1 "github.com/dubml/api/mesh/v1alpha1"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"sigs.k8s.io/yaml"
 )

@@ -178,7 +178,7 @@ spec:
       serviceAccountName: moviereview
       containers:
       - name: app
-        image: kdubbo/moviereview-moviepage:latest
+        image: dubml/moviereview-moviepage:latest
         imagePullPolicy: Always
         ports:
         - name: http
@@ -225,7 +225,7 @@ spec:
       serviceAccountName: moviereview
       containers:
       - name: app
-        image: kdubbo/moviereview-details:latest
+        image: dubml/moviereview-details:latest
         imagePullPolicy: Always
         ports:
         - name: http
@@ -267,7 +267,7 @@ spec:
       serviceAccountName: moviereview
       containers:
       - name: app
-        image: kdubbo/moviereview-ratings:latest
+        image: dubml/moviereview-ratings:latest
         imagePullPolicy: Always
         ports:
         - name: http
@@ -309,7 +309,7 @@ spec:
       serviceAccountName: moviereview
       containers:
       - name: app
-        image: kdubbo/moviereview-reviews-v1:latest
+        image: dubml/moviereview-reviews-v1:latest
         imagePullPolicy: Always
         ports:
         - name: http
@@ -351,7 +351,7 @@ spec:
       serviceAccountName: moviereview
       containers:
       - name: app
-        image: kdubbo/moviereview-reviews-v2:latest
+        image: dubml/moviereview-reviews-v2:latest
         imagePullPolicy: Always
         ports:
         - name: http
@@ -396,7 +396,7 @@ spec:
       serviceAccountName: moviereview
       containers:
       - name: app
-        image: kdubbo/moviereview-reviews-v3:latest
+        image: dubml/moviereview-reviews-v3:latest
         imagePullPolicy: Always
         ports:
         - name: http

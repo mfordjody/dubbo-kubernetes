@@ -22,27 +22,27 @@ Dubbo’s control plane provides an abstraction layer over the underlying cluste
 Dubbo component composition:
 
 - **dubbod** — Dubbo xDS control plane. It provides service discovery, configuration and certificate issuance.
-- **dxgate** — Dubbo delegated gateway for Gateway API. It consumes routing configuration from dubbod over xDS and proxies north-south traffic into the mesh.
+- **transit** — Dubbo delegated gateway for Gateway API. It consumes routing configuration from dubbod over xDS and proxies north-south traffic into the mesh.
 
 ## Repositories
 
 Projects are distributed across the code directory repositories:
 
-- [api](https://github.com/kdubbo/api). — Defines the component level APIs for the Dubbo control plane.
+- [api](https://github.com/dubml/api). — Defines the component level APIs for the Dubbo control plane.
 
-- [xds-api](https://github.com/kdubbo/xds-api). — Define the xDS API for the Dubbo control plane.
+- [xds-api](https://github.com/dubml/xds-api). — Define the xDS API for the Dubbo control plane.
 
-- [client-go](https://github.com/kdubbo/client-go). — Defines the Kubernetes clients automatically generated for Dubbo control plane resources.
+- [client-go](https://github.com/dubml/client-go). — Defines the Kubernetes clients automatically generated for Dubbo control plane resources.
 
-- [dubboctl](https://github.com/kdubbo/dubboctl). — Provides dubboctl command line tools for control plane management and other operations.
+- [dubboctl](https://github.com/dubml/dubboctl). — Provides dubboctl command line tools for control plane management and other operations.
 
-- [dubbod](https://github.com/kdubbo/dubbod) — The main code directory for the Dubbo control plane.
+- [dubbod](https://github.com/dubml/dubbod) — The main code directory for the Dubbo control plane.
 
-- [operator](https://github.com/kdubbo/operator). — Provides user friendly options for operating the service mesh.
+- [operator](https://github.com/dubml/operator). — Provides user friendly options for operating the service mesh.
 
-- [dxgate](https://github.com/kdubbo/dxgate) — Provides the delegated gateway that serves Gateway API traffic at the mesh edge.
+- [transit](https://github.com/dubml/transit) — Provides the delegated gateway that serves Gateway API traffic at the mesh edge.
 
-- [gui](https://github.com/kdubbo/gui) — Provides the console that aggregates the management API across discovered control planes.
+- [gui](https://github.com/dubml/gui) — Provides the console that aggregates the management API across discovered control planes.
 
 ## Contributing
 

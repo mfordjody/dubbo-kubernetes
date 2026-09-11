@@ -27,7 +27,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config"
 	"github.com/apache/dubbo-kubernetes/pkg/config/labels"
 	"github.com/hashicorp/go-multierror"
-	typev1alpha3 "github.com/kdubbo/api/type/v1alpha3"
+	typev1alpha3 "github.com/dubml/api/type/v1alpha3"
 )
 
 // Validation holds errors and warnings collected while validating a config.

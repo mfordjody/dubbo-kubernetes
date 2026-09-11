@@ -161,19 +161,19 @@ metadata:
     dubbo: networking
     heritage: Tiller
     release: dubbo
-  name: dxgateservices.networking.dubbo.apache.org
+  name: transitservices.networking.dubbo.apache.org
 spec:
   group: networking.dubbo.apache.org
   names:
     categories:
     - dubbo
     - networking
-    kind: DxgateService
-    listKind: DxgateServiceList
-    plural: dxgateservices
+    kind: TransitService
+    listKind: TransitServiceList
+    plural: transitservices
     shortNames:
-    - dxsvc
-    singular: dxgateservice
+    - transitsvc
+    singular: transitservice
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
@@ -216,7 +216,7 @@ spec:
                         description: Kubernetes Service name.
                         type: string
                       namespace:
-                        description: Defaults to the DxgateService namespace.
+                        description: Defaults to the TransitService namespace.
                         type: string
                     required:
                     - name
@@ -324,7 +324,7 @@ spec:
                                   description: Kubernetes Service name.
                                   type: string
                                 namespace:
-                                  description: Defaults to the DxgateService namespace.
+                                  description: Defaults to the TransitService namespace.
                                   type: string
                               required:
                               - name

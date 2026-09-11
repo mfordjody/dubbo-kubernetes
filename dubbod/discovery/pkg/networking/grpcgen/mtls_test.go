@@ -22,9 +22,9 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config"
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/gvk"
 	"github.com/apache/dubbo-kubernetes/pkg/grpcxds"
-	security "github.com/kdubbo/api/security/v1alpha3"
-	tlsv1 "github.com/kdubbo/xds-api/extensions/transport_sockets/tls/v1"
-	listener "github.com/kdubbo/xds-api/listener/v1"
+	security "github.com/dubml/api/security/v1alpha3"
+	tlsv1 "github.com/dubml/xds-api/extensions/transport_sockets/tls/v1"
+	listener "github.com/dubml/xds-api/listener/v1"
 )
 
 func TestPeerAuthenticationStrictBuildsDownstreamMTLSListener(t *testing.T) {

@@ -177,7 +177,7 @@ func (x *ProxyConfig) GetClusterDomain() string {
 
 type GatewayConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Default replica count for managed dxgate deployments. Individual Gateways
+	// Default replica count for managed transit deployments. Individual Gateways
 	// override it with the gateway.dubbo.apache.org/replicas annotation.
 	ReplicaCount  *wrapperspb.Int32Value `protobuf:"bytes,1,opt,name=replicaCount,proto3" json:"replicaCount,omitempty"`
 	unknownFields protoimpl.UnknownFields

@@ -23,10 +23,10 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config"
 	"github.com/apache/dubbo-kubernetes/pkg/config/host"
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/gvk"
-	networking "github.com/kdubbo/api/networking/v1alpha3"
-	security "github.com/kdubbo/api/security/v1alpha3"
-	cluster "github.com/kdubbo/xds-api/cluster/v1"
-	tlsv1 "github.com/kdubbo/xds-api/extensions/transport_sockets/tls/v1"
+	networking "github.com/dubml/api/networking/v1alpha3"
+	security "github.com/dubml/api/security/v1alpha3"
+	cluster "github.com/dubml/xds-api/cluster/v1"
+	tlsv1 "github.com/dubml/xds-api/extensions/transport_sockets/tls/v1"
 	gatewayv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
@@ -118,7 +118,7 @@ func TestBuildClustersExternalNameBackendTLSPolicyUsesSimpleTLS(t *testing.T) {
 	}, []*model.Service{service})
 
 	resources := (&GrpcConfigGenerator{}).BuildClusters(&model.Proxy{
-		ID:   "router~10.0.0.1~dxgate.app~app.svc.cluster.local",
+		ID:   "router~10.0.0.1~transit.app~app.svc.cluster.local",
 		Type: model.Router,
 	}, push, []string{"outbound|443||" + hostName})
 

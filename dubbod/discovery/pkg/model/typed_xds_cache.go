@@ -25,8 +25,8 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/slices"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
 	"github.com/hashicorp/golang-lru/v2/simplelru"
-	// discovery "github.com/kdubbo/xds-api/service/discovery/v1"
-	discovery "github.com/kdubbo/xds-api/service/discovery/v1"
+	// discovery "github.com/dubml/xds-api/service/discovery/v1"
+	discovery "github.com/dubml/xds-api/service/discovery/v1"
 )
 
 type CacheToken uint64

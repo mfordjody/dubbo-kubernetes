@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	telemetryconfig "github.com/apache/dubbo-kubernetes/pkg/config/telemetry"
-	meshv1alpha1 "github.com/kdubbo/api/mesh/v1alpha1"
+	meshv1alpha1 "github.com/dubml/api/mesh/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -426,7 +426,7 @@ func TestInstallerGRPCEngineTemplateConfiguresXDSClientForDubbodImage(t *testing
 			ServiceAccountName: "nginx",
 			Containers: []corev1.Container{{
 				Name:  "app",
-				Image: "kdubbo/dubbod:debug",
+				Image: "dubml/dubbod:debug",
 			}},
 		},
 	}

@@ -16,7 +16,7 @@
 
 set -euo pipefail
 
-HUB="${HUB:-kdubbo}"
+HUB="${HUB:-dubml}"
 TAG="${TAG:-latest}"
 PUSH="${PUSH:-false}"
 # 目标节点架构，与集群节点不一致时必须显式指定，例如 PLATFORM=linux/amd64。

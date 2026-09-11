@@ -23,17 +23,17 @@ import (
 
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/model"
 	"github.com/apache/dubbo-kubernetes/pkg/config"
-	networking "github.com/kdubbo/api/networking/v1alpha3"
-	route "github.com/kdubbo/xds-api/route/v1"
+	networking "github.com/dubml/api/networking/v1alpha3"
+	route "github.com/dubml/xds-api/route/v1"
 	gatewayv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
 const (
-	dxgateServiceGroup = "networking.dubbo.apache.org"
-	dxgateServiceKind  = "DxgateService"
+	transitServiceGroup = "networking.dubbo.apache.org"
+	transitServiceKind  = "TransitService"
 )
 
-func isDxgateServiceBackend(ref gatewayv1.HTTPBackendRef) bool {
+func isTransitServiceBackend(ref gatewayv1.HTTPBackendRef) bool {
 	group := ""
 	if ref.Group != nil {
 		group = string(*ref.Group)
@@ -42,12 +42,12 @@ func isDxgateServiceBackend(ref gatewayv1.HTTPBackendRef) bool {
 	if ref.Kind != nil {
 		kind = string(*ref.Kind)
 	}
-	return group == dxgateServiceGroup && kind == dxgateServiceKind
+	return group == transitServiceGroup && kind == transitServiceKind
 }
 
-func ruleUsesDxgateService(rule gatewayv1.HTTPRouteRule) bool {
+func ruleUsesTransitService(rule gatewayv1.HTTPRouteRule) bool {
 	for _, ref := range rule.BackendRefs {
-		if isDxgateServiceBackend(ref) {
+		if isTransitServiceBackend(ref) {
 			return true
 		}
 	}
@@ -69,7 +69,7 @@ func buildAgentConfig(push *model.PushContext, httpRoutes []config.Config) *rout
 			continue
 		}
 		for ruleIndex, rule := range spec.Rules {
-			if !ruleUsesDxgateService(rule) {
+			if !ruleUsesTransitService(rule) {
 				continue
 			}
 			if len(rule.BackendRefs) == 0 {
@@ -80,8 +80,8 @@ func buildAgentConfig(push *model.PushContext, httpRoutes []config.Config) *rout
 			var weighted []*route.WeightedBackend
 			valid := true
 			for _, ref := range rule.BackendRefs {
-				if !isDxgateServiceBackend(ref) {
-					log.Warnf("HTTPRoute %s/%s rule[%d] mixes Service and DxgateService backends", routeConfig.Namespace, routeConfig.Name, ruleIndex)
+				if !isTransitServiceBackend(ref) {
+					log.Warnf("HTTPRoute %s/%s rule[%d] mixes Service and TransitService backends", routeConfig.Namespace, routeConfig.Name, ruleIndex)
 					valid = false
 					break
 				}
@@ -90,29 +90,29 @@ func buildAgentConfig(push *model.PushContext, httpRoutes []config.Config) *rout
 					namespace = string(*ref.Namespace)
 				}
 				if namespace != routeConfig.Namespace {
-					log.Warnf("HTTPRoute %s/%s rule[%d] cross-namespace DxgateService reference %s/%s is not supported", routeConfig.Namespace, routeConfig.Name, ruleIndex, namespace, ref.Name)
+					log.Warnf("HTTPRoute %s/%s rule[%d] cross-namespace TransitService reference %s/%s is not supported", routeConfig.Namespace, routeConfig.Name, ruleIndex, namespace, ref.Name)
 					valid = false
 					break
 				}
-				serviceConfig, found := push.DxgateService(namespace, string(ref.Name))
+				serviceConfig, found := push.TransitService(namespace, string(ref.Name))
 				if !found {
-					log.Warnf("HTTPRoute %s/%s rule[%d] references missing DxgateService %s/%s", routeConfig.Namespace, routeConfig.Name, ruleIndex, namespace, ref.Name)
+					log.Warnf("HTTPRoute %s/%s rule[%d] references missing TransitService %s/%s", routeConfig.Namespace, routeConfig.Name, ruleIndex, namespace, ref.Name)
 					valid = false
 					break
 				}
-				service, ok := serviceConfig.Spec.(*networking.DxgateService)
+				service, ok := serviceConfig.Spec.(*networking.TransitService)
 				if !ok {
 					valid = false
 					break
 				}
-				compiled, serviceProtocol, err := compileDxgateService(serviceConfig, service)
+				compiled, serviceProtocol, err := compileTransitService(serviceConfig, service)
 				if err != nil {
-					log.Warnf("DxgateService %s/%s cannot be compiled: %v", namespace, ref.Name, err)
+					log.Warnf("TransitService %s/%s cannot be compiled: %v", namespace, ref.Name, err)
 					valid = false
 					break
 				}
 				if protocol != route.AgentProtocol_AGENT_PROTOCOL_UNSPECIFIED && protocol != serviceProtocol {
-					log.Warnf("HTTPRoute %s/%s rule[%d] mixes DxgateService protocols", routeConfig.Namespace, routeConfig.Name, ruleIndex)
+					log.Warnf("HTTPRoute %s/%s rule[%d] mixes TransitService protocols", routeConfig.Namespace, routeConfig.Name, ruleIndex)
 					valid = false
 					break
 				}
@@ -160,13 +160,13 @@ func buildAgentConfig(push *model.PushContext, httpRoutes []config.Config) *rout
 	return out
 }
 
-type compiledDxgateService struct {
+type compiledTransitService struct {
 	provider *route.AgentProvider
 	backends []*route.AgentBackend
 	policy   *route.AgentPolicy
 }
 
-func compileDxgateService(cfg config.Config, service *networking.DxgateService) (compiledDxgateService, route.AgentProtocol, error) {
+func compileTransitService(cfg config.Config, service *networking.TransitService) (compiledTransitService, route.AgentProtocol, error) {
 	prefix := fmt.Sprintf("%s.%s", cfg.Name, cfg.Namespace)
 	policyName := prefix + ".policy"
 	policy := compileAgentPolicy(policyName, cfg.Namespace, service.GetPolicies())
@@ -179,7 +179,7 @@ func compileDxgateService(cfg config.Config, service *networking.DxgateService) 
 	case service.GetAi() != nil:
 		ai := service.GetAi()
 		if ai.GetProvider() == nil {
-			return compiledDxgateService{}, 0, fmt.Errorf("provider is not set")
+			return compiledTransitService{}, 0, fmt.Errorf("provider is not set")
 		}
 		providerName := prefix + ".provider"
 		provider := &route.AgentProvider{
@@ -194,7 +194,7 @@ func compileDxgateService(cfg config.Config, service *networking.DxgateService) 
 		case ai.GetProvider().GetAnthropic() != nil:
 			provider.Kind = route.AgentProviderKind_ANTHROPIC
 		default:
-			return compiledDxgateService{}, 0, fmt.Errorf("provider is not set")
+			return compiledTransitService{}, 0, fmt.Errorf("provider is not set")
 		}
 		backend := &route.AgentBackend{
 			Name: prefix,
@@ -205,7 +205,7 @@ func compileDxgateService(cfg config.Config, service *networking.DxgateService) 
 			}},
 			Policies: policyRefs,
 		}
-		return compiledDxgateService{provider: provider, backends: []*route.AgentBackend{backend}, policy: policy}, route.AgentProtocol_LLM, nil
+		return compiledTransitService{provider: provider, backends: []*route.AgentBackend{backend}, policy: policy}, route.AgentProtocol_LLM, nil
 	case service.GetMcp() != nil:
 		backends := make([]*route.AgentBackend, 0, len(service.GetMcp().GetTargets()))
 		for _, target := range service.GetMcp().GetTargets() {
@@ -226,7 +226,7 @@ func compileDxgateService(cfg config.Config, service *networking.DxgateService) 
 				Policies: policyRefs,
 			})
 		}
-		return compiledDxgateService{backends: backends, policy: policy}, route.AgentProtocol_MCP, nil
+		return compiledTransitService{backends: backends, policy: policy}, route.AgentProtocol_MCP, nil
 	case service.GetA2A() != nil:
 		a2a := service.GetA2A()
 		endpoint := ""
@@ -247,9 +247,9 @@ func compileDxgateService(cfg config.Config, service *networking.DxgateService) 
 			}},
 			Policies: policyRefs,
 		}
-		return compiledDxgateService{backends: []*route.AgentBackend{backend}, policy: policy}, route.AgentProtocol_A2A, nil
+		return compiledTransitService{backends: []*route.AgentBackend{backend}, policy: policy}, route.AgentProtocol_A2A, nil
 	default:
-		return compiledDxgateService{}, 0, fmt.Errorf("service type is not set")
+		return compiledTransitService{}, 0, fmt.Errorf("service type is not set")
 	}
 }
 
@@ -323,7 +323,7 @@ func compileAgentRewrite(filters []gatewayv1.HTTPRouteFilter) *route.PathRewrite
 	return nil
 }
 
-func compileAgentPolicy(name, namespace string, in *networking.DxgateServicePolicies) *route.AgentPolicy {
+func compileAgentPolicy(name, namespace string, in *networking.TransitServicePolicies) *route.AgentPolicy {
 	if in == nil {
 		return nil
 	}

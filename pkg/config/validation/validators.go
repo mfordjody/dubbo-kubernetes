@@ -30,9 +30,9 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/protocol"
 	telemetryconfig "github.com/apache/dubbo-kubernetes/pkg/config/telemetry"
 	"github.com/apache/dubbo-kubernetes/pkg/config/visibility"
-	networking "github.com/kdubbo/api/networking/v1alpha3"
-	security "github.com/kdubbo/api/security/v1alpha3"
-	telemetry "github.com/kdubbo/api/telemetry/v1alpha3"
+	networking "github.com/dubml/api/networking/v1alpha3"
+	security "github.com/dubml/api/security/v1alpha3"
+	telemetry "github.com/dubml/api/telemetry/v1alpha3"
 	kvalidation "k8s.io/apimachinery/pkg/util/validation"
 )
 
@@ -281,13 +281,13 @@ var ValidateFaultInjectionPolicy = RegisterValidateFunc("ValidateFaultInjectionP
 		return v.Unwrap()
 	})
 
-// ValidateDxgateService checks that a mesh-native LLM, MCP, or A2A backend can
+// ValidateTransitService checks that a mesh-native LLM, MCP, or A2A backend can
 // be compiled into one unambiguous data-plane configuration.
-var ValidateDxgateService = RegisterValidateFunc("ValidateDxgateService",
+var ValidateTransitService = RegisterValidateFunc("ValidateTransitService",
 	func(cfg config.Config) (Warning, error) {
-		spec, ok := cfg.Spec.(*networking.DxgateService)
+		spec, ok := cfg.Spec.(*networking.TransitService)
 		if !ok {
-			return nil, fmt.Errorf("cannot cast to DxgateService")
+			return nil, fmt.Errorf("cannot cast to TransitService")
 		}
 		v := Validation{}
 		switch {
@@ -340,7 +340,7 @@ var ValidateDxgateService = RegisterValidateFunc("ValidateDxgateService",
 				}
 				v = appendValidation(v,
 					validateBackendReference(fmt.Sprintf("mcp.targets[%d].static.backendRef", i), static.GetBackendRef()),
-					validateDxgatePort(fmt.Sprintf("mcp.targets[%d].static.port", i), static.GetPort()),
+					validateTransitPort(fmt.Sprintf("mcp.targets[%d].static.port", i), static.GetPort()),
 					validateOptionalPath(fmt.Sprintf("mcp.targets[%d].static.path", i), static.GetPath()),
 				)
 			}
@@ -355,7 +355,7 @@ var ValidateDxgateService = RegisterValidateFunc("ValidateDxgateService",
 				v = appendValidation(v, validateBackendReference("a2a.backendRef", a2a.GetBackendRef()))
 			}
 			v = appendValidation(v,
-				validateDxgatePort("a2a.port", a2a.GetPort()),
+				validateTransitPort("a2a.port", a2a.GetPort()),
 				validateOptionalPath("a2a.path", a2a.GetPath()),
 			)
 		default:
@@ -417,7 +417,7 @@ func validateBackendReference(field string, ref *networking.BackendReference) er
 	return nil
 }
 
-func validateDxgatePort(field string, port uint32) error {
+func validateTransitPort(field string, port uint32) error {
 	if port == 0 || port > 65535 {
 		return fmt.Errorf("%s must be in range [1, 65535], got %d", field, port)
 	}

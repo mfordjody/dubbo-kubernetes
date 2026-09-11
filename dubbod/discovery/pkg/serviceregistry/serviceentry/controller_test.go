@@ -25,9 +25,9 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config"
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/collections"
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/gvk"
-	meta "github.com/kdubbo/api/meta/v1alpha1"
-	networking "github.com/kdubbo/api/networking/v1alpha3"
-	typev1alpha3 "github.com/kdubbo/api/type/v1alpha3"
+	meta "github.com/dubml/api/meta/v1alpha1"
+	networking "github.com/dubml/api/networking/v1alpha3"
+	typev1alpha3 "github.com/dubml/api/type/v1alpha3"
 )
 
 func TestControllerReconcilesServiceEntryAndWorkloadEntry(t *testing.T) {

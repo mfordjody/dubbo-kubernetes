@@ -1072,12 +1072,6 @@ github.com/julienschmidt/httprouter v1.3.0/go.mod h1:JR6WtHb+2LUe8TCKY3cZOxFyyO8
 github.com/jung-kurt/gofpdf v1.0.0/go.mod h1:7Id9E/uU8ce6rXgefFLlgrJj/GYY22cpxn+r32jIOes=
 github.com/jung-kurt/gofpdf v1.0.3-0.20190309125859-24315acbbda5/go.mod h1:7Id9E/uU8ce6rXgefFLlgrJj/GYY22cpxn+r32jIOes=
 github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51/go.mod h1:CzGEWj7cYgsdH8dAjBGEr58BoE7ScuLd+fwFZ44+/x8=
-github.com/kdubbo/api v0.0.0-20260820123851-c3a7c138547d h1:FCV7OMp3FZmQzmJAM75SSI2SSVHsgbDxHz/pyCQGWVw=
-github.com/kdubbo/api v0.0.0-20260820123851-c3a7c138547d/go.mod h1:8BtJiIovg7QCPsCxXcw3gDf922VcvYq5ihOSvj49Rq8=
-github.com/kdubbo/client-go v0.0.0-20260820124012-0079f2cf2b1d h1:bfMl7kxZq9Gp83MNh/4btIjK4FiGzUNbHNJQNDcZL+w=
-github.com/kdubbo/client-go v0.0.0-20260820124012-0079f2cf2b1d/go.mod h1:XiHz2FHeoNOavRxt2EQLR9WC6Jl69TzM5MwQrS4ToqU=
-github.com/kdubbo/xds-api v0.0.0-20260820125224-2e2719c54121 h1:4yzXRhnMrCm6236P3dqU2f7CJpz7vzIQQkl5ye44HnQ=
-github.com/kdubbo/xds-api v0.0.0-20260820125224-2e2719c54121/go.mod h1:TilAt91qTzM3pArPae5S/1uRTdH2adhGnFIUkTBaSkk=
 github.com/kisielk/errcheck v1.1.0/go.mod h1:EZBBE59ingxPouuu3KfxchcWSUPOHkagtvWXihfKN4Q=
 github.com/kisielk/errcheck v1.5.0/go.mod h1:pFxgyoBC7bSaBwPgfKdkLd5X25qrDl4LWUI2bnpBCr8=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=

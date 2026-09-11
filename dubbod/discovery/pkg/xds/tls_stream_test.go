@@ -35,7 +35,7 @@ import (
 	v1 "github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/xds/v1"
 	"github.com/apache/dubbo-kubernetes/dubbod/security/pkg/server/ca/authenticate"
 	"github.com/apache/dubbo-kubernetes/pkg/security"
-	discovery "github.com/kdubbo/xds-api/service/discovery/v1"
+	discovery "github.com/dubml/xds-api/service/discovery/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"

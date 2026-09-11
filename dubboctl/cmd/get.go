@@ -27,7 +27,7 @@ import (
 
 	"github.com/apache/dubbo-kubernetes/dubboctl/pkg/cli"
 	"github.com/apache/dubbo-kubernetes/pkg/kube/inject"
-	"github.com/kdubbo/api/annotation"
+	"github.com/dubml/api/annotation"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

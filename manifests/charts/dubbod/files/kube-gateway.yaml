@@ -19,7 +19,7 @@ metadata:
   name: {{ .DeploymentName }}-bootstrap
   namespace: {{ .Gateway.Namespace }}
   labels:
-    app.kubernetes.io/name: dxgate
+    app.kubernetes.io/name: transit
     app.kubernetes.io/instance: {{ .DeploymentName }}
     app.kubernetes.io/managed-by: dubbod
     gateway.networking.k8s.io/gateway-name: {{ .Gateway.Name }}
@@ -33,7 +33,7 @@ metadata:
   name: {{ .ServiceAccount }}
   namespace: {{ .Gateway.Namespace }}
   labels:
-    app.kubernetes.io/name: dxgate
+    app.kubernetes.io/name: transit
     app.kubernetes.io/instance: {{ .DeploymentName }}
     app.kubernetes.io/managed-by: dubbod
     gateway.networking.k8s.io/gateway-name: {{ .Gateway.Name }}
@@ -45,7 +45,7 @@ metadata:
   name: {{ .ServiceAccount }}-credentials
   namespace: {{ .Gateway.Namespace }}
   labels:
-    app.kubernetes.io/name: dxgate
+    app.kubernetes.io/name: transit
     app.kubernetes.io/instance: {{ .DeploymentName }}
     app.kubernetes.io/managed-by: dubbod
     gateway.networking.k8s.io/gateway-name: {{ .Gateway.Name }}
@@ -60,7 +60,7 @@ metadata:
   name: {{ .ServiceAccount }}-credentials
   namespace: {{ .Gateway.Namespace }}
   labels:
-    app.kubernetes.io/name: dxgate
+    app.kubernetes.io/name: transit
     app.kubernetes.io/instance: {{ .DeploymentName }}
     app.kubernetes.io/managed-by: dubbod
     gateway.networking.k8s.io/gateway-name: {{ .Gateway.Name }}
@@ -79,7 +79,7 @@ metadata:
   name: {{ .DeploymentName }}
   namespace: {{ .Gateway.Namespace }}
   labels:
-    app.kubernetes.io/name: dxgate
+    app.kubernetes.io/name: transit
     app.kubernetes.io/instance: {{ .DeploymentName }}
     app.kubernetes.io/managed-by: dubbod
     gateway.networking.k8s.io/gateway-name: {{ .Gateway.Name }}
@@ -87,12 +87,12 @@ spec:
   replicas: {{ .Replicas }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: dxgate
+      app.kubernetes.io/name: transit
       app.kubernetes.io/instance: {{ .DeploymentName }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: dxgate
+        app.kubernetes.io/name: transit
         app.kubernetes.io/instance: {{ .DeploymentName }}
         app.kubernetes.io/managed-by: dubbod
         gateway.dubbo.apache.org/managed: dubbo.apache.org-gateway-controller
@@ -116,7 +116,7 @@ spec:
                 topologyKey: kubernetes.io/hostname
                 labelSelector:
                   matchLabels:
-                    app.kubernetes.io/name: dxgate
+                    app.kubernetes.io/name: transit
                     app.kubernetes.io/instance: {{ .DeploymentName }}
       # Advisory spread: a single-node or single-zone cluster still schedules
       # every replica rather than leaving the gateway short.
@@ -126,68 +126,68 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app.kubernetes.io/name: dxgate
+              app.kubernetes.io/name: transit
               app.kubernetes.io/instance: {{ .DeploymentName }}
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app.kubernetes.io/name: dxgate
+              app.kubernetes.io/name: transit
               app.kubernetes.io/instance: {{ .DeploymentName }}
 {{- end }}
       containers:
-      - name: dxgate
-        image: {{ .DxgateImage }}
+      - name: transit
+        image: {{ .TransitImage }}
         imagePullPolicy: IfNotPresent
         env:
-        - name: DXGATE_BOOTSTRAP
-          value: /etc/dxgate/bootstrap.json
-        - name: DXGATE_HTTP_ADDR
+        - name: TRANSIT_BOOTSTRAP
+          value: /etc/transit/bootstrap.json
+        - name: TRANSIT_HTTP_ADDR
           value: 0.0.0.0:15080
-        - name: DXGATE_UI_ADDR
+        - name: TRANSIT_UI_ADDR
           value: 0.0.0.0:26021
-        - name: DXGATE_GATEWAY_NAME
+        - name: TRANSIT_GATEWAY_NAME
           value: {{ .Gateway.Name | quote }}
-        - name: DXGATE_OTEL_SERVICE_NAME
+        - name: TRANSIT_OTEL_SERVICE_NAME
           value: {{ .OtelServiceName | quote }}
-        - name: DXGATE_OTEL_SAMPLING_PERCENTAGE
+        - name: TRANSIT_OTEL_SAMPLING_PERCENTAGE
           value: {{ .OtelSampling | quote }}
 {{- if .OtelTags }}
-        - name: DXGATE_OTEL_TAGS
+        - name: TRANSIT_OTEL_TAGS
           value: {{ .OtelTags | quote }}
 {{- end }}
 {{- if .OtelEndpoint }}
-        - name: DXGATE_OTEL_ENDPOINT
+        - name: TRANSIT_OTEL_ENDPOINT
           value: {{ .OtelEndpoint | quote }}
 {{- end }}
 {{- if .OtelLogsEndpoint }}
-        - name: DXGATE_OTEL_LOGS_ENDPOINT
+        - name: TRANSIT_OTEL_LOGS_ENDPOINT
           value: {{ .OtelLogsEndpoint | quote }}
 {{- end }}
-        - name: DXGATE_ACCESS_LOG
+        - name: TRANSIT_ACCESS_LOG
           value: {{ .AccessLog | quote }}
-        - name: DXGATE_ACCESS_LOG_FORMAT
+        - name: TRANSIT_ACCESS_LOG_FORMAT
           value: {{ .AccessLogFormat | quote }}
 {{- if .AccessLogMode }}
-        - name: DXGATE_ACCESS_LOG_MODE
+        - name: TRANSIT_ACCESS_LOG_MODE
           value: {{ .AccessLogMode | quote }}
 {{- end }}
 {{- if .AccessLogFilter }}
-        - name: DXGATE_ACCESS_LOG_FILTER
+        - name: TRANSIT_ACCESS_LOG_FILTER
           value: {{ .AccessLogFilter | quote }}
 {{- end }}
 {{- if .AccessLogTags }}
-        - name: DXGATE_ACCESS_LOG_TAGS
+        - name: TRANSIT_ACCESS_LOG_TAGS
           value: {{ .AccessLogTags | quote }}
 {{- end }}
 {{- if .ActivationControlPlane }}
         # On-demand activation. Absent, the gateway fails a request for a
         # scaled-to-zero backend immediately, which is the behaviour every
         # gateway had before activation existed.
-        - name: DXGATE_ACTIVATION_CONTROL_PLANE
+        - name: TRANSIT_ACTIVATION_CONTROL_PLANE
           value: {{ .ActivationControlPlane | quote }}
-        - name: DXGATE_ACTIVATION_HOLD_TIMEOUT
+        - name: TRANSIT_ACTIVATION_HOLD_TIMEOUT
           value: {{ .ActivationHoldTimeout | quote }}
 {{- end }}
         - name: POD_NAME
@@ -225,7 +225,7 @@ spec:
           periodSeconds: 10
         volumeMounts:
         - name: bootstrap
-          mountPath: /etc/dxgate
+          mountPath: /etc/transit
           readOnly: true
         securityContext:
           allowPrivilegeEscalation: false
@@ -256,7 +256,7 @@ metadata:
   name: {{ .DeploymentName }}
   namespace: {{ .Gateway.Namespace }}
   labels:
-    app.kubernetes.io/name: dxgate
+    app.kubernetes.io/name: transit
     app.kubernetes.io/instance: {{ .DeploymentName }}
     app.kubernetes.io/managed-by: dubbod
     gateway.networking.k8s.io/gateway-name: {{ .Gateway.Name }}
@@ -264,7 +264,7 @@ metadata:
 spec:
   type: {{ .ServiceType }}
   selector:
-    app.kubernetes.io/name: dxgate
+    app.kubernetes.io/name: transit
     app.kubernetes.io/instance: {{ .DeploymentName }}
   ports:
 {{- range .Ports }}
@@ -284,7 +284,7 @@ metadata:
   name: {{ .DeploymentName }}
   namespace: {{ .Gateway.Namespace }}
   labels:
-    app.kubernetes.io/name: dxgate
+    app.kubernetes.io/name: transit
     app.kubernetes.io/instance: {{ .DeploymentName }}
     app.kubernetes.io/managed-by: dubbod
     gateway.networking.k8s.io/gateway-name: {{ .Gateway.Name }}
@@ -292,6 +292,6 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: dxgate
+      app.kubernetes.io/name: transit
       app.kubernetes.io/instance: {{ .DeploymentName }}
 {{- end }}

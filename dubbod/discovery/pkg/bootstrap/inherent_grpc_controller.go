@@ -49,8 +49,8 @@ import (
 	"github.com/apache/dubbo-kubernetes/dubbod/security/pkg/pki/ca"
 	pkiutil "github.com/apache/dubbo-kubernetes/dubbod/security/pkg/pki/util"
 	caserver "github.com/apache/dubbo-kubernetes/dubbod/security/pkg/server/ca"
-	meshv1alpha1 "github.com/kdubbo/api/mesh/v1alpha1"
-	securityv1alpha3 "github.com/kdubbo/api/security/v1alpha3"
+	meshv1alpha1 "github.com/dubml/api/mesh/v1alpha1"
+	securityv1alpha3 "github.com/dubml/api/security/v1alpha3"
 	"google.golang.org/protobuf/proto"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -951,7 +951,7 @@ func runtimeWorkloadAuthorizationPolicies(
 				policy.Rules = append(policy.Rules, projected)
 			}
 		}
-		// JWT claim constraints are enforced by dxgate. Never weaken them into
+		// JWT claim constraints are enforced by transit. Never weaken them into
 		// an unconstrained native workload rule.
 		if len(spec.GetRules()) > 0 && len(policy.Rules) == 0 {
 			continue
