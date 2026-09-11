@@ -247,15 +247,15 @@ jobs:
       # Pin the data plane source that implements request holding and demand
       # reporting. A floating main branch could make a control-plane PR pass
       # against behavior it did not declare.
-      - name: Checkout dxgate
+      - name: Checkout transit
         uses: actions/checkout@v4
         with:
-          repository: kdubbo/dxgate
-          ref: c8e423501f103c7faa08a0cee7a43680a5054138
-          path: .e2e/dxgate
+          repository: dubml/transit
+          ref: 460f879b285ae6c569508d3292b5d7f69af47ca2
+          path: .e2e/transit
 
-      - name: Build dxgate activation image
-        run: docker build -t kdubbo/dxgate:ga-e2e .e2e/dxgate
+      - name: Build transit activation image
+        run: docker build -t dubml/transit:ga-e2e .e2e/transit
 
       - name: Install Helm
         run: tools/ci/install-helm.sh v3.16.4
@@ -268,9 +268,9 @@ jobs:
           ACTIVATION_E2E: '1'
           AI_MESH_E2E: '1'
           CLUSTER_NAME: dubbo-activation-ga
-          DXGATE_IMAGE: kdubbo/dxgate:ga-e2e
-          IMAGE: kdubbo/dubbod:activation-ga-e2e
-          UPGRADE_FROM_IMAGE: kdubbo/dubbod:activation-ga-e2e
+          TRANSIT_IMAGE: dubml/transit:ga-e2e
+          IMAGE: dubml/dubbod:activation-ga-e2e
+          UPGRADE_FROM_IMAGE: dubml/dubbod:activation-ga-e2e
           UPGRADE_FROM_VERSION: '0.4.3'
         run: make test-e2e
 

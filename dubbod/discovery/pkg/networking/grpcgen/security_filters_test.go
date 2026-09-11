@@ -23,10 +23,10 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config"
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/gvk"
 	"github.com/apache/dubbo-kubernetes/pkg/wellknown"
-	security "github.com/kdubbo/api/security/v1alpha3"
-	typev1alpha3 "github.com/kdubbo/api/type/v1alpha3"
-	jwtv1 "github.com/kdubbo/xds-api/extensions/filters/v1/http/jwt_authn"
-	rbacv1 "github.com/kdubbo/xds-api/extensions/filters/v1/http/rbac"
+	security "github.com/dubml/api/security/v1alpha3"
+	typev1alpha3 "github.com/dubml/api/type/v1alpha3"
+	jwtv1 "github.com/dubml/xds-api/extensions/filters/v1/http/jwt_authn"
+	rbacv1 "github.com/dubml/xds-api/extensions/filters/v1/http/rbac"
 )
 
 func TestBuildInboundHTTPFiltersAddsJWTAndAuthorizationBeforeRouter(t *testing.T) {

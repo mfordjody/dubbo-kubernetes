@@ -30,7 +30,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/kube/kubetypes"
 	"github.com/apache/dubbo-kubernetes/pkg/lazy"
 	"github.com/apache/dubbo-kubernetes/pkg/sleep"
-	dubboclient "github.com/kdubbo/client-go/pkg/clientset/versioned"
+	dubboclient "github.com/dubml/client-go/pkg/clientset/versioned"
 	"go.uber.org/atomic"
 	kubeExtClient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/api/meta"

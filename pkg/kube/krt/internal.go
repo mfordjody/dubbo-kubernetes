@@ -26,7 +26,7 @@ import (
 
 	"github.com/apache/dubbo-kubernetes/pkg/config"
 	"github.com/apache/dubbo-kubernetes/pkg/util/ptr"
-	typev1alpha3 "github.com/kdubbo/api/type/v1alpha3"
+	typev1alpha3 "github.com/dubml/api/type/v1alpha3"
 )
 
 // registerHandlerAsBatched is a helper to register the provided handler as a batched handler. This allows collections to

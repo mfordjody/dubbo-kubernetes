@@ -31,11 +31,11 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
 	dubboversion "github.com/apache/dubbo-kubernetes/pkg/version"
 	"github.com/apache/dubbo-kubernetes/pkg/xds"
-	cluster "github.com/kdubbo/xds-api/cluster/v1"
-	core "github.com/kdubbo/xds-api/core/v1"
-	hcmv1 "github.com/kdubbo/xds-api/extensions/filters/v1/network/http_connection_manager"
-	listener "github.com/kdubbo/xds-api/listener/v1"
-	discovery "github.com/kdubbo/xds-api/service/discovery/v1"
+	cluster "github.com/dubml/xds-api/cluster/v1"
+	core "github.com/dubml/xds-api/core/v1"
+	hcmv1 "github.com/dubml/xds-api/extensions/filters/v1/network/http_connection_manager"
+	listener "github.com/dubml/xds-api/listener/v1"
+	discovery "github.com/dubml/xds-api/service/discovery/v1"
 )
 
 type DubboControlPlaneInstance struct {
@@ -580,7 +580,7 @@ func shouldSetWatchedResources(w *model.WatchedResource) bool {
 	if w == nil {
 		return false
 	}
-	// RDS is not globally wildcard in xDS, but dxgate starts with a wildcard
+	// RDS is not globally wildcard in xDS, but transit starts with a wildcard
 	// Delta subscription and then ACKs without repeating concrete names. Keep
 	// the names we actually sent so later policy pushes can rebuild those routes.
 	return xds.IsWildcardTypeURL(w.TypeUrl) || w.TypeUrl == v1.RouteType

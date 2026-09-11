@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: http
-          image: kdubbo/agent-mock:latest
+          image: dubml/agent-mock:latest
           imagePullPolicy: IfNotPresent
           env:
             - {name: MOCK_MODE, value: http}
@@ -22,7 +22,7 @@ spec:
           ports:
             - {name: http, containerPort: 8080}
         - name: openai
-          image: kdubbo/agent-mock:latest
+          image: dubml/agent-mock:latest
           imagePullPolicy: IfNotPresent
           env:
             - {name: MOCK_MODE, value: openai}
@@ -30,7 +30,7 @@ spec:
           ports:
             - {name: openai, containerPort: 8081}
         - name: anthropic
-          image: kdubbo/agent-mock:latest
+          image: dubml/agent-mock:latest
           imagePullPolicy: IfNotPresent
           env:
             - {name: MOCK_MODE, value: anthropic}
@@ -38,7 +38,7 @@ spec:
           ports:
             - {name: anthropic, containerPort: 8082}
         - name: mcp-search
-          image: kdubbo/agent-mock:latest
+          image: dubml/agent-mock:latest
           imagePullPolicy: IfNotPresent
           env:
             - {name: MOCK_MODE, value: mcp}
@@ -47,7 +47,7 @@ spec:
           ports:
             - {name: mcp-search, containerPort: 8083}
         - name: mcp-calendar
-          image: kdubbo/agent-mock:latest
+          image: dubml/agent-mock:latest
           imagePullPolicy: IfNotPresent
           env:
             - {name: MOCK_MODE, value: mcp}
@@ -56,7 +56,7 @@ spec:
           ports:
             - {name: mcp-calendar, containerPort: 8084}
         - name: a2a
-          image: kdubbo/agent-mock:latest
+          image: dubml/agent-mock:latest
           imagePullPolicy: IfNotPresent
           env:
             - {name: MOCK_MODE, value: a2a}

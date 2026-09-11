@@ -23,7 +23,7 @@ import (
 	"os"
 	"time"
 
-	runtimeapplication "github.com/kdubbo/xds-api/grpc/application"
+	runtimeapplication "github.com/dubml/xds-api/grpc/application"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"

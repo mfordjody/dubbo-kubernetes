@@ -61,9 +61,9 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/network"
 	"github.com/apache/dubbo-kubernetes/pkg/spiffe"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
+	meshv1alpha1 "github.com/dubml/api/mesh/v1alpha1"
 	"github.com/fsnotify/fsnotify"
 	grpcprom "github.com/grpc-ecosystem/go-grpc-prometheus"
-	meshv1alpha1 "github.com/kdubbo/api/mesh/v1alpha1"
 	"go.uber.org/atomic"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -535,7 +535,7 @@ func (s *Server) initRegistryEventHandlers() {
 			configKind == kind.ReferenceGrant ||
 			configKind == kind.CircuitBreakerPolicy ||
 			configKind == kind.FaultInjectionPolicy ||
-			configKind == kind.DxgateService ||
+			configKind == kind.TransitService ||
 			configKind == kind.ServiceActivationPolicy
 
 		// Trigger ConfigUpdate to push changes to all connected proxies
@@ -619,8 +619,8 @@ func configKindForSchemaIdentifier(schemaID string) (kind.Kind, bool) {
 		return kind.CircuitBreakerPolicy, true
 	case "FaultInjectionPolicy":
 		return kind.FaultInjectionPolicy, true
-	case "DxgateService":
-		return kind.DxgateService, true
+	case "TransitService":
+		return kind.TransitService, true
 	case "ServiceActivationPolicy":
 		return kind.ServiceActivationPolicy, true
 	case "Telemetry":

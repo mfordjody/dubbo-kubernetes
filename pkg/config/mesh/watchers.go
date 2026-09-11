@@ -17,7 +17,7 @@
 package mesh
 
 import (
-	"github.com/kdubbo/api/mesh/v1alpha1"
+	"github.com/dubml/api/mesh/v1alpha1"
 )
 
 // Holder of a mesh configuration.

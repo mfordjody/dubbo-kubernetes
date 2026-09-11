@@ -623,6 +623,12 @@ github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZm
 github.com/dlclark/regexp2 v1.11.5 h1:Q/sSnsKerHeCkc/jSTNq1oCm7KiVgUMZRDUoRu0JQZQ=
 github.com/dlclark/regexp2 v1.11.5/go.mod h1:DHkYz0B9wPfa6wondMfaivmHpzrQ3v9q8cnmRbL6yW8=
 github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815/go.mod h1:WwZ+bS3ebgob9U8Nd0kOddGdZWjyMGR8Wziv+TBNwSE=
+github.com/dubml/api v0.0.0-20260911093830-fa669147470c h1:N5/9WYEsvTm/5fMfzkBuZtzpH/UvFO81buW42DpyFwU=
+github.com/dubml/api v0.0.0-20260911093830-fa669147470c/go.mod h1:fw9ZUYCATkmfdFjlbfZ76llWlnaTzGzb3UFHULDIm/o=
+github.com/dubml/client-go v0.0.0-20260911093918-b7801d1c7ef5 h1:LMNiysAbMqLD9lR9mhDWssBwjd/OZpT03vhbqSzrGpQ=
+github.com/dubml/client-go v0.0.0-20260911093918-b7801d1c7ef5/go.mod h1:fEJmKtkc7zatAXWV/o9uXleEh0SV8DU+bKnTaT7oRSc=
+github.com/dubml/xds-api v0.0.0-20260911093855-f8a089db050d h1:RrhtIrBwH1SrfcfJc+nTE9uyzXtMSUPv+Gm3ekDrWxw=
+github.com/dubml/xds-api v0.0.0-20260911093855-f8a089db050d/go.mod h1:40I5C5QNo2YraLjwK9P6aOwLx5YjALyKFGT2AUifzEY=
 github.com/dustin/go-humanize v0.0.0-20171111073723-bb3d318650d4/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
@@ -1072,12 +1078,6 @@ github.com/julienschmidt/httprouter v1.3.0/go.mod h1:JR6WtHb+2LUe8TCKY3cZOxFyyO8
 github.com/jung-kurt/gofpdf v1.0.0/go.mod h1:7Id9E/uU8ce6rXgefFLlgrJj/GYY22cpxn+r32jIOes=
 github.com/jung-kurt/gofpdf v1.0.3-0.20190309125859-24315acbbda5/go.mod h1:7Id9E/uU8ce6rXgefFLlgrJj/GYY22cpxn+r32jIOes=
 github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51/go.mod h1:CzGEWj7cYgsdH8dAjBGEr58BoE7ScuLd+fwFZ44+/x8=
-github.com/kdubbo/api v0.0.0-20260820123851-c3a7c138547d h1:FCV7OMp3FZmQzmJAM75SSI2SSVHsgbDxHz/pyCQGWVw=
-github.com/kdubbo/api v0.0.0-20260820123851-c3a7c138547d/go.mod h1:8BtJiIovg7QCPsCxXcw3gDf922VcvYq5ihOSvj49Rq8=
-github.com/kdubbo/client-go v0.0.0-20260820124012-0079f2cf2b1d h1:bfMl7kxZq9Gp83MNh/4btIjK4FiGzUNbHNJQNDcZL+w=
-github.com/kdubbo/client-go v0.0.0-20260820124012-0079f2cf2b1d/go.mod h1:XiHz2FHeoNOavRxt2EQLR9WC6Jl69TzM5MwQrS4ToqU=
-github.com/kdubbo/xds-api v0.0.0-20260820125224-2e2719c54121 h1:4yzXRhnMrCm6236P3dqU2f7CJpz7vzIQQkl5ye44HnQ=
-github.com/kdubbo/xds-api v0.0.0-20260820125224-2e2719c54121/go.mod h1:TilAt91qTzM3pArPae5S/1uRTdH2adhGnFIUkTBaSkk=
 github.com/kisielk/errcheck v1.1.0/go.mod h1:EZBBE59ingxPouuu3KfxchcWSUPOHkagtvWXihfKN4Q=
 github.com/kisielk/errcheck v1.5.0/go.mod h1:pFxgyoBC7bSaBwPgfKdkLd5X25qrDl4LWUI2bnpBCr8=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=

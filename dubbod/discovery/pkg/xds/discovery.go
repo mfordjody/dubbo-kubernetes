@@ -31,7 +31,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/kind"
 	"github.com/apache/dubbo-kubernetes/pkg/kube/krt"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
-	discovery "github.com/kdubbo/xds-api/service/discovery/v1"
+	discovery "github.com/dubml/xds-api/service/discovery/v1"
 	"go.uber.org/atomic"
 	"golang.org/x/time/rate"
 	"google.golang.org/grpc"

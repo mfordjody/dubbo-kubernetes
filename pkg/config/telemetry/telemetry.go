@@ -26,8 +26,8 @@ import (
 	"time"
 
 	"github.com/apache/dubbo-kubernetes/pkg/config"
-	api "github.com/kdubbo/api/telemetry/v1alpha3"
-	clientapi "github.com/kdubbo/client-go/pkg/apis/telemetry/v1alpha3"
+	api "github.com/dubml/api/telemetry/v1alpha3"
+	clientapi "github.com/dubml/client-go/pkg/apis/telemetry/v1alpha3"
 )
 
 const (

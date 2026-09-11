@@ -11,11 +11,11 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/collection"
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/resource"
 	"github.com/apache/dubbo-kubernetes/pkg/config/validation"
-	githubcomkdubboapimeshv1alpha1 "github.com/kdubbo/api/mesh/v1alpha1"
-	githubcomkdubboapimetav1alpha1 "github.com/kdubbo/api/meta/v1alpha1"
-	githubcomkdubboapinetworkingv1alpha3 "github.com/kdubbo/api/networking/v1alpha3"
-	githubcomkdubboapisecurityv1alpha3 "github.com/kdubbo/api/security/v1alpha3"
-	githubcomkdubboapitelemetryv1alpha3 "github.com/kdubbo/api/telemetry/v1alpha3"
+	githubcomdubmlapimeshv1alpha1 "github.com/dubml/api/mesh/v1alpha1"
+	githubcomdubmlapimetav1alpha1 "github.com/dubml/api/meta/v1alpha1"
+	githubcomdubmlapinetworkingv1alpha3 "github.com/dubml/api/networking/v1alpha3"
+	githubcomdubmlapisecurityv1alpha3 "github.com/dubml/api/security/v1alpha3"
+	githubcomdubmlapitelemetryv1alpha3 "github.com/dubml/api/telemetry/v1alpha3"
 	k8sioapiadmissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	k8sioapiappsv1 "k8s.io/api/apps/v1"
 	k8sioapiautoscalingv2 "k8s.io/api/autoscaling/v2"
@@ -36,8 +36,8 @@ var (
 		Plural:     "authorizationpolicies",
 		Version:    "v1alpha3",
 		Proto:      "dubbo.security.v1alpha3.AuthorizationPolicy", StatusProto: "dubbo.meta.v1alpha1.DubboStatus",
-		ReflectType: reflect.TypeOf(&githubcomkdubboapisecurityv1alpha3.AuthorizationPolicy{}).Elem(), StatusType: reflect.TypeOf(&githubcomkdubboapimetav1alpha1.DubboStatus{}).Elem(),
-		ProtoPackage: "github.com/kdubbo/api/security/v1alpha3", StatusPackage: "github.com/kdubbo/api/meta/v1alpha1",
+		ReflectType: reflect.TypeOf(&githubcomdubmlapisecurityv1alpha3.AuthorizationPolicy{}).Elem(), StatusType: reflect.TypeOf(&githubcomdubmlapimetav1alpha1.DubboStatus{}).Elem(),
+		ProtoPackage: "github.com/dubml/api/security/v1alpha3", StatusPackage: "github.com/dubml/api/meta/v1alpha1",
 		ClusterScoped: false,
 		Synthetic:     false,
 		Builtin:       false,
@@ -69,8 +69,8 @@ var (
 		Plural:     "circuitbreakerpolicies",
 		Version:    "v1alpha3",
 		Proto:      "dubbo.networking.v1alpha3.CircuitBreakerPolicy", StatusProto: "dubbo.meta.v1alpha1.DubboStatus",
-		ReflectType: reflect.TypeOf(&githubcomkdubboapinetworkingv1alpha3.CircuitBreakerPolicy{}).Elem(), StatusType: reflect.TypeOf(&githubcomkdubboapimetav1alpha1.DubboStatus{}).Elem(),
-		ProtoPackage: "github.com/kdubbo/api/networking/v1alpha3", StatusPackage: "github.com/kdubbo/api/meta/v1alpha1",
+		ReflectType: reflect.TypeOf(&githubcomdubmlapinetworkingv1alpha3.CircuitBreakerPolicy{}).Elem(), StatusType: reflect.TypeOf(&githubcomdubmlapimetav1alpha1.DubboStatus{}).Elem(),
+		ProtoPackage: "github.com/dubml/api/networking/v1alpha3", StatusPackage: "github.com/dubml/api/meta/v1alpha1",
 		ClusterScoped: false,
 		Synthetic:     false,
 		Builtin:       false,
@@ -137,21 +137,6 @@ var (
 		ValidateProto: validation.EmptyValidate,
 	}.MustBuild()
 
-	DxgateService = resource.Builder{
-		Identifier: "DxgateService",
-		Group:      "networking.dubbo.apache.org",
-		Kind:       "DxgateService",
-		Plural:     "dxgateservices",
-		Version:    "v1alpha3",
-		Proto:      "dubbo.networking.v1alpha3.DxgateService", StatusProto: "dubbo.meta.v1alpha1.DubboStatus",
-		ReflectType: reflect.TypeOf(&githubcomkdubboapinetworkingv1alpha3.DxgateService{}).Elem(), StatusType: reflect.TypeOf(&githubcomkdubboapimetav1alpha1.DubboStatus{}).Elem(),
-		ProtoPackage: "github.com/kdubbo/api/networking/v1alpha3", StatusPackage: "github.com/kdubbo/api/meta/v1alpha1",
-		ClusterScoped: false,
-		Synthetic:     false,
-		Builtin:       false,
-		ValidateProto: validation.ValidateDxgateService,
-	}.MustBuild()
-
 	EndpointSlice = resource.Builder{
 		Identifier:    "EndpointSlice",
 		Group:         "discovery.k8s.io",
@@ -189,8 +174,8 @@ var (
 		Plural:     "faultinjectionpolicies",
 		Version:    "v1alpha3",
 		Proto:      "dubbo.networking.v1alpha3.FaultInjectionPolicy", StatusProto: "dubbo.meta.v1alpha1.DubboStatus",
-		ReflectType: reflect.TypeOf(&githubcomkdubboapinetworkingv1alpha3.FaultInjectionPolicy{}).Elem(), StatusType: reflect.TypeOf(&githubcomkdubboapimetav1alpha1.DubboStatus{}).Elem(),
-		ProtoPackage: "github.com/kdubbo/api/networking/v1alpha3", StatusPackage: "github.com/kdubbo/api/meta/v1alpha1",
+		ReflectType: reflect.TypeOf(&githubcomdubmlapinetworkingv1alpha3.FaultInjectionPolicy{}).Elem(), StatusType: reflect.TypeOf(&githubcomdubmlapimetav1alpha1.DubboStatus{}).Elem(),
+		ProtoPackage: "github.com/dubml/api/networking/v1alpha3", StatusPackage: "github.com/dubml/api/meta/v1alpha1",
 		ClusterScoped: false,
 		Synthetic:     false,
 		Builtin:       false,
@@ -288,8 +273,8 @@ var (
 		Plural:        "meshconfigs",
 		Version:       "v1alpha1",
 		Proto:         "dubbo.mesh.v1alpha1.MeshConfig",
-		ReflectType:   reflect.TypeOf(&githubcomkdubboapimeshv1alpha1.MeshConfig{}).Elem(),
-		ProtoPackage:  "github.com/kdubbo/api/mesh/v1alpha1",
+		ReflectType:   reflect.TypeOf(&githubcomdubmlapimeshv1alpha1.MeshConfig{}).Elem(),
+		ProtoPackage:  "github.com/dubml/api/mesh/v1alpha1",
 		ClusterScoped: false,
 		Synthetic:     true,
 		Builtin:       false,
@@ -348,8 +333,8 @@ var (
 		Plural:     "peerauthentications",
 		Version:    "v1alpha3",
 		Proto:      "dubbo.security.v1alpha3.PeerAuthentication", StatusProto: "dubbo.meta.v1alpha1.DubboStatus",
-		ReflectType: reflect.TypeOf(&githubcomkdubboapisecurityv1alpha3.PeerAuthentication{}).Elem(), StatusType: reflect.TypeOf(&githubcomkdubboapimetav1alpha1.DubboStatus{}).Elem(),
-		ProtoPackage: "github.com/kdubbo/api/security/v1alpha3", StatusPackage: "github.com/kdubbo/api/meta/v1alpha1",
+		ReflectType: reflect.TypeOf(&githubcomdubmlapisecurityv1alpha3.PeerAuthentication{}).Elem(), StatusType: reflect.TypeOf(&githubcomdubmlapimetav1alpha1.DubboStatus{}).Elem(),
+		ProtoPackage: "github.com/dubml/api/security/v1alpha3", StatusPackage: "github.com/dubml/api/meta/v1alpha1",
 		ClusterScoped: false,
 		Synthetic:     false,
 		Builtin:       false,
@@ -411,8 +396,8 @@ var (
 		Plural:     "requestauthentications",
 		Version:    "v1alpha3",
 		Proto:      "dubbo.security.v1alpha3.RequestAuthentication", StatusProto: "dubbo.meta.v1alpha1.DubboStatus",
-		ReflectType: reflect.TypeOf(&githubcomkdubboapisecurityv1alpha3.RequestAuthentication{}).Elem(), StatusType: reflect.TypeOf(&githubcomkdubboapimetav1alpha1.DubboStatus{}).Elem(),
-		ProtoPackage: "github.com/kdubbo/api/security/v1alpha3", StatusPackage: "github.com/kdubbo/api/meta/v1alpha1",
+		ReflectType: reflect.TypeOf(&githubcomdubmlapisecurityv1alpha3.RequestAuthentication{}).Elem(), StatusType: reflect.TypeOf(&githubcomdubmlapimetav1alpha1.DubboStatus{}).Elem(),
+		ProtoPackage: "github.com/dubml/api/security/v1alpha3", StatusPackage: "github.com/dubml/api/meta/v1alpha1",
 		ClusterScoped: false,
 		Synthetic:     false,
 		Builtin:       false,
@@ -471,8 +456,8 @@ var (
 		Plural:     "serviceactivationpolicies",
 		Version:    "v1alpha3",
 		Proto:      "dubbo.networking.v1alpha3.ServiceActivationPolicy", StatusProto: "dubbo.meta.v1alpha1.DubboStatus",
-		ReflectType: reflect.TypeOf(&githubcomkdubboapinetworkingv1alpha3.ServiceActivationPolicy{}).Elem(), StatusType: reflect.TypeOf(&githubcomkdubboapimetav1alpha1.DubboStatus{}).Elem(),
-		ProtoPackage: "github.com/kdubbo/api/networking/v1alpha3", StatusPackage: "github.com/kdubbo/api/meta/v1alpha1",
+		ReflectType: reflect.TypeOf(&githubcomdubmlapinetworkingv1alpha3.ServiceActivationPolicy{}).Elem(), StatusType: reflect.TypeOf(&githubcomdubmlapimetav1alpha1.DubboStatus{}).Elem(),
+		ProtoPackage: "github.com/dubml/api/networking/v1alpha3", StatusPackage: "github.com/dubml/api/meta/v1alpha1",
 		ClusterScoped: false,
 		Synthetic:     false,
 		Builtin:       false,
@@ -486,8 +471,8 @@ var (
 		Plural:     "serviceentries",
 		Version:    "v1alpha3",
 		Proto:      "dubbo.networking.v1alpha3.ServiceEntry", StatusProto: "dubbo.meta.v1alpha1.DubboStatus",
-		ReflectType: reflect.TypeOf(&githubcomkdubboapinetworkingv1alpha3.ServiceEntry{}).Elem(), StatusType: reflect.TypeOf(&githubcomkdubboapimetav1alpha1.DubboStatus{}).Elem(),
-		ProtoPackage: "github.com/kdubbo/api/networking/v1alpha3", StatusPackage: "github.com/kdubbo/api/meta/v1alpha1",
+		ReflectType: reflect.TypeOf(&githubcomdubmlapinetworkingv1alpha3.ServiceEntry{}).Elem(), StatusType: reflect.TypeOf(&githubcomdubmlapimetav1alpha1.DubboStatus{}).Elem(),
+		ProtoPackage: "github.com/dubml/api/networking/v1alpha3", StatusPackage: "github.com/dubml/api/meta/v1alpha1",
 		ClusterScoped: false,
 		Synthetic:     false,
 		Builtin:       false,
@@ -516,12 +501,27 @@ var (
 		Plural:     "telemetries",
 		Version:    "v1alpha3",
 		Proto:      "dubbo.telemetry.v1alpha3.Telemetry", StatusProto: "dubbo.meta.v1alpha1.DubboStatus",
-		ReflectType: reflect.TypeOf(&githubcomkdubboapitelemetryv1alpha3.Telemetry{}).Elem(), StatusType: reflect.TypeOf(&githubcomkdubboapimetav1alpha1.DubboStatus{}).Elem(),
-		ProtoPackage: "github.com/kdubbo/api/telemetry/v1alpha3", StatusPackage: "github.com/kdubbo/api/meta/v1alpha1",
+		ReflectType: reflect.TypeOf(&githubcomdubmlapitelemetryv1alpha3.Telemetry{}).Elem(), StatusType: reflect.TypeOf(&githubcomdubmlapimetav1alpha1.DubboStatus{}).Elem(),
+		ProtoPackage: "github.com/dubml/api/telemetry/v1alpha3", StatusPackage: "github.com/dubml/api/meta/v1alpha1",
 		ClusterScoped: false,
 		Synthetic:     false,
 		Builtin:       false,
 		ValidateProto: validation.ValidateTelemetry,
+	}.MustBuild()
+
+	TransitService = resource.Builder{
+		Identifier: "TransitService",
+		Group:      "networking.dubbo.apache.org",
+		Kind:       "TransitService",
+		Plural:     "transitservices",
+		Version:    "v1alpha3",
+		Proto:      "dubbo.networking.v1alpha3.TransitService", StatusProto: "dubbo.meta.v1alpha1.DubboStatus",
+		ReflectType: reflect.TypeOf(&githubcomdubmlapinetworkingv1alpha3.TransitService{}).Elem(), StatusType: reflect.TypeOf(&githubcomdubmlapimetav1alpha1.DubboStatus{}).Elem(),
+		ProtoPackage: "github.com/dubml/api/networking/v1alpha3", StatusPackage: "github.com/dubml/api/meta/v1alpha1",
+		ClusterScoped: false,
+		Synthetic:     false,
+		Builtin:       false,
+		ValidateProto: validation.ValidateTransitService,
 	}.MustBuild()
 
 	ValidatingWebhookConfiguration = resource.Builder{
@@ -546,8 +546,8 @@ var (
 		Plural:     "workloadentries",
 		Version:    "v1alpha3",
 		Proto:      "dubbo.networking.v1alpha3.WorkloadEntry", StatusProto: "dubbo.meta.v1alpha1.DubboStatus",
-		ReflectType: reflect.TypeOf(&githubcomkdubboapinetworkingv1alpha3.WorkloadEntry{}).Elem(), StatusType: reflect.TypeOf(&githubcomkdubboapimetav1alpha1.DubboStatus{}).Elem(),
-		ProtoPackage: "github.com/kdubbo/api/networking/v1alpha3", StatusPackage: "github.com/kdubbo/api/meta/v1alpha1",
+		ReflectType: reflect.TypeOf(&githubcomdubmlapinetworkingv1alpha3.WorkloadEntry{}).Elem(), StatusType: reflect.TypeOf(&githubcomdubmlapimetav1alpha1.DubboStatus{}).Elem(),
+		ProtoPackage: "github.com/dubml/api/networking/v1alpha3", StatusPackage: "github.com/dubml/api/meta/v1alpha1",
 		ClusterScoped: false,
 		Synthetic:     false,
 		Builtin:       false,
@@ -563,7 +563,6 @@ var (
 		MustAdd(CustomResourceDefinition).
 		MustAdd(DaemonSet).
 		MustAdd(Deployment).
-		MustAdd(DxgateService).
 		MustAdd(EndpointSlice).
 		MustAdd(Endpoints).
 		MustAdd(FaultInjectionPolicy).
@@ -588,6 +587,7 @@ var (
 		MustAdd(ServiceEntry).
 		MustAdd(StatefulSet).
 		MustAdd(Telemetry).
+		MustAdd(TransitService).
 		MustAdd(ValidatingWebhookConfiguration).
 		MustAdd(WorkloadEntry).
 		Build()
@@ -623,13 +623,13 @@ var (
 	Dubbo = collection.NewSchemasBuilder().
 		MustAdd(AuthorizationPolicy).
 		MustAdd(CircuitBreakerPolicy).
-		MustAdd(DxgateService).
 		MustAdd(FaultInjectionPolicy).
 		MustAdd(PeerAuthentication).
 		MustAdd(RequestAuthentication).
 		MustAdd(ServiceActivationPolicy).
 		MustAdd(ServiceEntry).
 		MustAdd(Telemetry).
+		MustAdd(TransitService).
 		MustAdd(WorkloadEntry).
 		Build()
 
@@ -638,7 +638,6 @@ var (
 			MustAdd(AuthorizationPolicy).
 			MustAdd(BackendTLSPolicy).
 			MustAdd(CircuitBreakerPolicy).
-			MustAdd(DxgateService).
 			MustAdd(FaultInjectionPolicy).
 			MustAdd(GatewayClass).
 			MustAdd(HTTPRoute).
@@ -649,6 +648,7 @@ var (
 			MustAdd(ServiceActivationPolicy).
 			MustAdd(ServiceEntry).
 			MustAdd(Telemetry).
+			MustAdd(TransitService).
 			MustAdd(WorkloadEntry).
 			Build()
 
@@ -657,7 +657,6 @@ var (
 				MustAdd(AuthorizationPolicy).
 				MustAdd(BackendTLSPolicy).
 				MustAdd(CircuitBreakerPolicy).
-				MustAdd(DxgateService).
 				MustAdd(FaultInjectionPolicy).
 				MustAdd(GatewayClass).
 				MustAdd(HTTPRoute).
@@ -668,6 +667,7 @@ var (
 				MustAdd(ServiceActivationPolicy).
 				MustAdd(ServiceEntry).
 				MustAdd(Telemetry).
+				MustAdd(TransitService).
 				MustAdd(WorkloadEntry).
 				Build()
 )

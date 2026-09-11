@@ -21,7 +21,7 @@ import (
 
 	"github.com/apache/dubbo-kubernetes/pkg/model"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
-	discovery "github.com/kdubbo/xds-api/service/discovery/v1"
+	discovery "github.com/dubml/xds-api/service/discovery/v1"
 )
 
 type testWatcher struct {

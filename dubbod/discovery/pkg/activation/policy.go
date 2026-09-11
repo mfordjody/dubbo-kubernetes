@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"strings"
 
-	metav1alpha1 "github.com/kdubbo/api/meta/v1alpha1"
-	networking "github.com/kdubbo/api/networking/v1alpha3"
-	clientnetworking "github.com/kdubbo/client-go/pkg/apis/networking/v1alpha3"
+	metav1alpha1 "github.com/dubml/api/meta/v1alpha1"
+	networking "github.com/dubml/api/networking/v1alpha3"
+	clientnetworking "github.com/dubml/client-go/pkg/apis/networking/v1alpha3"
 )
 
 // Condition types reported on a ServiceActivationPolicy. Each answers a

@@ -27,7 +27,7 @@ import (
 	dubbogrpc "github.com/apache/dubbo-kubernetes/pkg/grpc"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
 	"github.com/google/uuid"
-	discovery "github.com/kdubbo/xds-api/service/discovery/v1"
+	discovery "github.com/dubml/xds-api/service/discovery/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"

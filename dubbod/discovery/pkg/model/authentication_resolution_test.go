@@ -21,8 +21,8 @@ import (
 
 	"github.com/apache/dubbo-kubernetes/pkg/config"
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/gvk"
-	security "github.com/kdubbo/api/security/v1alpha3"
-	typev1alpha3 "github.com/kdubbo/api/type/v1alpha3"
+	security "github.com/dubml/api/security/v1alpha3"
+	typev1alpha3 "github.com/dubml/api/type/v1alpha3"
 )
 
 func selectorFromLabels(labels map[string]string) *typev1alpha3.WorkloadSelector {

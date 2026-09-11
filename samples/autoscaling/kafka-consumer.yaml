@@ -37,7 +37,7 @@ spec:
       containers:
         - name: consumer
           # Replace with your own consumer image.
-          image: kdubbo/order-consumer:latest
+          image: dubml/order-consumer:latest
           imagePullPolicy: IfNotPresent
           env:
             - name: KAFKA_BOOTSTRAP_SERVERS

@@ -17,9 +17,9 @@ import (
 	ktypes "github.com/apache/dubbo-kubernetes/pkg/kube/kubetypes"
 	"github.com/apache/dubbo-kubernetes/pkg/util/ptr"
 
-	apigithubcomapachedubbokubernetesapinetworkingv1alpha3 "github.com/kdubbo/client-go/pkg/apis/networking/v1alpha3"
-	apigithubcomapachedubbokubernetesapisecurityv1alpha3 "github.com/kdubbo/client-go/pkg/apis/security/v1alpha3"
-	apigithubcomapachedubbokubernetesapitelemetryv1alpha3 "github.com/kdubbo/client-go/pkg/apis/telemetry/v1alpha3"
+	apigithubcomapachedubbokubernetesapinetworkingv1alpha3 "github.com/dubml/client-go/pkg/apis/networking/v1alpha3"
+	apigithubcomapachedubbokubernetesapisecurityv1alpha3 "github.com/dubml/client-go/pkg/apis/security/v1alpha3"
+	apigithubcomapachedubbokubernetesapitelemetryv1alpha3 "github.com/dubml/client-go/pkg/apis/telemetry/v1alpha3"
 	k8sioapiadmissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	k8sioapiappsv1 "k8s.io/api/apps/v1"
 	k8sioapiautoscalingv2 "k8s.io/api/autoscaling/v2"
@@ -48,8 +48,6 @@ func GetWriteClient[T runtime.Object](c ClientGetter, namespace string) ktypes.W
 		return c.Kube().AppsV1().DaemonSets(namespace).(ktypes.WriteAPI[T])
 	case *k8sioapiappsv1.Deployment:
 		return c.Kube().AppsV1().Deployments(namespace).(ktypes.WriteAPI[T])
-	case *apigithubcomapachedubbokubernetesapinetworkingv1alpha3.DxgateService:
-		return c.Dubbo().NetworkingV1alpha3().DxgateServices(namespace).(ktypes.WriteAPI[T])
 	case *k8sioapidiscoveryv1.EndpointSlice:
 		return c.Kube().DiscoveryV1().EndpointSlices(namespace).(ktypes.WriteAPI[T])
 	case *k8sioapicorev1.Endpoints:
@@ -96,6 +94,8 @@ func GetWriteClient[T runtime.Object](c ClientGetter, namespace string) ktypes.W
 		return c.Kube().AppsV1().StatefulSets(namespace).(ktypes.WriteAPI[T])
 	case *apigithubcomapachedubbokubernetesapitelemetryv1alpha3.Telemetry:
 		return c.Dubbo().TelemetryV1alpha3().Telemetries(namespace).(ktypes.WriteAPI[T])
+	case *apigithubcomapachedubbokubernetesapinetworkingv1alpha3.TransitService:
+		return c.Dubbo().NetworkingV1alpha3().TransitServices(namespace).(ktypes.WriteAPI[T])
 	case *k8sioapiadmissionregistrationv1.ValidatingWebhookConfiguration:
 		return c.Kube().AdmissionregistrationV1().ValidatingWebhookConfigurations().(ktypes.WriteAPI[T])
 	case *apigithubcomapachedubbokubernetesapinetworkingv1alpha3.WorkloadEntry:
@@ -121,8 +121,6 @@ func GetClient[T, TL runtime.Object](c ClientGetter, namespace string) ktypes.Re
 		return c.Kube().AppsV1().DaemonSets(namespace).(ktypes.ReadWriteAPI[T, TL])
 	case *k8sioapiappsv1.Deployment:
 		return c.Kube().AppsV1().Deployments(namespace).(ktypes.ReadWriteAPI[T, TL])
-	case *apigithubcomapachedubbokubernetesapinetworkingv1alpha3.DxgateService:
-		return c.Dubbo().NetworkingV1alpha3().DxgateServices(namespace).(ktypes.ReadWriteAPI[T, TL])
 	case *k8sioapidiscoveryv1.EndpointSlice:
 		return c.Kube().DiscoveryV1().EndpointSlices(namespace).(ktypes.ReadWriteAPI[T, TL])
 	case *k8sioapicorev1.Endpoints:
@@ -169,6 +167,8 @@ func GetClient[T, TL runtime.Object](c ClientGetter, namespace string) ktypes.Re
 		return c.Kube().AppsV1().StatefulSets(namespace).(ktypes.ReadWriteAPI[T, TL])
 	case *apigithubcomapachedubbokubernetesapitelemetryv1alpha3.Telemetry:
 		return c.Dubbo().TelemetryV1alpha3().Telemetries(namespace).(ktypes.ReadWriteAPI[T, TL])
+	case *apigithubcomapachedubbokubernetesapinetworkingv1alpha3.TransitService:
+		return c.Dubbo().NetworkingV1alpha3().TransitServices(namespace).(ktypes.ReadWriteAPI[T, TL])
 	case *k8sioapiadmissionregistrationv1.ValidatingWebhookConfiguration:
 		return c.Kube().AdmissionregistrationV1().ValidatingWebhookConfigurations().(ktypes.ReadWriteAPI[T, TL])
 	case *apigithubcomapachedubbokubernetesapinetworkingv1alpha3.WorkloadEntry:
@@ -194,8 +194,6 @@ func gvrToObject(g schema.GroupVersionResource) runtime.Object {
 		return &k8sioapiappsv1.DaemonSet{}
 	case gvr.Deployment:
 		return &k8sioapiappsv1.Deployment{}
-	case gvr.DxgateService:
-		return &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.DxgateService{}
 	case gvr.EndpointSlice:
 		return &k8sioapidiscoveryv1.EndpointSlice{}
 	case gvr.Endpoints:
@@ -242,6 +240,8 @@ func gvrToObject(g schema.GroupVersionResource) runtime.Object {
 		return &k8sioapiappsv1.StatefulSet{}
 	case gvr.Telemetry:
 		return &apigithubcomapachedubbokubernetesapitelemetryv1alpha3.Telemetry{}
+	case gvr.TransitService:
+		return &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.TransitService{}
 	case gvr.ValidatingWebhookConfiguration:
 		return &k8sioapiadmissionregistrationv1.ValidatingWebhookConfiguration{}
 	case gvr.WorkloadEntry:
@@ -304,13 +304,6 @@ func getInformerFiltered(c ClientGetter, opts ktypes.InformerOptions, g schema.G
 		}
 		w = func(options metav1.ListOptions) (watch.Interface, error) {
 			return c.Kube().AppsV1().Deployments(opts.Namespace).Watch(context.Background(), options)
-		}
-	case gvr.DxgateService:
-		l = func(options metav1.ListOptions) (runtime.Object, error) {
-			return c.Dubbo().NetworkingV1alpha3().DxgateServices(opts.Namespace).List(context.Background(), options)
-		}
-		w = func(options metav1.ListOptions) (watch.Interface, error) {
-			return c.Dubbo().NetworkingV1alpha3().DxgateServices(opts.Namespace).Watch(context.Background(), options)
 		}
 	case gvr.EndpointSlice:
 		l = func(options metav1.ListOptions) (runtime.Object, error) {
@@ -472,6 +465,13 @@ func getInformerFiltered(c ClientGetter, opts ktypes.InformerOptions, g schema.G
 		}
 		w = func(options metav1.ListOptions) (watch.Interface, error) {
 			return c.Dubbo().TelemetryV1alpha3().Telemetries(opts.Namespace).Watch(context.Background(), options)
+		}
+	case gvr.TransitService:
+		l = func(options metav1.ListOptions) (runtime.Object, error) {
+			return c.Dubbo().NetworkingV1alpha3().TransitServices(opts.Namespace).List(context.Background(), options)
+		}
+		w = func(options metav1.ListOptions) (watch.Interface, error) {
+			return c.Dubbo().NetworkingV1alpha3().TransitServices(opts.Namespace).Watch(context.Background(), options)
 		}
 	case gvr.ValidatingWebhookConfiguration:
 		l = func(options metav1.ListOptions) (runtime.Object, error) {

@@ -13,7 +13,6 @@ var (
 	CustomResourceDefinition       = schema.GroupVersionResource{Group: "apiextensions.k8s.io", Version: "v1", Resource: "customresourcedefinitions"}
 	DaemonSet                      = schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "daemonsets"}
 	Deployment                     = schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}
-	DxgateService                  = schema.GroupVersionResource{Group: "networking.dubbo.apache.org", Version: "v1alpha3", Resource: "dxgateservices"}
 	EndpointSlice                  = schema.GroupVersionResource{Group: "discovery.k8s.io", Version: "v1", Resource: "endpointslices"}
 	Endpoints                      = schema.GroupVersionResource{Group: "", Version: "v1", Resource: "endpoints"}
 	FaultInjectionPolicy           = schema.GroupVersionResource{Group: "networking.dubbo.apache.org", Version: "v1alpha3", Resource: "faultinjectionpolicies"}
@@ -42,6 +41,7 @@ var (
 	ServiceEntry                   = schema.GroupVersionResource{Group: "networking.dubbo.apache.org", Version: "v1alpha3", Resource: "serviceentries"}
 	StatefulSet                    = schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "statefulsets"}
 	Telemetry                      = schema.GroupVersionResource{Group: "telemetry.dubbo.apache.org", Version: "v1alpha3", Resource: "telemetries"}
+	TransitService                 = schema.GroupVersionResource{Group: "networking.dubbo.apache.org", Version: "v1alpha3", Resource: "transitservices"}
 	ValidatingWebhookConfiguration = schema.GroupVersionResource{Group: "admissionregistration.k8s.io", Version: "v1", Resource: "validatingwebhookconfigurations"}
 	WorkloadEntry                  = schema.GroupVersionResource{Group: "networking.dubbo.apache.org", Version: "v1alpha3", Resource: "workloadentries"}
 )
@@ -63,8 +63,6 @@ func IsClusterScoped(g schema.GroupVersionResource) bool {
 	case DaemonSet:
 		return false
 	case Deployment:
-		return false
-	case DxgateService:
 		return false
 	case EndpointSlice:
 		return false
@@ -119,6 +117,8 @@ func IsClusterScoped(g schema.GroupVersionResource) bool {
 	case StatefulSet:
 		return false
 	case Telemetry:
+		return false
+	case TransitService:
 		return false
 	case ValidatingWebhookConfiguration:
 		return true

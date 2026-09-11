@@ -7,7 +7,7 @@
 ### 链路
 
 ```
-请求 -> dxgate 扣住请求
+请求 -> transit 扣住请求
           |  上报 pending 数（gRPC 流）
           v
        dubbod  <-- KEDA 轮询 external scaler
@@ -16,10 +16,10 @@
        ScaledObject -> Deployment 0 -> 1
           |
           v
-       EDS 下发新端点 -> dxgate 放行被扣住的请求
+       EDS 下发新端点 -> transit 放行被扣住的请求
 ```
 
-南北向请求直接经过 dxgate。东西向请求原本由 inherent 调用方直接读 EDS；冷服务的 EDS 现在会临时改写为专用 Activator `dxgate-gateway`，所以同一个扣流和上报机制也能接住服务间调用。后端就绪后，EDS 恢复真实端点，新请求直接访问后端。
+南北向请求直接经过 transit。东西向请求原本由 inherent 调用方直接读 EDS；冷服务的 EDS 现在会临时改写为专用 Activator `transit-gateway`，所以同一个扣流和上报机制也能接住服务间调用。后端就绪后，EDS 恢复真实端点，新请求直接访问后端。
 
 网关只负责等和上报，副本数始终由 KEDA 写。这条边界是有意的：网关重启不会把某个工作负载留在没人要求过的副本数上。
 
@@ -30,7 +30,7 @@ helm repo add kedacore https://kedacore.github.io/charts
 helm install keda kedacore/keda -n keda --create-namespace
 ```
 
-需要一个名为 `dxgate-gateway` 的 Gateway 作为命名空间内的专用 Activator。`dubbod` 会为它拉起 dxgate，并注入 `DXGATE_ACTIVATION_CONTROL_PLANE`。其他 Gateway 使用各自派生的 Deployment/Service 名称，不会覆盖或清理 Activator 资源。
+需要一个名为 `transit-gateway` 的 Gateway 作为命名空间内的专用 Activator。`dubbod` 会为它拉起 transit，并注入 `TRANSIT_ACTIVATION_CONTROL_PLANE`。其他 Gateway 使用各自派生的 Deployment/Service 名称，不会覆盖或清理 Activator 资源。
 
 ### 部署
 
@@ -60,12 +60,12 @@ time curl -s http://$GATEWAY/payment/healthz
 请求会挂住几秒——那是冷启动——然后正常返回，不是 503。同一时刻看网关：
 
 ```bash
-kubectl -n activation port-forward deploy/dxgate-gateway 15021:26021
-curl -s localhost:15021/metrics | grep dxgate_activation_requests_held
-# dxgate_activation_requests_held 1
+kubectl -n activation port-forward deploy/transit-gateway 15021:26021
+curl -s localhost:15021/metrics | grep transit_activation_requests_held
+# transit_activation_requests_held 1
 ```
 
-这个指标和 `dxgate_requests_in_flight` 是分开的，因为它们要区别对待：前者是在等扩容，后者是在等上游。混在一起会让一次冷启动看起来像网关变慢了。
+这个指标和 `transit_requests_in_flight` 是分开的，因为它们要区别对待：前者是在等扩容，后者是在等上游。混在一起会让一次冷启动看起来像网关变慢了。
 
 策略状态里能看到控制面这一侧是否就绪：
 
@@ -81,7 +81,7 @@ kubectl -n activation get serviceactivationpolicy payment -o jsonpath='{.status.
 | --- | --- | --- |
 | `ServiceActivationPolicy` | 声明哪个 Service 可以被激活、扣多久、扣多少 | 不写副本数 |
 | `ScaledObject` | 副本数的唯一归属 | 不知道请求被扣住这回事 |
-| dxgate | 扣住请求、上报 pending、端点出现后放行 | 不扩容任何东西 |
+| transit | 扣住请求、上报 pending、端点出现后放行 | 不扩容任何东西 |
 
 少任何一个都不成立。只有策略没有 `ScaledObject`，请求会被扣满 `requestTimeout` 然后失败；只有 `ScaledObject` 没有策略，控制面不会为这个目标发布 scaler 指标，KEDA 拿不到 pending 数，服务永远停在零。
 
@@ -109,7 +109,7 @@ kubectl -n activation get serviceactivationpolicy payment -o jsonpath='{.status.
 每个被扣住的请求占一个 task 和一条连接。所以有两层上限：
 
 - `maxPendingRequests`（策略级，样例 100）——单个冷目标能占掉网关多少
-- `DXGATE_ACTIVATION_MAX_PENDING_REQUESTS`（网关级，默认 1024）——所有目标合计
+- `TRANSIT_ACTIVATION_MAX_PENDING_REQUESTS`（网关级，默认 1024）——所有目标合计
 
 超过上限的请求直接失败，不进等待队列，也不会出现在上报里。这是有意的：让一个起不来的目标拖垮整个网关，比这些请求早点失败要糟得多。
 
@@ -125,7 +125,7 @@ ScaledObject 使用负载均衡的 `dubbod-activation`，无论 KEDA 落到哪�
 
 ### 东西向和 mTLS
 
-带 `ServiceActivationPolicy` 的冷服务不会收到空 EDS。`dubbod` 把端点临时改成同命名空间 `dxgate-gateway` 的地址；Activator RDS 再按原始 Host 路由到真实服务。扩容完成后只切 EDS，不切 CDS。
+带 `ServiceActivationPolicy` 的冷服务不会收到空 EDS。`dubbod` 把端点临时改成同命名空间 `transit-gateway` 的地址；Activator RDS 再按原始 Host 路由到真实服务。扩容完成后只切 EDS，不切 CDS。
 
 `backendServiceAccounts` 是生产必填项。CDS 的 `MatchSubjectAltNames` 始终包含后端身份和 Activator 身份，冷/热切换期间 SAN 集合保持不变，避免证书校验窗口。不要为了省配置使用通配 SAN。
 
@@ -134,5 +134,5 @@ ScaledObject 使用负载均衡的 `dubbod-activation`，无论 KEDA 落到哪�
 - 只支持 HTTP 和 unary gRPC；流式 RPC、长连接、启动时间超过调用方 deadline 的服务保持 `minReplicaCount: 1`。
 - Activator 和 dubbod 都至少两个副本，并配置 PodDisruptionBudget。控制面 pending 是内存状态；全部控制面同时重启时，在网关下一次上报前 KEDA 暂时读到 0。
 - `maxPendingRequests` 和网关全局 backlog 都要压测。满载时按 `failurePolicy` 快速失败，不承诺无限排队。
-- 监控 `dxgate_activation_requests_held`、请求 4xx/5xx、KEDA ScaledObject/HPA 条件、策略的 `ScalerReady`/`ActivatorReady`。告警必须覆盖“pending 持续上升但副本仍为 0”。
-- 升级先保持目标至少一个副本，升级 CRD/base、dubbod、dxgate 后确认两种 SAN 和 Activator RDS 已下发，再恢复 `minReplicaCount: 0`。
+- 监控 `transit_activation_requests_held`、请求 4xx/5xx、KEDA ScaledObject/HPA 条件、策略的 `ScalerReady`/`ActivatorReady`。告警必须覆盖“pending 持续上升但副本仍为 0”。
+- 升级先保持目标至少一个副本，升级 CRD/base、dubbod、transit 后确认两种 SAN 和 Activator RDS 已下发，再恢复 `minReplicaCount: 0`。

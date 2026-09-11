@@ -25,8 +25,8 @@ import (
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/util/protoconv"
 	v1 "github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/xds/v1"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
-	cluster "github.com/kdubbo/xds-api/cluster/v1"
-	discovery "github.com/kdubbo/xds-api/service/discovery/v1"
+	cluster "github.com/dubml/xds-api/cluster/v1"
+	discovery "github.com/dubml/xds-api/service/discovery/v1"
 	"google.golang.org/grpc/metadata"
 )
 

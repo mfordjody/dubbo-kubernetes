@@ -23,14 +23,14 @@ import (
 	"time"
 
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/util/protoconv"
-	discovery "github.com/kdubbo/xds-api/service/discovery/v1"
+	discovery "github.com/dubml/xds-api/service/discovery/v1"
 
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/model"
 	"github.com/apache/dubbo-kubernetes/pkg/config"
 	"github.com/apache/dubbo-kubernetes/pkg/config/host"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
-	route "github.com/kdubbo/xds-api/route/v1"
-	matcher "github.com/kdubbo/xds-api/type/matcher/v1"
+	route "github.com/dubml/xds-api/route/v1"
+	matcher "github.com/dubml/xds-api/type/matcher/v1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -183,7 +183,7 @@ func buildHTTPRoute(node *model.Proxy, push *model.PushContext, routeName string
 	gatewayListenerPort := parsedPort
 	var gatewayName, gatewayNamespace string
 	// Resolve the listener's Service port from the generated Gateway Service.
-	// dxgate binds the Service targetPort (15080 by default), while Gateway API
+	// transit binds the Service targetPort (15080 by default), while Gateway API
 	// parentRefs and HTTPRoutes refer to the public listener port (for example 80).
 	for _, st := range node.ServiceTargets {
 		if st.Service == nil {
@@ -431,7 +431,7 @@ func buildRoutesFromGatewayHTTPRoute(httpRoutes []config.Config, hostName host.N
 				log.Debugf("HTTPRoute %s/%s rule[%d] has no backendRefs, skipping", hrConfig.Namespace, hrConfig.Name, ruleIdx)
 				continue
 			}
-			if ruleUsesDxgateService(rule) {
+			if ruleUsesTransitService(rule) {
 				// Mesh-native LLM/MCP/A2A backends are carried in AgentConfig.
 				// Emitting them as ordinary clusters would fabricate a
 				// Kubernetes Service with the same name and bypass protocol

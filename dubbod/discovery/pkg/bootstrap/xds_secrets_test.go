@@ -31,7 +31,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/model"
 	"github.com/apache/dubbo-kubernetes/pkg/config/constants"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
-	tlsv1 "github.com/kdubbo/xds-api/extensions/transport_sockets/tls/v1"
+	tlsv1 "github.com/dubml/xds-api/extensions/transport_sockets/tls/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	corev1 "k8s.io/api/core/v1"

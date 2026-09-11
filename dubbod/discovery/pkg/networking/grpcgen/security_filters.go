@@ -21,11 +21,11 @@ import (
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/util/protoconv"
 	"github.com/apache/dubbo-kubernetes/pkg/config"
 	"github.com/apache/dubbo-kubernetes/pkg/wellknown"
-	security "github.com/kdubbo/api/security/v1alpha3"
-	jwtv1 "github.com/kdubbo/xds-api/extensions/filters/v1/http/jwt_authn"
-	rbacv1 "github.com/kdubbo/xds-api/extensions/filters/v1/http/rbac"
-	routerv1 "github.com/kdubbo/xds-api/extensions/filters/v1/http/router"
-	hcmv1 "github.com/kdubbo/xds-api/extensions/filters/v1/network/http_connection_manager"
+	security "github.com/dubml/api/security/v1alpha3"
+	jwtv1 "github.com/dubml/xds-api/extensions/filters/v1/http/jwt_authn"
+	rbacv1 "github.com/dubml/xds-api/extensions/filters/v1/http/rbac"
+	routerv1 "github.com/dubml/xds-api/extensions/filters/v1/http/router"
+	hcmv1 "github.com/dubml/xds-api/extensions/filters/v1/network/http_connection_manager"
 	"google.golang.org/protobuf/proto"
 )
 

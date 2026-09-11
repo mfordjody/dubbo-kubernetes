@@ -14,13 +14,13 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/gvk"
 	"github.com/apache/dubbo-kubernetes/pkg/kube"
 
-	githubcomkdubboapimetav1alpha1 "github.com/kdubbo/api/meta/v1alpha1"
-	githubcomkdubboapinetworkingv1alpha3 "github.com/kdubbo/api/networking/v1alpha3"
-	githubcomkdubboapisecurityv1alpha3 "github.com/kdubbo/api/security/v1alpha3"
-	githubcomkdubboapitelemetryv1alpha3 "github.com/kdubbo/api/telemetry/v1alpha3"
-	apigithubcomapachedubbokubernetesapinetworkingv1alpha3 "github.com/kdubbo/client-go/pkg/apis/networking/v1alpha3"
-	apigithubcomapachedubbokubernetesapisecurityv1alpha3 "github.com/kdubbo/client-go/pkg/apis/security/v1alpha3"
-	apigithubcomapachedubbokubernetesapitelemetryv1alpha3 "github.com/kdubbo/client-go/pkg/apis/telemetry/v1alpha3"
+	githubcomdubmlapimetav1alpha1 "github.com/dubml/api/meta/v1alpha1"
+	githubcomdubmlapinetworkingv1alpha3 "github.com/dubml/api/networking/v1alpha3"
+	githubcomdubmlapisecurityv1alpha3 "github.com/dubml/api/security/v1alpha3"
+	githubcomdubmlapitelemetryv1alpha3 "github.com/dubml/api/telemetry/v1alpha3"
+	apigithubcomapachedubbokubernetesapinetworkingv1alpha3 "github.com/dubml/client-go/pkg/apis/networking/v1alpha3"
+	apigithubcomapachedubbokubernetesapisecurityv1alpha3 "github.com/dubml/client-go/pkg/apis/security/v1alpha3"
+	apigithubcomapachedubbokubernetesapitelemetryv1alpha3 "github.com/dubml/client-go/pkg/apis/telemetry/v1alpha3"
 	k8sioapiadmissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	k8sioapiappsv1 "k8s.io/api/apps/v1"
 	k8sioapiautoscalingv2 "k8s.io/api/autoscaling/v2"
@@ -38,7 +38,7 @@ func create(c kube.Client, cfg config.Config, objMeta metav1.ObjectMeta) (metav1
 	case gvk.AuthorizationPolicy:
 		return c.Dubbo().SecurityV1alpha3().AuthorizationPolicies(cfg.Namespace).Create(context.TODO(), &apigithubcomapachedubbokubernetesapisecurityv1alpha3.AuthorizationPolicy{
 			ObjectMeta: objMeta,
-			Spec:       *(cfg.Spec.(*githubcomkdubboapisecurityv1alpha3.AuthorizationPolicy)),
+			Spec:       *(cfg.Spec.(*githubcomdubmlapisecurityv1alpha3.AuthorizationPolicy)),
 		}, metav1.CreateOptions{})
 	case gvk.BackendTLSPolicy:
 		return c.GatewayAPI().GatewayV1().BackendTLSPolicies(cfg.Namespace).Create(context.TODO(), &sigsk8siogatewayapiapisv1.BackendTLSPolicy{
@@ -48,17 +48,12 @@ func create(c kube.Client, cfg config.Config, objMeta metav1.ObjectMeta) (metav1
 	case gvk.CircuitBreakerPolicy:
 		return c.Dubbo().NetworkingV1alpha3().CircuitBreakerPolicies(cfg.Namespace).Create(context.TODO(), &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.CircuitBreakerPolicy{
 			ObjectMeta: objMeta,
-			Spec:       *(cfg.Spec.(*githubcomkdubboapinetworkingv1alpha3.CircuitBreakerPolicy)),
-		}, metav1.CreateOptions{})
-	case gvk.DxgateService:
-		return c.Dubbo().NetworkingV1alpha3().DxgateServices(cfg.Namespace).Create(context.TODO(), &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.DxgateService{
-			ObjectMeta: objMeta,
-			Spec:       *(cfg.Spec.(*githubcomkdubboapinetworkingv1alpha3.DxgateService)),
+			Spec:       *(cfg.Spec.(*githubcomdubmlapinetworkingv1alpha3.CircuitBreakerPolicy)),
 		}, metav1.CreateOptions{})
 	case gvk.FaultInjectionPolicy:
 		return c.Dubbo().NetworkingV1alpha3().FaultInjectionPolicies(cfg.Namespace).Create(context.TODO(), &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.FaultInjectionPolicy{
 			ObjectMeta: objMeta,
-			Spec:       *(cfg.Spec.(*githubcomkdubboapinetworkingv1alpha3.FaultInjectionPolicy)),
+			Spec:       *(cfg.Spec.(*githubcomdubmlapinetworkingv1alpha3.FaultInjectionPolicy)),
 		}, metav1.CreateOptions{})
 	case gvk.GatewayClass:
 		return c.GatewayAPI().GatewayV1().GatewayClasses().Create(context.TODO(), &sigsk8siogatewayapiapisv1.GatewayClass{
@@ -78,7 +73,7 @@ func create(c kube.Client, cfg config.Config, objMeta metav1.ObjectMeta) (metav1
 	case gvk.PeerAuthentication:
 		return c.Dubbo().SecurityV1alpha3().PeerAuthentications(cfg.Namespace).Create(context.TODO(), &apigithubcomapachedubbokubernetesapisecurityv1alpha3.PeerAuthentication{
 			ObjectMeta: objMeta,
-			Spec:       *(cfg.Spec.(*githubcomkdubboapisecurityv1alpha3.PeerAuthentication)),
+			Spec:       *(cfg.Spec.(*githubcomdubmlapisecurityv1alpha3.PeerAuthentication)),
 		}, metav1.CreateOptions{})
 	case gvk.ReferenceGrant:
 		return c.GatewayAPI().GatewayV1beta1().ReferenceGrants(cfg.Namespace).Create(context.TODO(), &sigsk8siogatewayapiapisv1beta1.ReferenceGrant{
@@ -88,27 +83,32 @@ func create(c kube.Client, cfg config.Config, objMeta metav1.ObjectMeta) (metav1
 	case gvk.RequestAuthentication:
 		return c.Dubbo().SecurityV1alpha3().RequestAuthentications(cfg.Namespace).Create(context.TODO(), &apigithubcomapachedubbokubernetesapisecurityv1alpha3.RequestAuthentication{
 			ObjectMeta: objMeta,
-			Spec:       *(cfg.Spec.(*githubcomkdubboapisecurityv1alpha3.RequestAuthentication)),
+			Spec:       *(cfg.Spec.(*githubcomdubmlapisecurityv1alpha3.RequestAuthentication)),
 		}, metav1.CreateOptions{})
 	case gvk.ServiceActivationPolicy:
 		return c.Dubbo().NetworkingV1alpha3().ServiceActivationPolicies(cfg.Namespace).Create(context.TODO(), &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.ServiceActivationPolicy{
 			ObjectMeta: objMeta,
-			Spec:       *(cfg.Spec.(*githubcomkdubboapinetworkingv1alpha3.ServiceActivationPolicy)),
+			Spec:       *(cfg.Spec.(*githubcomdubmlapinetworkingv1alpha3.ServiceActivationPolicy)),
 		}, metav1.CreateOptions{})
 	case gvk.ServiceEntry:
 		return c.Dubbo().NetworkingV1alpha3().ServiceEntries(cfg.Namespace).Create(context.TODO(), &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.ServiceEntry{
 			ObjectMeta: objMeta,
-			Spec:       *(cfg.Spec.(*githubcomkdubboapinetworkingv1alpha3.ServiceEntry)),
+			Spec:       *(cfg.Spec.(*githubcomdubmlapinetworkingv1alpha3.ServiceEntry)),
 		}, metav1.CreateOptions{})
 	case gvk.Telemetry:
 		return c.Dubbo().TelemetryV1alpha3().Telemetries(cfg.Namespace).Create(context.TODO(), &apigithubcomapachedubbokubernetesapitelemetryv1alpha3.Telemetry{
 			ObjectMeta: objMeta,
-			Spec:       *(cfg.Spec.(*githubcomkdubboapitelemetryv1alpha3.Telemetry)),
+			Spec:       *(cfg.Spec.(*githubcomdubmlapitelemetryv1alpha3.Telemetry)),
+		}, metav1.CreateOptions{})
+	case gvk.TransitService:
+		return c.Dubbo().NetworkingV1alpha3().TransitServices(cfg.Namespace).Create(context.TODO(), &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.TransitService{
+			ObjectMeta: objMeta,
+			Spec:       *(cfg.Spec.(*githubcomdubmlapinetworkingv1alpha3.TransitService)),
 		}, metav1.CreateOptions{})
 	case gvk.WorkloadEntry:
 		return c.Dubbo().NetworkingV1alpha3().WorkloadEntries(cfg.Namespace).Create(context.TODO(), &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.WorkloadEntry{
 			ObjectMeta: objMeta,
-			Spec:       *(cfg.Spec.(*githubcomkdubboapinetworkingv1alpha3.WorkloadEntry)),
+			Spec:       *(cfg.Spec.(*githubcomdubmlapinetworkingv1alpha3.WorkloadEntry)),
 		}, metav1.CreateOptions{})
 	default:
 		return nil, fmt.Errorf("unsupported type: %v", cfg.GroupVersionKind)
@@ -120,7 +120,7 @@ func update(c kube.Client, cfg config.Config, objMeta metav1.ObjectMeta) (metav1
 	case gvk.AuthorizationPolicy:
 		return c.Dubbo().SecurityV1alpha3().AuthorizationPolicies(cfg.Namespace).Update(context.TODO(), &apigithubcomapachedubbokubernetesapisecurityv1alpha3.AuthorizationPolicy{
 			ObjectMeta: objMeta,
-			Spec:       *(cfg.Spec.(*githubcomkdubboapisecurityv1alpha3.AuthorizationPolicy)),
+			Spec:       *(cfg.Spec.(*githubcomdubmlapisecurityv1alpha3.AuthorizationPolicy)),
 		}, metav1.UpdateOptions{})
 	case gvk.BackendTLSPolicy:
 		return c.GatewayAPI().GatewayV1().BackendTLSPolicies(cfg.Namespace).Update(context.TODO(), &sigsk8siogatewayapiapisv1.BackendTLSPolicy{
@@ -130,17 +130,12 @@ func update(c kube.Client, cfg config.Config, objMeta metav1.ObjectMeta) (metav1
 	case gvk.CircuitBreakerPolicy:
 		return c.Dubbo().NetworkingV1alpha3().CircuitBreakerPolicies(cfg.Namespace).Update(context.TODO(), &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.CircuitBreakerPolicy{
 			ObjectMeta: objMeta,
-			Spec:       *(cfg.Spec.(*githubcomkdubboapinetworkingv1alpha3.CircuitBreakerPolicy)),
-		}, metav1.UpdateOptions{})
-	case gvk.DxgateService:
-		return c.Dubbo().NetworkingV1alpha3().DxgateServices(cfg.Namespace).Update(context.TODO(), &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.DxgateService{
-			ObjectMeta: objMeta,
-			Spec:       *(cfg.Spec.(*githubcomkdubboapinetworkingv1alpha3.DxgateService)),
+			Spec:       *(cfg.Spec.(*githubcomdubmlapinetworkingv1alpha3.CircuitBreakerPolicy)),
 		}, metav1.UpdateOptions{})
 	case gvk.FaultInjectionPolicy:
 		return c.Dubbo().NetworkingV1alpha3().FaultInjectionPolicies(cfg.Namespace).Update(context.TODO(), &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.FaultInjectionPolicy{
 			ObjectMeta: objMeta,
-			Spec:       *(cfg.Spec.(*githubcomkdubboapinetworkingv1alpha3.FaultInjectionPolicy)),
+			Spec:       *(cfg.Spec.(*githubcomdubmlapinetworkingv1alpha3.FaultInjectionPolicy)),
 		}, metav1.UpdateOptions{})
 	case gvk.GatewayClass:
 		return c.GatewayAPI().GatewayV1().GatewayClasses().Update(context.TODO(), &sigsk8siogatewayapiapisv1.GatewayClass{
@@ -160,7 +155,7 @@ func update(c kube.Client, cfg config.Config, objMeta metav1.ObjectMeta) (metav1
 	case gvk.PeerAuthentication:
 		return c.Dubbo().SecurityV1alpha3().PeerAuthentications(cfg.Namespace).Update(context.TODO(), &apigithubcomapachedubbokubernetesapisecurityv1alpha3.PeerAuthentication{
 			ObjectMeta: objMeta,
-			Spec:       *(cfg.Spec.(*githubcomkdubboapisecurityv1alpha3.PeerAuthentication)),
+			Spec:       *(cfg.Spec.(*githubcomdubmlapisecurityv1alpha3.PeerAuthentication)),
 		}, metav1.UpdateOptions{})
 	case gvk.ReferenceGrant:
 		return c.GatewayAPI().GatewayV1beta1().ReferenceGrants(cfg.Namespace).Update(context.TODO(), &sigsk8siogatewayapiapisv1beta1.ReferenceGrant{
@@ -170,27 +165,32 @@ func update(c kube.Client, cfg config.Config, objMeta metav1.ObjectMeta) (metav1
 	case gvk.RequestAuthentication:
 		return c.Dubbo().SecurityV1alpha3().RequestAuthentications(cfg.Namespace).Update(context.TODO(), &apigithubcomapachedubbokubernetesapisecurityv1alpha3.RequestAuthentication{
 			ObjectMeta: objMeta,
-			Spec:       *(cfg.Spec.(*githubcomkdubboapisecurityv1alpha3.RequestAuthentication)),
+			Spec:       *(cfg.Spec.(*githubcomdubmlapisecurityv1alpha3.RequestAuthentication)),
 		}, metav1.UpdateOptions{})
 	case gvk.ServiceActivationPolicy:
 		return c.Dubbo().NetworkingV1alpha3().ServiceActivationPolicies(cfg.Namespace).Update(context.TODO(), &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.ServiceActivationPolicy{
 			ObjectMeta: objMeta,
-			Spec:       *(cfg.Spec.(*githubcomkdubboapinetworkingv1alpha3.ServiceActivationPolicy)),
+			Spec:       *(cfg.Spec.(*githubcomdubmlapinetworkingv1alpha3.ServiceActivationPolicy)),
 		}, metav1.UpdateOptions{})
 	case gvk.ServiceEntry:
 		return c.Dubbo().NetworkingV1alpha3().ServiceEntries(cfg.Namespace).Update(context.TODO(), &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.ServiceEntry{
 			ObjectMeta: objMeta,
-			Spec:       *(cfg.Spec.(*githubcomkdubboapinetworkingv1alpha3.ServiceEntry)),
+			Spec:       *(cfg.Spec.(*githubcomdubmlapinetworkingv1alpha3.ServiceEntry)),
 		}, metav1.UpdateOptions{})
 	case gvk.Telemetry:
 		return c.Dubbo().TelemetryV1alpha3().Telemetries(cfg.Namespace).Update(context.TODO(), &apigithubcomapachedubbokubernetesapitelemetryv1alpha3.Telemetry{
 			ObjectMeta: objMeta,
-			Spec:       *(cfg.Spec.(*githubcomkdubboapitelemetryv1alpha3.Telemetry)),
+			Spec:       *(cfg.Spec.(*githubcomdubmlapitelemetryv1alpha3.Telemetry)),
+		}, metav1.UpdateOptions{})
+	case gvk.TransitService:
+		return c.Dubbo().NetworkingV1alpha3().TransitServices(cfg.Namespace).Update(context.TODO(), &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.TransitService{
+			ObjectMeta: objMeta,
+			Spec:       *(cfg.Spec.(*githubcomdubmlapinetworkingv1alpha3.TransitService)),
 		}, metav1.UpdateOptions{})
 	case gvk.WorkloadEntry:
 		return c.Dubbo().NetworkingV1alpha3().WorkloadEntries(cfg.Namespace).Update(context.TODO(), &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.WorkloadEntry{
 			ObjectMeta: objMeta,
-			Spec:       *(cfg.Spec.(*githubcomkdubboapinetworkingv1alpha3.WorkloadEntry)),
+			Spec:       *(cfg.Spec.(*githubcomdubmlapinetworkingv1alpha3.WorkloadEntry)),
 		}, metav1.UpdateOptions{})
 	default:
 		return nil, fmt.Errorf("unsupported type: %v", cfg.GroupVersionKind)
@@ -202,7 +202,7 @@ func updateStatus(c kube.Client, cfg config.Config, objMeta metav1.ObjectMeta) (
 	case gvk.AuthorizationPolicy:
 		return c.Dubbo().SecurityV1alpha3().AuthorizationPolicies(cfg.Namespace).UpdateStatus(context.TODO(), &apigithubcomapachedubbokubernetesapisecurityv1alpha3.AuthorizationPolicy{
 			ObjectMeta: objMeta,
-			Status:     *(cfg.Status.(*githubcomkdubboapimetav1alpha1.DubboStatus)),
+			Status:     *(cfg.Status.(*githubcomdubmlapimetav1alpha1.DubboStatus)),
 		}, metav1.UpdateOptions{})
 	case gvk.BackendTLSPolicy:
 		return c.GatewayAPI().GatewayV1().BackendTLSPolicies(cfg.Namespace).UpdateStatus(context.TODO(), &sigsk8siogatewayapiapisv1.BackendTLSPolicy{
@@ -212,17 +212,12 @@ func updateStatus(c kube.Client, cfg config.Config, objMeta metav1.ObjectMeta) (
 	case gvk.CircuitBreakerPolicy:
 		return c.Dubbo().NetworkingV1alpha3().CircuitBreakerPolicies(cfg.Namespace).UpdateStatus(context.TODO(), &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.CircuitBreakerPolicy{
 			ObjectMeta: objMeta,
-			Status:     *(cfg.Status.(*githubcomkdubboapimetav1alpha1.DubboStatus)),
-		}, metav1.UpdateOptions{})
-	case gvk.DxgateService:
-		return c.Dubbo().NetworkingV1alpha3().DxgateServices(cfg.Namespace).UpdateStatus(context.TODO(), &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.DxgateService{
-			ObjectMeta: objMeta,
-			Status:     *(cfg.Status.(*githubcomkdubboapimetav1alpha1.DubboStatus)),
+			Status:     *(cfg.Status.(*githubcomdubmlapimetav1alpha1.DubboStatus)),
 		}, metav1.UpdateOptions{})
 	case gvk.FaultInjectionPolicy:
 		return c.Dubbo().NetworkingV1alpha3().FaultInjectionPolicies(cfg.Namespace).UpdateStatus(context.TODO(), &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.FaultInjectionPolicy{
 			ObjectMeta: objMeta,
-			Status:     *(cfg.Status.(*githubcomkdubboapimetav1alpha1.DubboStatus)),
+			Status:     *(cfg.Status.(*githubcomdubmlapimetav1alpha1.DubboStatus)),
 		}, metav1.UpdateOptions{})
 	case gvk.GatewayClass:
 		return c.GatewayAPI().GatewayV1().GatewayClasses().UpdateStatus(context.TODO(), &sigsk8siogatewayapiapisv1.GatewayClass{
@@ -242,32 +237,37 @@ func updateStatus(c kube.Client, cfg config.Config, objMeta metav1.ObjectMeta) (
 	case gvk.PeerAuthentication:
 		return c.Dubbo().SecurityV1alpha3().PeerAuthentications(cfg.Namespace).UpdateStatus(context.TODO(), &apigithubcomapachedubbokubernetesapisecurityv1alpha3.PeerAuthentication{
 			ObjectMeta: objMeta,
-			Status:     *(cfg.Status.(*githubcomkdubboapimetav1alpha1.DubboStatus)),
+			Status:     *(cfg.Status.(*githubcomdubmlapimetav1alpha1.DubboStatus)),
 		}, metav1.UpdateOptions{})
 	case gvk.RequestAuthentication:
 		return c.Dubbo().SecurityV1alpha3().RequestAuthentications(cfg.Namespace).UpdateStatus(context.TODO(), &apigithubcomapachedubbokubernetesapisecurityv1alpha3.RequestAuthentication{
 			ObjectMeta: objMeta,
-			Status:     *(cfg.Status.(*githubcomkdubboapimetav1alpha1.DubboStatus)),
+			Status:     *(cfg.Status.(*githubcomdubmlapimetav1alpha1.DubboStatus)),
 		}, metav1.UpdateOptions{})
 	case gvk.ServiceActivationPolicy:
 		return c.Dubbo().NetworkingV1alpha3().ServiceActivationPolicies(cfg.Namespace).UpdateStatus(context.TODO(), &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.ServiceActivationPolicy{
 			ObjectMeta: objMeta,
-			Status:     *(cfg.Status.(*githubcomkdubboapimetav1alpha1.DubboStatus)),
+			Status:     *(cfg.Status.(*githubcomdubmlapimetav1alpha1.DubboStatus)),
 		}, metav1.UpdateOptions{})
 	case gvk.ServiceEntry:
 		return c.Dubbo().NetworkingV1alpha3().ServiceEntries(cfg.Namespace).UpdateStatus(context.TODO(), &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.ServiceEntry{
 			ObjectMeta: objMeta,
-			Status:     *(cfg.Status.(*githubcomkdubboapimetav1alpha1.DubboStatus)),
+			Status:     *(cfg.Status.(*githubcomdubmlapimetav1alpha1.DubboStatus)),
 		}, metav1.UpdateOptions{})
 	case gvk.Telemetry:
 		return c.Dubbo().TelemetryV1alpha3().Telemetries(cfg.Namespace).UpdateStatus(context.TODO(), &apigithubcomapachedubbokubernetesapitelemetryv1alpha3.Telemetry{
 			ObjectMeta: objMeta,
-			Status:     *(cfg.Status.(*githubcomkdubboapimetav1alpha1.DubboStatus)),
+			Status:     *(cfg.Status.(*githubcomdubmlapimetav1alpha1.DubboStatus)),
+		}, metav1.UpdateOptions{})
+	case gvk.TransitService:
+		return c.Dubbo().NetworkingV1alpha3().TransitServices(cfg.Namespace).UpdateStatus(context.TODO(), &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.TransitService{
+			ObjectMeta: objMeta,
+			Status:     *(cfg.Status.(*githubcomdubmlapimetav1alpha1.DubboStatus)),
 		}, metav1.UpdateOptions{})
 	case gvk.WorkloadEntry:
 		return c.Dubbo().NetworkingV1alpha3().WorkloadEntries(cfg.Namespace).UpdateStatus(context.TODO(), &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.WorkloadEntry{
 			ObjectMeta: objMeta,
-			Status:     *(cfg.Status.(*githubcomkdubboapimetav1alpha1.DubboStatus)),
+			Status:     *(cfg.Status.(*githubcomdubmlapimetav1alpha1.DubboStatus)),
 		}, metav1.UpdateOptions{})
 	default:
 		return nil, fmt.Errorf("unsupported type: %v", cfg.GroupVersionKind)
@@ -282,11 +282,11 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 	case gvk.AuthorizationPolicy:
 		oldRes := &apigithubcomapachedubbokubernetesapisecurityv1alpha3.AuthorizationPolicy{
 			ObjectMeta: origMeta,
-			Spec:       *(orig.Spec.(*githubcomkdubboapisecurityv1alpha3.AuthorizationPolicy)),
+			Spec:       *(orig.Spec.(*githubcomdubmlapisecurityv1alpha3.AuthorizationPolicy)),
 		}
 		modRes := &apigithubcomapachedubbokubernetesapisecurityv1alpha3.AuthorizationPolicy{
 			ObjectMeta: modMeta,
-			Spec:       *(mod.Spec.(*githubcomkdubboapisecurityv1alpha3.AuthorizationPolicy)),
+			Spec:       *(mod.Spec.(*githubcomdubmlapisecurityv1alpha3.AuthorizationPolicy)),
 		}
 		patchBytes, err := genPatchBytes(oldRes, modRes, typ)
 		if err != nil {
@@ -312,11 +312,11 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 	case gvk.CircuitBreakerPolicy:
 		oldRes := &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.CircuitBreakerPolicy{
 			ObjectMeta: origMeta,
-			Spec:       *(orig.Spec.(*githubcomkdubboapinetworkingv1alpha3.CircuitBreakerPolicy)),
+			Spec:       *(orig.Spec.(*githubcomdubmlapinetworkingv1alpha3.CircuitBreakerPolicy)),
 		}
 		modRes := &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.CircuitBreakerPolicy{
 			ObjectMeta: modMeta,
-			Spec:       *(mod.Spec.(*githubcomkdubboapinetworkingv1alpha3.CircuitBreakerPolicy)),
+			Spec:       *(mod.Spec.(*githubcomdubmlapinetworkingv1alpha3.CircuitBreakerPolicy)),
 		}
 		patchBytes, err := genPatchBytes(oldRes, modRes, typ)
 		if err != nil {
@@ -324,29 +324,14 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 		}
 		return c.Dubbo().NetworkingV1alpha3().CircuitBreakerPolicies(orig.Namespace).
 			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "dubbod"})
-	case gvk.DxgateService:
-		oldRes := &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.DxgateService{
-			ObjectMeta: origMeta,
-			Spec:       *(orig.Spec.(*githubcomkdubboapinetworkingv1alpha3.DxgateService)),
-		}
-		modRes := &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.DxgateService{
-			ObjectMeta: modMeta,
-			Spec:       *(mod.Spec.(*githubcomkdubboapinetworkingv1alpha3.DxgateService)),
-		}
-		patchBytes, err := genPatchBytes(oldRes, modRes, typ)
-		if err != nil {
-			return nil, err
-		}
-		return c.Dubbo().NetworkingV1alpha3().DxgateServices(orig.Namespace).
-			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "dubbod"})
 	case gvk.FaultInjectionPolicy:
 		oldRes := &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.FaultInjectionPolicy{
 			ObjectMeta: origMeta,
-			Spec:       *(orig.Spec.(*githubcomkdubboapinetworkingv1alpha3.FaultInjectionPolicy)),
+			Spec:       *(orig.Spec.(*githubcomdubmlapinetworkingv1alpha3.FaultInjectionPolicy)),
 		}
 		modRes := &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.FaultInjectionPolicy{
 			ObjectMeta: modMeta,
-			Spec:       *(mod.Spec.(*githubcomkdubboapinetworkingv1alpha3.FaultInjectionPolicy)),
+			Spec:       *(mod.Spec.(*githubcomdubmlapinetworkingv1alpha3.FaultInjectionPolicy)),
 		}
 		patchBytes, err := genPatchBytes(oldRes, modRes, typ)
 		if err != nil {
@@ -402,11 +387,11 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 	case gvk.PeerAuthentication:
 		oldRes := &apigithubcomapachedubbokubernetesapisecurityv1alpha3.PeerAuthentication{
 			ObjectMeta: origMeta,
-			Spec:       *(orig.Spec.(*githubcomkdubboapisecurityv1alpha3.PeerAuthentication)),
+			Spec:       *(orig.Spec.(*githubcomdubmlapisecurityv1alpha3.PeerAuthentication)),
 		}
 		modRes := &apigithubcomapachedubbokubernetesapisecurityv1alpha3.PeerAuthentication{
 			ObjectMeta: modMeta,
-			Spec:       *(mod.Spec.(*githubcomkdubboapisecurityv1alpha3.PeerAuthentication)),
+			Spec:       *(mod.Spec.(*githubcomdubmlapisecurityv1alpha3.PeerAuthentication)),
 		}
 		patchBytes, err := genPatchBytes(oldRes, modRes, typ)
 		if err != nil {
@@ -432,11 +417,11 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 	case gvk.RequestAuthentication:
 		oldRes := &apigithubcomapachedubbokubernetesapisecurityv1alpha3.RequestAuthentication{
 			ObjectMeta: origMeta,
-			Spec:       *(orig.Spec.(*githubcomkdubboapisecurityv1alpha3.RequestAuthentication)),
+			Spec:       *(orig.Spec.(*githubcomdubmlapisecurityv1alpha3.RequestAuthentication)),
 		}
 		modRes := &apigithubcomapachedubbokubernetesapisecurityv1alpha3.RequestAuthentication{
 			ObjectMeta: modMeta,
-			Spec:       *(mod.Spec.(*githubcomkdubboapisecurityv1alpha3.RequestAuthentication)),
+			Spec:       *(mod.Spec.(*githubcomdubmlapisecurityv1alpha3.RequestAuthentication)),
 		}
 		patchBytes, err := genPatchBytes(oldRes, modRes, typ)
 		if err != nil {
@@ -447,11 +432,11 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 	case gvk.ServiceActivationPolicy:
 		oldRes := &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.ServiceActivationPolicy{
 			ObjectMeta: origMeta,
-			Spec:       *(orig.Spec.(*githubcomkdubboapinetworkingv1alpha3.ServiceActivationPolicy)),
+			Spec:       *(orig.Spec.(*githubcomdubmlapinetworkingv1alpha3.ServiceActivationPolicy)),
 		}
 		modRes := &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.ServiceActivationPolicy{
 			ObjectMeta: modMeta,
-			Spec:       *(mod.Spec.(*githubcomkdubboapinetworkingv1alpha3.ServiceActivationPolicy)),
+			Spec:       *(mod.Spec.(*githubcomdubmlapinetworkingv1alpha3.ServiceActivationPolicy)),
 		}
 		patchBytes, err := genPatchBytes(oldRes, modRes, typ)
 		if err != nil {
@@ -462,11 +447,11 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 	case gvk.ServiceEntry:
 		oldRes := &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.ServiceEntry{
 			ObjectMeta: origMeta,
-			Spec:       *(orig.Spec.(*githubcomkdubboapinetworkingv1alpha3.ServiceEntry)),
+			Spec:       *(orig.Spec.(*githubcomdubmlapinetworkingv1alpha3.ServiceEntry)),
 		}
 		modRes := &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.ServiceEntry{
 			ObjectMeta: modMeta,
-			Spec:       *(mod.Spec.(*githubcomkdubboapinetworkingv1alpha3.ServiceEntry)),
+			Spec:       *(mod.Spec.(*githubcomdubmlapinetworkingv1alpha3.ServiceEntry)),
 		}
 		patchBytes, err := genPatchBytes(oldRes, modRes, typ)
 		if err != nil {
@@ -477,11 +462,11 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 	case gvk.Telemetry:
 		oldRes := &apigithubcomapachedubbokubernetesapitelemetryv1alpha3.Telemetry{
 			ObjectMeta: origMeta,
-			Spec:       *(orig.Spec.(*githubcomkdubboapitelemetryv1alpha3.Telemetry)),
+			Spec:       *(orig.Spec.(*githubcomdubmlapitelemetryv1alpha3.Telemetry)),
 		}
 		modRes := &apigithubcomapachedubbokubernetesapitelemetryv1alpha3.Telemetry{
 			ObjectMeta: modMeta,
-			Spec:       *(mod.Spec.(*githubcomkdubboapitelemetryv1alpha3.Telemetry)),
+			Spec:       *(mod.Spec.(*githubcomdubmlapitelemetryv1alpha3.Telemetry)),
 		}
 		patchBytes, err := genPatchBytes(oldRes, modRes, typ)
 		if err != nil {
@@ -489,14 +474,29 @@ func patch(c kube.Client, orig config.Config, origMeta metav1.ObjectMeta, mod co
 		}
 		return c.Dubbo().TelemetryV1alpha3().Telemetries(orig.Namespace).
 			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "dubbod"})
+	case gvk.TransitService:
+		oldRes := &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.TransitService{
+			ObjectMeta: origMeta,
+			Spec:       *(orig.Spec.(*githubcomdubmlapinetworkingv1alpha3.TransitService)),
+		}
+		modRes := &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.TransitService{
+			ObjectMeta: modMeta,
+			Spec:       *(mod.Spec.(*githubcomdubmlapinetworkingv1alpha3.TransitService)),
+		}
+		patchBytes, err := genPatchBytes(oldRes, modRes, typ)
+		if err != nil {
+			return nil, err
+		}
+		return c.Dubbo().NetworkingV1alpha3().TransitServices(orig.Namespace).
+			Patch(context.TODO(), orig.Name, typ, patchBytes, metav1.PatchOptions{FieldManager: "dubbod"})
 	case gvk.WorkloadEntry:
 		oldRes := &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.WorkloadEntry{
 			ObjectMeta: origMeta,
-			Spec:       *(orig.Spec.(*githubcomkdubboapinetworkingv1alpha3.WorkloadEntry)),
+			Spec:       *(orig.Spec.(*githubcomdubmlapinetworkingv1alpha3.WorkloadEntry)),
 		}
 		modRes := &apigithubcomapachedubbokubernetesapinetworkingv1alpha3.WorkloadEntry{
 			ObjectMeta: modMeta,
-			Spec:       *(mod.Spec.(*githubcomkdubboapinetworkingv1alpha3.WorkloadEntry)),
+			Spec:       *(mod.Spec.(*githubcomdubmlapinetworkingv1alpha3.WorkloadEntry)),
 		}
 		patchBytes, err := genPatchBytes(oldRes, modRes, typ)
 		if err != nil {
@@ -521,8 +521,6 @@ func delete(c kube.Client, typ config.GroupVersionKind, name, namespace string, 
 		return c.GatewayAPI().GatewayV1().BackendTLSPolicies(namespace).Delete(context.TODO(), name, deleteOptions)
 	case gvk.CircuitBreakerPolicy:
 		return c.Dubbo().NetworkingV1alpha3().CircuitBreakerPolicies(namespace).Delete(context.TODO(), name, deleteOptions)
-	case gvk.DxgateService:
-		return c.Dubbo().NetworkingV1alpha3().DxgateServices(namespace).Delete(context.TODO(), name, deleteOptions)
 	case gvk.FaultInjectionPolicy:
 		return c.Dubbo().NetworkingV1alpha3().FaultInjectionPolicies(namespace).Delete(context.TODO(), name, deleteOptions)
 	case gvk.GatewayClass:
@@ -543,6 +541,8 @@ func delete(c kube.Client, typ config.GroupVersionKind, name, namespace string, 
 		return c.Dubbo().NetworkingV1alpha3().ServiceEntries(namespace).Delete(context.TODO(), name, deleteOptions)
 	case gvk.Telemetry:
 		return c.Dubbo().TelemetryV1alpha3().Telemetries(namespace).Delete(context.TODO(), name, deleteOptions)
+	case gvk.TransitService:
+		return c.Dubbo().NetworkingV1alpha3().TransitServices(namespace).Delete(context.TODO(), name, deleteOptions)
 	case gvk.WorkloadEntry:
 		return c.Dubbo().NetworkingV1alpha3().WorkloadEntries(namespace).Delete(context.TODO(), name, deleteOptions)
 	default:
@@ -678,25 +678,6 @@ var translationMap = map[config.GroupVersionKind]func(r runtime.Object) config.C
 				Generation:        obj.Generation,
 			},
 			Spec: &obj.Spec,
-		}
-	},
-	gvk.DxgateService: func(r runtime.Object) config.Config {
-		obj := r.(*apigithubcomapachedubbokubernetesapinetworkingv1alpha3.DxgateService)
-		return config.Config{
-			Meta: config.Meta{
-				GroupVersionKind:  gvk.DxgateService,
-				Name:              obj.Name,
-				Namespace:         obj.Namespace,
-				Labels:            obj.Labels,
-				Annotations:       obj.Annotations,
-				ResourceVersion:   obj.ResourceVersion,
-				CreationTimestamp: obj.CreationTimestamp.Time,
-				OwnerReferences:   obj.OwnerReferences,
-				UID:               string(obj.UID),
-				Generation:        obj.Generation,
-			},
-			Spec:   &obj.Spec,
-			Status: &obj.Status,
 		}
 	},
 	gvk.EndpointSlice: func(r runtime.Object) config.Config {
@@ -1111,6 +1092,25 @@ var translationMap = map[config.GroupVersionKind]func(r runtime.Object) config.C
 		return config.Config{
 			Meta: config.Meta{
 				GroupVersionKind:  gvk.Telemetry,
+				Name:              obj.Name,
+				Namespace:         obj.Namespace,
+				Labels:            obj.Labels,
+				Annotations:       obj.Annotations,
+				ResourceVersion:   obj.ResourceVersion,
+				CreationTimestamp: obj.CreationTimestamp.Time,
+				OwnerReferences:   obj.OwnerReferences,
+				UID:               string(obj.UID),
+				Generation:        obj.Generation,
+			},
+			Spec:   &obj.Spec,
+			Status: &obj.Status,
+		}
+	},
+	gvk.TransitService: func(r runtime.Object) config.Config {
+		obj := r.(*apigithubcomapachedubbokubernetesapinetworkingv1alpha3.TransitService)
+		return config.Config{
+			Meta: config.Meta{
+				GroupVersionKind:  gvk.TransitService,
 				Name:              obj.Name,
 				Namespace:         obj.Namespace,
 				Labels:            obj.Labels,

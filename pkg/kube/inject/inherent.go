@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kdubbo/api/annotation"
+	"github.com/dubml/api/annotation"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -47,7 +47,7 @@ const (
 	InherentGRPCKeepaliveTimeout                = "10s"
 	InherentGRPCConfigFileName                  = "dubbo-grpc-xds.json"
 	InherentGRPCConfigPath                      = InherentXDSMountPath + "/" + InherentGRPCConfigFileName
-	// InherentGatewayInboundPort is the managed dxgate listener. Application
+	// InherentGatewayInboundPort is the managed transit listener. Application
 	// workloads keep their own declared ports in proxyless mode.
 	InherentGatewayInboundPort = 15080
 )

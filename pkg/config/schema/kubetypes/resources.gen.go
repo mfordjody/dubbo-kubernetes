@@ -5,13 +5,13 @@ package kubetypes
 import (
 	"github.com/apache/dubbo-kubernetes/pkg/config"
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/gvk"
-	githubcomkdubboapimeshv1alpha1 "github.com/kdubbo/api/mesh/v1alpha1"
-	githubcomkdubboapinetworkingv1alpha3 "github.com/kdubbo/api/networking/v1alpha3"
-	githubcomkdubboapisecurityv1alpha3 "github.com/kdubbo/api/security/v1alpha3"
-	githubcomkdubboapitelemetryv1alpha3 "github.com/kdubbo/api/telemetry/v1alpha3"
-	apigithubcomapachedubbokubernetesapinetworkingv1alpha3 "github.com/kdubbo/client-go/pkg/apis/networking/v1alpha3"
-	apigithubcomapachedubbokubernetesapisecurityv1alpha3 "github.com/kdubbo/client-go/pkg/apis/security/v1alpha3"
-	apigithubcomapachedubbokubernetesapitelemetryv1alpha3 "github.com/kdubbo/client-go/pkg/apis/telemetry/v1alpha3"
+	githubcomdubmlapimeshv1alpha1 "github.com/dubml/api/mesh/v1alpha1"
+	githubcomdubmlapinetworkingv1alpha3 "github.com/dubml/api/networking/v1alpha3"
+	githubcomdubmlapisecurityv1alpha3 "github.com/dubml/api/security/v1alpha3"
+	githubcomdubmlapitelemetryv1alpha3 "github.com/dubml/api/telemetry/v1alpha3"
+	apigithubcomapachedubbokubernetesapinetworkingv1alpha3 "github.com/dubml/client-go/pkg/apis/networking/v1alpha3"
+	apigithubcomapachedubbokubernetesapisecurityv1alpha3 "github.com/dubml/client-go/pkg/apis/security/v1alpha3"
+	apigithubcomapachedubbokubernetesapitelemetryv1alpha3 "github.com/dubml/client-go/pkg/apis/telemetry/v1alpha3"
 	k8sioapiadmissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	k8sioapiappsv1 "k8s.io/api/apps/v1"
 	k8sioapiautoscalingv2 "k8s.io/api/autoscaling/v2"
@@ -26,13 +26,13 @@ import (
 
 func getGvk(obj any) (config.GroupVersionKind, bool) {
 	switch obj.(type) {
-	case *githubcomkdubboapisecurityv1alpha3.AuthorizationPolicy:
+	case *githubcomdubmlapisecurityv1alpha3.AuthorizationPolicy:
 		return gvk.AuthorizationPolicy, true
 	case *apigithubcomapachedubbokubernetesapisecurityv1alpha3.AuthorizationPolicy:
 		return gvk.AuthorizationPolicy, true
 	case *sigsk8siogatewayapiapisv1.BackendTLSPolicy:
 		return gvk.BackendTLSPolicy, true
-	case *githubcomkdubboapinetworkingv1alpha3.CircuitBreakerPolicy:
+	case *githubcomdubmlapinetworkingv1alpha3.CircuitBreakerPolicy:
 		return gvk.CircuitBreakerPolicy, true
 	case *apigithubcomapachedubbokubernetesapinetworkingv1alpha3.CircuitBreakerPolicy:
 		return gvk.CircuitBreakerPolicy, true
@@ -44,15 +44,11 @@ func getGvk(obj any) (config.GroupVersionKind, bool) {
 		return gvk.DaemonSet, true
 	case *k8sioapiappsv1.Deployment:
 		return gvk.Deployment, true
-	case *githubcomkdubboapinetworkingv1alpha3.DxgateService:
-		return gvk.DxgateService, true
-	case *apigithubcomapachedubbokubernetesapinetworkingv1alpha3.DxgateService:
-		return gvk.DxgateService, true
 	case *k8sioapidiscoveryv1.EndpointSlice:
 		return gvk.EndpointSlice, true
 	case *k8sioapicorev1.Endpoints:
 		return gvk.Endpoints, true
-	case *githubcomkdubboapinetworkingv1alpha3.FaultInjectionPolicy:
+	case *githubcomdubmlapinetworkingv1alpha3.FaultInjectionPolicy:
 		return gvk.FaultInjectionPolicy, true
 	case *apigithubcomapachedubbokubernetesapinetworkingv1alpha3.FaultInjectionPolicy:
 		return gvk.FaultInjectionPolicy, true
@@ -66,7 +62,7 @@ func getGvk(obj any) (config.GroupVersionKind, bool) {
 		return gvk.KubernetesGateway, true
 	case *k8sioapicoordinationv1.Lease:
 		return gvk.Lease, true
-	case *githubcomkdubboapimeshv1alpha1.MeshConfig:
+	case *githubcomdubmlapimeshv1alpha1.MeshConfig:
 		return gvk.MeshConfig, true
 	case *k8sioapiadmissionregistrationv1.MutatingWebhookConfiguration:
 		return gvk.MutatingWebhookConfiguration, true
@@ -74,7 +70,7 @@ func getGvk(obj any) (config.GroupVersionKind, bool) {
 		return gvk.Namespace, true
 	case *k8sioapicorev1.Node:
 		return gvk.Node, true
-	case *githubcomkdubboapisecurityv1alpha3.PeerAuthentication:
+	case *githubcomdubmlapisecurityv1alpha3.PeerAuthentication:
 		return gvk.PeerAuthentication, true
 	case *apigithubcomapachedubbokubernetesapisecurityv1alpha3.PeerAuthentication:
 		return gvk.PeerAuthentication, true
@@ -84,7 +80,7 @@ func getGvk(obj any) (config.GroupVersionKind, bool) {
 		return gvk.PodDisruptionBudget, true
 	case *sigsk8siogatewayapiapisv1beta1.ReferenceGrant:
 		return gvk.ReferenceGrant, true
-	case *githubcomkdubboapisecurityv1alpha3.RequestAuthentication:
+	case *githubcomdubmlapisecurityv1alpha3.RequestAuthentication:
 		return gvk.RequestAuthentication, true
 	case *apigithubcomapachedubbokubernetesapisecurityv1alpha3.RequestAuthentication:
 		return gvk.RequestAuthentication, true
@@ -94,23 +90,27 @@ func getGvk(obj any) (config.GroupVersionKind, bool) {
 		return gvk.Service, true
 	case *k8sioapicorev1.ServiceAccount:
 		return gvk.ServiceAccount, true
-	case *githubcomkdubboapinetworkingv1alpha3.ServiceActivationPolicy:
+	case *githubcomdubmlapinetworkingv1alpha3.ServiceActivationPolicy:
 		return gvk.ServiceActivationPolicy, true
 	case *apigithubcomapachedubbokubernetesapinetworkingv1alpha3.ServiceActivationPolicy:
 		return gvk.ServiceActivationPolicy, true
-	case *githubcomkdubboapinetworkingv1alpha3.ServiceEntry:
+	case *githubcomdubmlapinetworkingv1alpha3.ServiceEntry:
 		return gvk.ServiceEntry, true
 	case *apigithubcomapachedubbokubernetesapinetworkingv1alpha3.ServiceEntry:
 		return gvk.ServiceEntry, true
 	case *k8sioapiappsv1.StatefulSet:
 		return gvk.StatefulSet, true
-	case *githubcomkdubboapitelemetryv1alpha3.Telemetry:
+	case *githubcomdubmlapitelemetryv1alpha3.Telemetry:
 		return gvk.Telemetry, true
 	case *apigithubcomapachedubbokubernetesapitelemetryv1alpha3.Telemetry:
 		return gvk.Telemetry, true
+	case *githubcomdubmlapinetworkingv1alpha3.TransitService:
+		return gvk.TransitService, true
+	case *apigithubcomapachedubbokubernetesapinetworkingv1alpha3.TransitService:
+		return gvk.TransitService, true
 	case *k8sioapiadmissionregistrationv1.ValidatingWebhookConfiguration:
 		return gvk.ValidatingWebhookConfiguration, true
-	case *githubcomkdubboapinetworkingv1alpha3.WorkloadEntry:
+	case *githubcomdubmlapinetworkingv1alpha3.WorkloadEntry:
 		return gvk.WorkloadEntry, true
 	case *apigithubcomapachedubbokubernetesapinetworkingv1alpha3.WorkloadEntry:
 		return gvk.WorkloadEntry, true

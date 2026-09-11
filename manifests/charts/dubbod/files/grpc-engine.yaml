@@ -94,7 +94,7 @@ spec:
     - name: OTEL_RESOURCE_ATTRIBUTES
       value: {{ .TracingResourceAttributes | quote }}
 {{- end }}
-{{- if and (gt (len .Spec.Containers) 0) (contains "kdubbo/dubbod" ((index .Spec.Containers 0).Image | default "")) }}
+{{- if and (gt (len .Spec.Containers) 0) (contains "dubml/dubbod" ((index .Spec.Containers 0).Image | default "")) }}
     args:
     - grpc-outbound
     - --watch

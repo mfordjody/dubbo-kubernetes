@@ -23,7 +23,7 @@ import (
 	"strings"
 
 	"github.com/apache/dubbo-kubernetes/pkg/util/ptr"
-	meshv1alpha1 "github.com/kdubbo/api/mesh/v1alpha1"
+	meshv1alpha1 "github.com/dubml/api/mesh/v1alpha1"
 
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/features"
 	"github.com/apache/dubbo-kubernetes/pkg/config/mesh/kubemesh"

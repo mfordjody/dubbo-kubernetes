@@ -24,7 +24,7 @@ import (
 
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/model"
 	"github.com/apache/dubbo-kubernetes/pkg/security"
-	discovery "github.com/kdubbo/xds-api/service/discovery/v1"
+	discovery "github.com/dubml/xds-api/service/discovery/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

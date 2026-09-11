@@ -31,8 +31,8 @@ import (
 	"testing"
 	"time"
 
-	tlsv1 "github.com/kdubbo/xds-api/extensions/transport_sockets/tls/v1"
-	routev1 "github.com/kdubbo/xds-api/route/v1"
+	tlsv1 "github.com/dubml/xds-api/extensions/transport_sockets/tls/v1"
+	routev1 "github.com/dubml/xds-api/route/v1"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/wrapperspb"

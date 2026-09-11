@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/gvk"
-	networking "github.com/kdubbo/api/networking/v1alpha3"
+	networking "github.com/dubml/api/networking/v1alpha3"
 	sigsk8siogatewayapiapisv1 "sigs.k8s.io/gateway-api/apis/v1"
 
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/serviceregistry/provider"
@@ -34,7 +34,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/slices"
 	"github.com/apache/dubbo-kubernetes/pkg/spiffe"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
-	meshv1alpha1 "github.com/kdubbo/api/mesh/v1alpha1"
+	meshv1alpha1 "github.com/dubml/api/mesh/v1alpha1"
 	"go.uber.org/atomic"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
@@ -53,7 +53,7 @@ type ConfigSnapshot struct {
 	exportToDefaults       exportToDefaults
 	ServiceIndex           serviceIndex
 	httpRouteIndex         httpRouteIndex
-	dxgateServiceIndex     dxgateServiceIndex
+	transitServiceIndex    transitServiceIndex
 	backendTLSPolicyIndex  backendTLSPolicyIndex
 	faultInjectionIndex    faultInjectionPolicyIndex
 	serviceActivationIndex serviceActivationPolicyIndex
@@ -83,7 +83,7 @@ type httpRouteIndex struct {
 	hostToRoutes map[host.Name][]config.Config
 }
 
-type dxgateServiceIndex struct {
+type transitServiceIndex struct {
 	byNamespace map[string]map[string]config.Config
 }
 
@@ -95,7 +95,7 @@ type BackendTLSSettings struct {
 	SNI string
 }
 
-const ActivationGatewayServiceName = "dxgate-gateway"
+const ActivationGatewayServiceName = "transit-gateway"
 
 type serviceActivationPolicyIndex struct {
 	services map[string][]string
@@ -104,7 +104,7 @@ type serviceActivationPolicyIndex struct {
 func NewConfigSnapshot() *ConfigSnapshot {
 	return &ConfigSnapshot{
 		ServiceIndex:          newServiceIndex(),
-		dxgateServiceIndex:    dxgateServiceIndex{byNamespace: map[string]map[string]config.Config{}},
+		transitServiceIndex:   transitServiceIndex{byNamespace: map[string]map[string]config.Config{}},
 		backendTLSPolicyIndex: backendTLSPolicyIndex{serviceTLS: map[string]BackendTLSSettings{}},
 		serviceActivationIndex: serviceActivationPolicyIndex{
 			services: map[string][]string{},
@@ -319,7 +319,7 @@ func (ps *ConfigSnapshot) createNewContext(env *Environment) {
 	// Initialize Kubernetes Gateway API resources if the controller is enabled.
 	ps.initKubernetesGateways(env)
 	ps.initHTTPRoutes(env)
-	ps.initDxgateServices(env)
+	ps.initTransitServices(env)
 	ps.initBackendTLSPolicies(env)
 	ps.initFaultInjectionPolicies(env)
 	ps.initServiceActivationPolicies(env)
@@ -379,11 +379,11 @@ func (ps *ConfigSnapshot) updateContext(env *Environment, oldSnapshot *ConfigSna
 		ps.httpRouteIndex = oldSnapshot.httpRouteIndex
 	}
 
-	dxgateServicesChanged := change != nil && HasConfigsOfKind(change.ConfigsUpdated, kind.DxgateService)
-	if dxgateServicesChanged {
-		ps.initDxgateServices(env)
+	transitServicesChanged := change != nil && HasConfigsOfKind(change.ConfigsUpdated, kind.TransitService)
+	if transitServicesChanged {
+		ps.initTransitServices(env)
 	} else {
-		ps.dxgateServiceIndex = oldSnapshot.dxgateServiceIndex
+		ps.transitServiceIndex = oldSnapshot.transitServiceIndex
 	}
 
 	backendTLSPoliciesChanged := change != nil && HasConfigsOfKind(change.ConfigsUpdated, kind.BackendTLSPolicy)
@@ -553,8 +553,8 @@ func (ps *ConfigSnapshot) initHTTPRoutes(env *Environment) {
 	}
 }
 
-func (ps *ConfigSnapshot) initDxgateServices(env *Environment) {
-	services := sortConfigByCreationTime(env.List(gvk.DxgateService, NamespaceAll))
+func (ps *ConfigSnapshot) initTransitServices(env *Environment) {
+	services := sortConfigByCreationTime(env.List(gvk.TransitService, NamespaceAll))
 	index := make(map[string]map[string]config.Config)
 	for _, service := range services {
 		if index[service.Namespace] == nil {
@@ -562,15 +562,15 @@ func (ps *ConfigSnapshot) initDxgateServices(env *Environment) {
 		}
 		index[service.Namespace][service.Name] = service
 	}
-	ps.dxgateServiceIndex = dxgateServiceIndex{byNamespace: index}
+	ps.transitServiceIndex = transitServiceIndex{byNamespace: index}
 }
 
-// DxgateService resolves the mesh-native backend named by an HTTPRoute.
-func (ps *ConfigSnapshot) DxgateService(namespace, name string) (config.Config, bool) {
+// TransitService resolves the mesh-native backend named by an HTTPRoute.
+func (ps *ConfigSnapshot) TransitService(namespace, name string) (config.Config, bool) {
 	if ps == nil {
 		return config.Config{}, false
 	}
-	services := ps.dxgateServiceIndex.byNamespace[namespace]
+	services := ps.transitServiceIndex.byNamespace[namespace]
 	if services == nil {
 		return config.Config{}, false
 	}

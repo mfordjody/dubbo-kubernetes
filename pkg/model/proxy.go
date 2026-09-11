@@ -20,12 +20,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/apache/dubbo-kubernetes/pkg/cluster"
-	core "github.com/kdubbo/xds-api/core/v1"
+	core "github.com/dubml/xds-api/core/v1"
 	"strconv"
 
 	networkutil "github.com/apache/dubbo-kubernetes/pkg/util/net"
 	"github.com/apache/dubbo-kubernetes/pkg/util/protomarshal"
-	meshv1alpha1 "github.com/kdubbo/api/mesh/v1alpha1"
+	meshv1alpha1 "github.com/dubml/api/mesh/v1alpha1"
 )
 
 type (

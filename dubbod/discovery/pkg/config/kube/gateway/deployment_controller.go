@@ -54,9 +54,9 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/kube/inject"
 	"github.com/apache/dubbo-kubernetes/pkg/kube/kclient"
 	dubbolog "github.com/apache/dubbo-kubernetes/pkg/log"
-	networking "github.com/kdubbo/api/networking/v1alpha3"
-	clientnetworking "github.com/kdubbo/client-go/pkg/apis/networking/v1alpha3"
-	clienttelemetry "github.com/kdubbo/client-go/pkg/apis/telemetry/v1alpha3"
+	networking "github.com/dubml/api/networking/v1alpha3"
+	clientnetworking "github.com/dubml/client-go/pkg/apis/networking/v1alpha3"
+	clienttelemetry "github.com/dubml/client-go/pkg/apis/telemetry/v1alpha3"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
@@ -75,7 +75,7 @@ type classInfo struct {
 	addressType            gateway.AddressType
 }
 
-const defaultDxgateGatewayName = "dxgate-gateway"
+const defaultTransitGatewayName = "transit-gateway"
 
 const (
 	eastWestGatewayAnnotation   = "gateway.dubbo.apache.org/eastwest"
@@ -91,7 +91,7 @@ const (
 // defaultGatewayReplicas keeps a gateway serving while one replica is drained,
 // upgraded or evicted. A single replica turns any of those into an outage for
 // every route the gateway fronts. The installed default comes from
-// features.DxgateReplicas; this is the floor used when that value is unusable.
+// features.TransitReplicas; this is the floor used when that value is unusable.
 const defaultGatewayReplicas = 2
 
 var builtinClasses = getBuiltinClasses()
@@ -398,12 +398,12 @@ func (d *DeploymentController) configureGateway(log *dubbolog.Logger, gw gateway
 	// Extract service ports from Gateway listeners
 	ports := extractServicePorts(gw)
 	if len(ports) == 0 {
-		log.Infof("gateway has no supported HTTP listeners, skipping dxgate deployment")
+		log.Infof("gateway has no supported HTTP listeners, skipping transit deployment")
 		return nil
 	}
-	bootstrapConfig, bootstrapConfigHash, err := d.buildDxgateBootstrapConfig(gw, defaultName, ports)
+	bootstrapConfig, bootstrapConfigHash, err := d.buildTransitBootstrapConfig(gw, defaultName, ports)
 	if err != nil {
-		log.Errorf("failed building dxgate bootstrap config: %v", err)
+		log.Errorf("failed building transit bootstrap config: %v", err)
 		return err
 	}
 
@@ -420,7 +420,7 @@ func (d *DeploymentController) configureGateway(log *dubbolog.Logger, gw gateway
 		ControllerLabel:     gi.controllerLabel,
 		BootstrapConfig:     bootstrapConfig,
 		BootstrapConfigHash: bootstrapConfigHash,
-		DxgateImage:         features.DxgateImage,
+		TransitImage:        features.TransitImage,
 		SystemNamespace:     d.systemNamespace,
 		ClusterID:           string(d.clusterID),
 		DomainSuffix:        d.domainSuffix(),
@@ -439,8 +439,8 @@ func (d *DeploymentController) configureGateway(log *dubbolog.Logger, gw gateway
 		ActivationHoldTimeout:  features.ActivationHoldTimeout,
 	}
 
-	log.Infof("desired dxgate deployment=%s/%s gatewayClass=%s serviceType=%s ports=%s image=%s",
-		gw.Namespace, defaultName, input.GatewayClass, serviceType, formatGatewayServicePorts(ports), input.DxgateImage)
+	log.Infof("desired transit deployment=%s/%s gatewayClass=%s serviceType=%s ports=%s image=%s",
+		gw.Namespace, defaultName, input.GatewayClass, serviceType, formatGatewayServicePorts(ports), input.TransitImage)
 
 	log.Debugf("rendering template %q for gateway %s/%s", gi.templates, gw.Namespace, gw.Name)
 	rendered, err := d.render(gi.templates, input)
@@ -471,19 +471,19 @@ func (d *DeploymentController) configureGateway(log *dubbolog.Logger, gw gateway
 		defaultName,
 		gw.Name,
 	); err != nil {
-		log.Warnf("failed cleaning up legacy dxgate resources %s/%s: %v", gw.Namespace, legacyName, err)
+		log.Warnf("failed cleaning up legacy transit resources %s/%s: %v", gw.Namespace, legacyName, err)
 	}
-	if defaultName != defaultDxgateGatewayName {
+	if defaultName != defaultTransitGatewayName {
 		if err := d.cleanupLegacyGatewayResources(
 			context.TODO(),
 			log,
 			gw.Namespace,
-			defaultDxgateGatewayName,
+			defaultTransitGatewayName,
 			defaultName,
 			gw.Name,
 		); err != nil {
-			log.Warnf("failed cleaning up fixed-name dxgate resources %s/%s: %v",
-				gw.Namespace, defaultDxgateGatewayName, err)
+			log.Warnf("failed cleaning up fixed-name transit resources %s/%s: %v",
+				gw.Namespace, defaultTransitGatewayName, err)
 		}
 	}
 
@@ -506,7 +506,7 @@ type TemplateInput struct {
 	BootstrapConfigHash string
 	RuntimeConfig       string
 	RuntimeConfigHash   string
-	DxgateImage         string
+	TransitImage        string
 	SystemNamespace     string
 	ClusterID           string
 	DomainSuffix        string
@@ -550,7 +550,7 @@ func (d *DeploymentController) observabilityConfigForGateway(gw gateway.Gateway)
 
 func resolveGatewayObservability(gw gateway.Gateway, meshNamespace string, resources []telemetryconfig.Resource) gatewayObservabilityConfig {
 	labels := map[string]string{
-		"app.kubernetes.io/name":                 "dxgate",
+		"app.kubernetes.io/name":                 "transit",
 		"gateway.networking.k8s.io/gateway-name": gw.Name,
 	}
 	for key, value := range gw.Labels {
@@ -558,7 +558,7 @@ func resolveGatewayObservability(gw gateway.Gateway, meshNamespace string, resou
 	}
 	effective := telemetryconfig.Resolve(resources, meshNamespace, gw.Namespace, labels)
 	cfg := gatewayObservabilityConfig{
-		OtelServiceName: fmt.Sprintf("dxgate.%s.%s", gw.Namespace, gw.Name),
+		OtelServiceName: fmt.Sprintf("transit.%s.%s", gw.Namespace, gw.Name),
 		OtelSampling:    effective.SamplingPercentageString(),
 		OtelTags:        effective.TagsJSON(),
 		AccessLog:       gatewayAccessLog(gw),
@@ -612,74 +612,74 @@ func gatewayAccessLogFormat(gw gateway.Gateway) string {
 	}
 }
 
-type dxgateBootstrapConfig struct {
+type transitBootstrapConfig struct {
 	XDSAddress    string   `json:"xds_address" yaml:"xds_address"`
 	ListenerNames []string `json:"listener_names" yaml:"listener_names"`
 	ClusterID     string   `json:"cluster_id" yaml:"cluster_id"`
 	DNSDomain     string   `json:"dns_domain" yaml:"dns_domain"`
 }
 
-type dxgateRuntimeConfig struct {
-	Version   string           `json:"version" yaml:"version"`
-	Listeners []dxgateListener `json:"listeners" yaml:"listeners"`
-	Clusters  []dxgateCluster  `json:"clusters" yaml:"clusters"`
-	Secrets   []dxgateSecret   `json:"secrets" yaml:"secrets"`
+type transitRuntimeConfig struct {
+	Version   string            `json:"version" yaml:"version"`
+	Listeners []transitListener `json:"listeners" yaml:"listeners"`
+	Clusters  []transitCluster  `json:"clusters" yaml:"clusters"`
+	Secrets   []transitSecret   `json:"secrets" yaml:"secrets"`
 }
 
-type dxgateListener struct {
-	Name         string              `json:"name" yaml:"name"`
-	Bind         string              `json:"bind" yaml:"bind"`
-	Protocol     string              `json:"protocol" yaml:"protocol"`
-	VirtualHosts []dxgateVirtualHost `json:"virtual_hosts" yaml:"virtual_hosts"`
-	TLSSecret    *string             `json:"tls_secret,omitempty" yaml:"tls_secret,omitempty"`
+type transitListener struct {
+	Name         string               `json:"name" yaml:"name"`
+	Bind         string               `json:"bind" yaml:"bind"`
+	Protocol     string               `json:"protocol" yaml:"protocol"`
+	VirtualHosts []transitVirtualHost `json:"virtual_hosts" yaml:"virtual_hosts"`
+	TLSSecret    *string              `json:"tls_secret,omitempty" yaml:"tls_secret,omitempty"`
 }
 
-type dxgateVirtualHost struct {
-	Name    string        `json:"name" yaml:"name"`
-	Domains []string      `json:"domains" yaml:"domains"`
-	Routes  []dxgateRoute `json:"routes" yaml:"routes"`
+type transitVirtualHost struct {
+	Name    string         `json:"name" yaml:"name"`
+	Domains []string       `json:"domains" yaml:"domains"`
+	Routes  []transitRoute `json:"routes" yaml:"routes"`
 }
 
-type dxgateRoute struct {
-	Name             string                  `json:"name" yaml:"name"`
-	Matches          []dxgateRouteMatch      `json:"matches" yaml:"matches"`
-	WeightedClusters []dxgateWeightedCluster `json:"weighted_clusters" yaml:"weighted_clusters"`
+type transitRoute struct {
+	Name             string                   `json:"name" yaml:"name"`
+	Matches          []transitRouteMatch      `json:"matches" yaml:"matches"`
+	WeightedClusters []transitWeightedCluster `json:"weighted_clusters" yaml:"weighted_clusters"`
 }
 
-type dxgateRouteMatch struct {
-	Path    dxgatePathMatch     `json:"path" yaml:"path"`
-	Headers []dxgateHeaderMatch `json:"headers" yaml:"headers"`
+type transitRouteMatch struct {
+	Path    transitPathMatch     `json:"path" yaml:"path"`
+	Headers []transitHeaderMatch `json:"headers" yaml:"headers"`
 }
 
-type dxgatePathMatch struct {
+type transitPathMatch struct {
 	Type  string `json:"type" yaml:"type"`
 	Value string `json:"value" yaml:"value"`
 }
 
-type dxgateHeaderMatch struct {
+type transitHeaderMatch struct {
 	Name  string `json:"name" yaml:"name"`
 	Value string `json:"value" yaml:"value"`
 }
 
-type dxgateWeightedCluster struct {
+type transitWeightedCluster struct {
 	Name   string `json:"name" yaml:"name"`
 	Weight uint32 `json:"weight" yaml:"weight"`
 }
 
-type dxgateCluster struct {
-	Name           string                  `json:"name" yaml:"name"`
-	Endpoints      []dxgateEndpoint        `json:"endpoints" yaml:"endpoints"`
-	TLS            *dxgateUpstreamTLS      `json:"tls,omitempty" yaml:"tls,omitempty"`
-	CircuitBreaker *dxgateCircuitBreaker   `json:"circuit_breaker,omitempty" yaml:"circuit_breaker,omitempty"`
-	Outlier        *dxgateOutlierDetection `json:"outlier_detection,omitempty" yaml:"outlier_detection,omitempty"`
+type transitCluster struct {
+	Name           string                   `json:"name" yaml:"name"`
+	Endpoints      []transitEndpoint        `json:"endpoints" yaml:"endpoints"`
+	TLS            *transitUpstreamTLS      `json:"tls,omitempty" yaml:"tls,omitempty"`
+	CircuitBreaker *transitCircuitBreaker   `json:"circuit_breaker,omitempty" yaml:"circuit_breaker,omitempty"`
+	Outlier        *transitOutlierDetection `json:"outlier_detection,omitempty" yaml:"outlier_detection,omitempty"`
 }
 
-type dxgateUpstreamTLS struct {
+type transitUpstreamTLS struct {
 	Mode string `json:"mode" yaml:"mode"`
 	SNI  string `json:"sni,omitempty" yaml:"sni,omitempty"`
 }
 
-type dxgateCircuitBreaker struct {
+type transitCircuitBreaker struct {
 	MaxConnections           int32 `json:"max_connections,omitempty" yaml:"max_connections,omitempty"`
 	HTTP1MaxPendingRequests  int32 `json:"http1_max_pending_requests,omitempty" yaml:"http1_max_pending_requests,omitempty"`
 	HTTP2MaxRequests         int32 `json:"http2_max_requests,omitempty" yaml:"http2_max_requests,omitempty"`
@@ -687,7 +687,7 @@ type dxgateCircuitBreaker struct {
 	MaxRetries               int32 `json:"max_retries,omitempty" yaml:"max_retries,omitempty"`
 }
 
-type dxgateOutlierDetection struct {
+type transitOutlierDetection struct {
 	Consecutive5xxErrors uint32 `json:"consecutive_5xx_errors,omitempty" yaml:"consecutive_5xx_errors,omitempty"`
 	Interval             string `json:"interval,omitempty" yaml:"interval,omitempty"`
 	BaseEjectionTime     string `json:"base_ejection_time,omitempty" yaml:"base_ejection_time,omitempty"`
@@ -695,14 +695,14 @@ type dxgateOutlierDetection struct {
 	MinHealthPercent     int32  `json:"min_health_percent,omitempty" yaml:"min_health_percent,omitempty"`
 }
 
-type dxgateEndpoint struct {
+type transitEndpoint struct {
 	Address  string  `json:"address" yaml:"address"`
 	Port     uint16  `json:"port" yaml:"port"`
 	Healthy  bool    `json:"healthy" yaml:"healthy"`
 	NodeName *string `json:"node_name,omitempty" yaml:"node_name,omitempty"`
 }
 
-type dxgateSecret struct {
+type transitSecret struct {
 	Name                string `json:"name" yaml:"name"`
 	CertificateChainPEM string `json:"certificate_chain_pem" yaml:"certificate_chain_pem"`
 	PrivateKeyPEM       string `json:"private_key_pem" yaml:"private_key_pem"`
@@ -733,7 +733,7 @@ func (d *DeploymentController) domainSuffix() string {
 	return constants.DefaultClusterLocalDomain
 }
 
-func (d *DeploymentController) buildDxgateBootstrapConfig(gw gateway.Gateway, serviceName string, ports []corev1.ServicePort) (string, string, error) {
+func (d *DeploymentController) buildTransitBootstrapConfig(gw gateway.Gateway, serviceName string, ports []corev1.ServicePort) (string, string, error) {
 	systemNamespace := d.systemNamespace
 	if systemNamespace == "" {
 		systemNamespace = constants.DubboSystemNamespace
@@ -742,21 +742,21 @@ func (d *DeploymentController) buildDxgateBootstrapConfig(gw gateway.Gateway, se
 	if gw.Annotations[xdsAddressAnnotation] != "" {
 		xdsAddress = gw.Annotations[xdsAddressAnnotation]
 	}
-	return buildDxgateBootstrapConfig(
+	return buildTransitBootstrapConfig(
 		xdsAddress,
-		dxgateListenerNames(gw.Namespace, serviceName, d.domainSuffix(), ports),
+		transitListenerNames(gw.Namespace, serviceName, d.domainSuffix(), ports),
 		string(d.clusterID),
 		d.domainSuffix(),
 	)
 }
 
-func buildDxgateBootstrapConfig(xdsAddress string, listenerNames []string, clusterID, dnsDomain string) (string, string, error) {
+func buildTransitBootstrapConfig(xdsAddress string, listenerNames []string, clusterID, dnsDomain string) (string, string, error) {
 	if xdsAddress == "" {
-		return "", "", fmt.Errorf("dxgate bootstrap xDS address is empty")
+		return "", "", fmt.Errorf("transit bootstrap xDS address is empty")
 	}
 	endpoint, err := url.Parse(xdsAddress)
 	if err != nil || endpoint.Scheme != "https" || endpoint.Hostname() == "" {
-		return "", "", fmt.Errorf("dxgate ADS address must be an https URL with workload credentials")
+		return "", "", fmt.Errorf("transit ADS address must be an https URL with workload credentials")
 	}
 	if clusterID == "" {
 		clusterID = string(cluster.ID("Kubernetes"))
@@ -764,7 +764,7 @@ func buildDxgateBootstrapConfig(xdsAddress string, listenerNames []string, clust
 	if dnsDomain == "" {
 		dnsDomain = constants.DefaultClusterLocalDomain
 	}
-	cfg := dxgateBootstrapConfig{
+	cfg := transitBootstrapConfig{
 		XDSAddress:    xdsAddress,
 		ListenerNames: listenerNames,
 		ClusterID:     clusterID,
@@ -772,14 +772,14 @@ func buildDxgateBootstrapConfig(xdsAddress string, listenerNames []string, clust
 	}
 	rendered, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
-		return "", "", fmt.Errorf("marshal dxgate bootstrap config: %v", err)
+		return "", "", fmt.Errorf("marshal transit bootstrap config: %v", err)
 	}
 	rendered = append(rendered, '\n')
 	sum := sha256.Sum256(rendered)
 	return string(rendered), hex.EncodeToString(sum[:]), nil
 }
 
-func dxgateListenerNames(namespace, serviceName, domainSuffix string, ports []corev1.ServicePort) []string {
+func transitListenerNames(namespace, serviceName, domainSuffix string, ports []corev1.ServicePort) []string {
 	out := make([]string, 0, len(ports))
 	for _, port := range ports {
 		targetPort := port.TargetPort.IntValue()
@@ -800,7 +800,7 @@ func formatGatewayServicePorts(ports []corev1.ServicePort) string {
 	return strings.Join(out, ",")
 }
 
-func buildDxgateRuntimeConfig(gw gateway.Gateway, routes []*gateway.HTTPRoute, services []*corev1.Service, backendTLSPolicies []*gateway.BackendTLSPolicy, policies []config.Config, domainSuffix string) (string, string, error) {
+func buildTransitRuntimeConfig(gw gateway.Gateway, routes []*gateway.HTTPRoute, services []*corev1.Service, backendTLSPolicies []*gateway.BackendTLSPolicy, policies []config.Config, domainSuffix string) (string, string, error) {
 	if domainSuffix == "" {
 		domainSuffix = constants.DefaultClusterLocalDomain
 	}
@@ -815,18 +815,18 @@ func buildDxgateRuntimeConfig(gw gateway.Gateway, routes []*gateway.HTTPRoute, s
 		return routes[i].Name < routes[j].Name
 	})
 
-	cfg := dxgateRuntimeConfig{
-		Version: dxgateRuntimeVersion(gw, routes),
-		Listeners: []dxgateListener{
+	cfg := transitRuntimeConfig{
+		Version: transitRuntimeVersion(gw, routes),
+		Listeners: []transitListener{
 			{
 				Name:         "http-80",
 				Bind:         "0.0.0.0:80",
 				Protocol:     "http",
-				VirtualHosts: []dxgateVirtualHost{},
+				VirtualHosts: []transitVirtualHost{},
 			},
 		},
-		Clusters: []dxgateCluster{},
-		Secrets:  []dxgateSecret{},
+		Clusters: []transitCluster{},
+		Secrets:  []transitSecret{},
 	}
 
 	clusterNames := map[string]struct{}{}
@@ -834,7 +834,7 @@ func buildDxgateRuntimeConfig(gw gateway.Gateway, routes []*gateway.HTTPRoute, s
 		if !httpRouteReferencesGateway(hr, &gw) {
 			continue
 		}
-		vh, clusters := buildDxgateVirtualHost(gw, hr, servicesByKey, backendTLS, circuitBreakers, domainSuffix)
+		vh, clusters := buildTransitVirtualHost(gw, hr, servicesByKey, backendTLS, circuitBreakers, domainSuffix)
 		if len(vh.Routes) == 0 {
 			continue
 		}
@@ -850,13 +850,13 @@ func buildDxgateRuntimeConfig(gw gateway.Gateway, routes []*gateway.HTTPRoute, s
 
 	rendered, err := yaml.Marshal(cfg)
 	if err != nil {
-		return "", "", fmt.Errorf("marshal dxgate runtime config: %v", err)
+		return "", "", fmt.Errorf("marshal transit runtime config: %v", err)
 	}
 	sum := sha256.Sum256(rendered)
 	return string(rendered), hex.EncodeToString(sum[:]), nil
 }
 
-func dxgateRuntimeVersion(gw gateway.Gateway, routes []*gateway.HTTPRoute) string {
+func transitRuntimeVersion(gw gateway.Gateway, routes []*gateway.HTTPRoute) string {
 	parts := []string{
 		fmt.Sprintf("gateway/%s/%s/%s", gw.Namespace, gw.Name, gw.ResourceVersion),
 	}
@@ -868,20 +868,20 @@ func dxgateRuntimeVersion(gw gateway.Gateway, routes []*gateway.HTTPRoute) strin
 	return strings.Join(parts, ";")
 }
 
-func buildDxgateVirtualHost(gw gateway.Gateway, hr *gateway.HTTPRoute, services map[string]*corev1.Service, backendTLS map[string]*dxgateUpstreamTLS, circuitBreakers map[string]dxgateBackendCircuitBreaker, domainSuffix string) (dxgateVirtualHost, []dxgateCluster) {
-	vh := dxgateVirtualHost{
+func buildTransitVirtualHost(gw gateway.Gateway, hr *gateway.HTTPRoute, services map[string]*corev1.Service, backendTLS map[string]*transitUpstreamTLS, circuitBreakers map[string]transitBackendCircuitBreaker, domainSuffix string) (transitVirtualHost, []transitCluster) {
+	vh := transitVirtualHost{
 		Name:    fmt.Sprintf("%s-%s", hr.Namespace, hr.Name),
-		Domains: dxgateRouteDomains(gw, hr),
-		Routes:  []dxgateRoute{},
+		Domains: transitRouteDomains(gw, hr),
+		Routes:  []transitRoute{},
 	}
-	clusters := []dxgateCluster{}
+	clusters := []transitCluster{}
 
 	for ruleIdx, rule := range hr.Spec.Rules {
-		for matchIdx, match := range dxgateMatches(rule.Matches) {
-			route := dxgateRoute{
+		for matchIdx, match := range transitMatches(rule.Matches) {
+			route := transitRoute{
 				Name:             fmt.Sprintf("%s-%s-%d-%d", hr.Namespace, hr.Name, ruleIdx, matchIdx),
-				Matches:          []dxgateRouteMatch{match},
-				WeightedClusters: []dxgateWeightedCluster{},
+				Matches:          []transitRouteMatch{match},
+				WeightedClusters: []transitWeightedCluster{},
 			}
 			for backendIdx, backendRef := range rule.BackendRefs {
 				if !isServiceBackend(backendRef) || backendRef.Port == nil {
@@ -905,18 +905,18 @@ func buildDxgateVirtualHost(gw gateway.Gateway, hr *gateway.HTTPRoute, services 
 				policy := circuitBreakers[backendKey]
 				upstreamTLS := backendTLS[backendKey]
 
-				route.WeightedClusters = append(route.WeightedClusters, dxgateWeightedCluster{
+				route.WeightedClusters = append(route.WeightedClusters, transitWeightedCluster{
 					Name:   clusterName,
 					Weight: weight,
 				})
-				clusters = append(clusters, dxgateCluster{
+				clusters = append(clusters, transitCluster{
 					Name:           clusterName,
 					TLS:            upstreamTLS,
 					CircuitBreaker: policy.CircuitBreaker,
 					Outlier:        policy.Outlier,
-					Endpoints: []dxgateEndpoint{
+					Endpoints: []transitEndpoint{
 						{
-							Address: dxgateBackendAddress(backendNamespace, string(backendRef.Name), domainSuffix, services),
+							Address: transitBackendAddress(backendNamespace, string(backendRef.Name), domainSuffix, services),
 							Port:    port,
 							Healthy: true,
 						},
@@ -942,15 +942,15 @@ func servicesByNamespacedName(services []*corev1.Service) map[string]*corev1.Ser
 	return out
 }
 
-func dxgateBackendAddress(namespace, name, domainSuffix string, services map[string]*corev1.Service) string {
+func transitBackendAddress(namespace, name, domainSuffix string, services map[string]*corev1.Service) string {
 	if svc := services[namespacedServiceKey(namespace, name)]; svc != nil && svc.Spec.Type == corev1.ServiceTypeExternalName && svc.Spec.ExternalName != "" {
 		return svc.Spec.ExternalName
 	}
 	return fmt.Sprintf("%s.%s.svc.%s", name, namespace, domainSuffix)
 }
 
-func backendTLSPoliciesByTarget(policies []*gateway.BackendTLSPolicy) map[string]*dxgateUpstreamTLS {
-	out := map[string]*dxgateUpstreamTLS{}
+func backendTLSPoliciesByTarget(policies []*gateway.BackendTLSPolicy) map[string]*transitUpstreamTLS {
+	out := map[string]*transitUpstreamTLS{}
 	sort.Slice(policies, func(i, j int) bool {
 		if !policies[i].CreationTimestamp.Time.Equal(policies[j].CreationTimestamp.Time) {
 			return policies[i].CreationTimestamp.Time.Before(policies[j].CreationTimestamp.Time)
@@ -964,7 +964,7 @@ func backendTLSPoliciesByTarget(policies []*gateway.BackendTLSPolicy) map[string
 		if policy == nil || !supportsSystemBackendTLS(policy) {
 			continue
 		}
-		upstreamTLS := &dxgateUpstreamTLS{
+		upstreamTLS := &transitUpstreamTLS{
 			Mode: "simple",
 			SNI:  string(policy.Spec.Validation.Hostname),
 		}
@@ -998,13 +998,13 @@ func isBackendTLSPolicyServiceTarget(target gateway.LocalPolicyTargetReferenceWi
 	return (group == "" || group == "core") && strings.EqualFold(kind, "Service")
 }
 
-type dxgateBackendCircuitBreaker struct {
-	CircuitBreaker *dxgateCircuitBreaker
-	Outlier        *dxgateOutlierDetection
+type transitBackendCircuitBreaker struct {
+	CircuitBreaker *transitCircuitBreaker
+	Outlier        *transitOutlierDetection
 }
 
-func circuitBreakerPoliciesByTarget(policies []config.Config) map[string]dxgateBackendCircuitBreaker {
-	out := map[string]dxgateBackendCircuitBreaker{}
+func circuitBreakerPoliciesByTarget(policies []config.Config) map[string]transitBackendCircuitBreaker {
+	out := map[string]transitBackendCircuitBreaker{}
 	sort.Slice(policies, func(i, j int) bool {
 		if policies[i].CreationTimestamp != policies[j].CreationTimestamp {
 			return policies[i].CreationTimestamp.Before(policies[j].CreationTimestamp)
@@ -1019,7 +1019,7 @@ func circuitBreakerPoliciesByTarget(policies []config.Config) map[string]dxgateB
 		if !ok || spec == nil {
 			continue
 		}
-		policy := dxgateCircuitBreakerFromPolicy(spec)
+		policy := transitCircuitBreakerFromPolicy(spec)
 		if policy.CircuitBreaker == nil && policy.Outlier == nil {
 			continue
 		}
@@ -1045,10 +1045,10 @@ func isCircuitBreakerServiceTarget(target *networking.PolicyTargetReference) boo
 	return (group == "" || group == "core") && strings.EqualFold(kind, "Service")
 }
 
-func dxgateCircuitBreakerFromPolicy(policy *networking.CircuitBreakerPolicy) dxgateBackendCircuitBreaker {
-	out := dxgateBackendCircuitBreaker{}
+func transitCircuitBreakerFromPolicy(policy *networking.CircuitBreakerPolicy) transitBackendCircuitBreaker {
+	out := transitBackendCircuitBreaker{}
 	if cp := policy.GetConnectionPool(); cp != nil {
-		cb := &dxgateCircuitBreaker{
+		cb := &transitCircuitBreaker{
 			MaxConnections:           positiveInt32(cp.GetMaxConnections()),
 			HTTP1MaxPendingRequests:  positiveInt32(cp.GetHttp1MaxPendingRequests()),
 			HTTP2MaxRequests:         positiveInt32(cp.GetHttp2MaxRequests()),
@@ -1060,7 +1060,7 @@ func dxgateCircuitBreakerFromPolicy(policy *networking.CircuitBreakerPolicy) dxg
 		}
 	}
 	if od := policy.GetOutlierDetection(); od != nil {
-		outlier := &dxgateOutlierDetection{
+		outlier := &transitOutlierDetection{
 			Consecutive5xxErrors: uint32Value(od.GetConsecutive_5XxErrors()),
 			Interval:             durationString(od.GetInterval()),
 			BaseEjectionTime:     durationString(od.GetBaseEjectionTime()),
@@ -1099,7 +1099,7 @@ func namespacedServiceKey(namespace, name string) string {
 	return namespace + "/" + name
 }
 
-func dxgateRouteDomains(gw gateway.Gateway, hr *gateway.HTTPRoute) []string {
+func transitRouteDomains(gw gateway.Gateway, hr *gateway.HTTPRoute) []string {
 	domains := map[string]struct{}{}
 	for _, hostname := range hr.Spec.Hostnames {
 		if hostname != "" {
@@ -1125,51 +1125,51 @@ func dxgateRouteDomains(gw gateway.Gateway, hr *gateway.HTTPRoute) []string {
 	return out
 }
 
-func dxgateMatches(matches []gateway.HTTPRouteMatch) []dxgateRouteMatch {
+func transitMatches(matches []gateway.HTTPRouteMatch) []transitRouteMatch {
 	if len(matches) == 0 {
-		return []dxgateRouteMatch{defaultDxgateRouteMatch()}
+		return []transitRouteMatch{defaultTransitRouteMatch()}
 	}
-	out := make([]dxgateRouteMatch, 0, len(matches))
+	out := make([]transitRouteMatch, 0, len(matches))
 	for _, match := range matches {
-		out = append(out, dxgateRouteMatch{
-			Path:    dxgatePath(match.Path),
-			Headers: dxgateHeaders(match.Headers),
+		out = append(out, transitRouteMatch{
+			Path:    transitPath(match.Path),
+			Headers: transitHeaders(match.Headers),
 		})
 	}
 	return out
 }
 
-func defaultDxgateRouteMatch() dxgateRouteMatch {
-	return dxgateRouteMatch{
-		Path: dxgatePathMatch{
+func defaultTransitRouteMatch() transitRouteMatch {
+	return transitRouteMatch{
+		Path: transitPathMatch{
 			Type:  "prefix",
 			Value: "/",
 		},
-		Headers: []dxgateHeaderMatch{},
+		Headers: []transitHeaderMatch{},
 	}
 }
 
-func dxgatePath(path *gateway.HTTPPathMatch) dxgatePathMatch {
+func transitPath(path *gateway.HTTPPathMatch) transitPathMatch {
 	if path == nil {
-		return defaultDxgateRouteMatch().Path
+		return defaultTransitRouteMatch().Path
 	}
 	value := "/"
 	if path.Value != nil && *path.Value != "" {
 		value = *path.Value
 	}
 	if path.Type != nil && *path.Type == gateway.PathMatchExact {
-		return dxgatePathMatch{Type: "exact", Value: value}
+		return transitPathMatch{Type: "exact", Value: value}
 	}
-	return dxgatePathMatch{Type: "prefix", Value: value}
+	return transitPathMatch{Type: "prefix", Value: value}
 }
 
-func dxgateHeaders(headers []gateway.HTTPHeaderMatch) []dxgateHeaderMatch {
-	out := make([]dxgateHeaderMatch, 0, len(headers))
+func transitHeaders(headers []gateway.HTTPHeaderMatch) []transitHeaderMatch {
+	out := make([]transitHeaderMatch, 0, len(headers))
 	for _, header := range headers {
 		if header.Type != nil && *header.Type != gateway.HeaderMatchExact {
 			continue
 		}
-		out = append(out, dxgateHeaderMatch{
+		out = append(out, transitHeaderMatch{
 			Name:  string(header.Name),
 			Value: header.Value,
 		})
@@ -1352,7 +1352,7 @@ func (d *DeploymentController) cleanupLegacyGatewayResources(
 		return fmt.Errorf("%s", strings.Join(errs, "; "))
 	}
 
-	log.Debugf("checked legacy dxgate resources %s/%s", namespace, legacyName)
+	log.Debugf("checked legacy transit resources %s/%s", namespace, legacyName)
 	return nil
 }
 
@@ -1463,8 +1463,8 @@ func getDefaultName(name string, kgw *gateway.GatewaySpec, disableNameSuffix boo
 	// Keep the canonical Activator Service stable: inherent cold EDS points at
 	// this namespace-local name. Every other Gateway needs its own resources or
 	// two Gateway reconciles overwrite the same Deployment, Service and config.
-	if name == defaultDxgateGatewayName {
-		return defaultDxgateGatewayName
+	if name == defaultTransitGatewayName {
+		return defaultTransitGatewayName
 	}
 	return getLegacyDefaultName(name, kgw, disableNameSuffix)
 }
@@ -1528,7 +1528,7 @@ func gatewayServiceNodePort(gw gateway.Gateway) int32 {
 	return int32(port)
 }
 
-// gatewayReplicas reports how many dxgate pods to run. Zero is allowed so a
+// gatewayReplicas reports how many transit pods to run. Zero is allowed so a
 // gateway can be scaled down deliberately, which is why this does not reuse
 // positiveIntAnnotation.
 func gatewayReplicas(gw gateway.Gateway) int32 {
@@ -1550,10 +1550,10 @@ func gatewayReplicasWithDefault(gw gateway.Gateway, fallback int32) int32 {
 // meaningless and a zero one would make every gateway default to serving no
 // traffic, so both fall back to the highly available floor.
 func installedGatewayReplicas() int32 {
-	if features.DxgateReplicas < 1 {
+	if features.TransitReplicas < 1 {
 		return defaultGatewayReplicas
 	}
-	return int32(features.DxgateReplicas)
+	return int32(features.TransitReplicas)
 }
 
 func positiveIntAnnotation(gw gateway.Gateway, name string) (int, bool) {

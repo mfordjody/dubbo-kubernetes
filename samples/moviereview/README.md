@@ -9,7 +9,7 @@ moviepage / details / reviews(v1,v2,v3) / ratings 六个服务，应用代码本
 
 ```bash
 samples/moviereview/build.sh                                   # 构建到本地
-HUB=kdubbo TAG=latest PUSH=true samples/moviereview/build.sh   # 构建并推送
+HUB=dubml TAG=latest PUSH=true samples/moviereview/build.sh   # 构建并推送
 PLATFORM=linux/amd64 samples/moviereview/build.sh              # 集群节点架构与本机不一致时
 ```
 

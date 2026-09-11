@@ -53,7 +53,7 @@ spec:
       serviceAccountName: payment
       containers:
         - name: payment
-          image: kdubbo/activation-e2e:latest
+          image: dubml/activation-e2e:latest
           imagePullPolicy: IfNotPresent
           args: ["server"]
           ports:
