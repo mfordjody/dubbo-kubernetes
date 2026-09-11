@@ -251,7 +251,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: dubml/transit
-          ref: c8e423501f103c7faa08a0cee7a43680a5054138
+          ref: 460f879b285ae6c569508d3292b5d7f69af47ca2
           path: .e2e/transit
 
       - name: Build transit activation image
