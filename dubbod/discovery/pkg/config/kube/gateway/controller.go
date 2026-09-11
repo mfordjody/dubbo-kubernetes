@@ -161,7 +161,7 @@ func newKindStore(collection krt.Collection[config.Config]) kindStore {
 	}
 }
 
-func (c *Controller) Reconcile(ps *model.PushContext) {
+func (c *Controller) Reconcile(ps *model.ConfigSnapshot) {
 	ctx := NewGatewayContext(ps, c.cluster)
 	c.gatewayContext.Modify(func(i **atomic.Pointer[Context]) {
 		(*i).Store(&ctx)

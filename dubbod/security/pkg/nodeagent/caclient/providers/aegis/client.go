@@ -24,8 +24,8 @@ import (
 
 	"github.com/apache/dubbo-kubernetes/pkg/log"
 
-	dubbogrpc "github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/grpc"
 	"github.com/apache/dubbo-kubernetes/dubbod/security/pkg/nodeagent/caclient"
+	dubbogrpc "github.com/apache/dubbo-kubernetes/pkg/grpc"
 	"github.com/apache/dubbo-kubernetes/pkg/security"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"

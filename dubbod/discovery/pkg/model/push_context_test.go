@@ -127,7 +127,7 @@ func TestApplyServiceActivationPolicyUpdates(t *testing.T) {
 	}
 
 	push := NewPushContext()
-	push.applyServiceActivationPolicyUpdates(add)
+	push.applyServiceActivationPolicyUpdates(add.ConfigChange())
 	if !push.ServiceActivationEnabled("app", "payment") {
 		t.Fatal("policy event did not add payment to activation index")
 	}
@@ -143,7 +143,7 @@ func TestApplyServiceActivationPolicyUpdates(t *testing.T) {
 	}
 	next := NewPushContext()
 	next.serviceActivationIndex = copyServiceActivationPolicyIndex(push.serviceActivationIndex)
-	next.applyServiceActivationPolicyUpdates(merged)
+	next.applyServiceActivationPolicyUpdates(merged.ConfigChange())
 	if next.ServiceActivationEnabled("app", "payment") {
 		t.Fatal("policy delete did not remove payment from activation index")
 	}

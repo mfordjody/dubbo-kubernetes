@@ -21,11 +21,29 @@ import (
 	"net"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 
 	dubbolog "github.com/apache/dubbo-kubernetes/pkg/log"
 	"github.com/spf13/cobra"
 )
+
+type synchronizedBuffer struct {
+	mu     sync.Mutex
+	buffer bytes.Buffer
+}
+
+func (b *synchronizedBuffer) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buffer.Write(p)
+}
+
+func (b *synchronizedBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buffer.String()
+}
 
 func legacyIntrospectionTokens() []string {
 	return []string{"ctrl" + "z", "control" + "z"}
@@ -81,7 +99,7 @@ func TestRunLogsHaveNoLegacyIntrospectionIdentifiers(t *testing.T) {
 	if scope == nil {
 		t.Fatal("introspection log scope missing")
 	}
-	var out bytes.Buffer
+	var out synchronizedBuffer
 	scope.SetOutput(&out)
 	defer scope.SetOutput(os.Stderr)
 

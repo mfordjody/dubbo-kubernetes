@@ -22,10 +22,10 @@ import (
 
 	"github.com/apache/dubbo-kubernetes/pkg/util/ptr"
 
-	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/features"
 	dubbogvr "github.com/apache/dubbo-kubernetes/pkg/config/schema/gvr"
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/kubeclient"
 	types "github.com/apache/dubbo-kubernetes/pkg/config/schema/kubetypes"
+	"github.com/apache/dubbo-kubernetes/pkg/features"
 	"github.com/apache/dubbo-kubernetes/pkg/kube"
 	"github.com/apache/dubbo-kubernetes/pkg/kube/controllers"
 	"github.com/apache/dubbo-kubernetes/pkg/kube/informerfactory"

@@ -30,36 +30,6 @@ const (
 	waitTimeout  = 2 * time.Minute
 )
 
-func AllIPv4(ipAddrs []string) bool {
-	for i := 0; i < len(ipAddrs); i++ {
-		addr, err := netip.ParseAddr(ipAddrs[i])
-		if err != nil {
-			// Should not happen, invalid IP in proxy's IPAddresses slice should have been caught earlier,
-			// skip it to prevent a panic.
-			continue
-		}
-		if !addr.Is4() && addr.Is6() {
-			return false
-		}
-	}
-	return true
-}
-
-func AllIPv6(ipAddrs []string) bool {
-	for i := 0; i < len(ipAddrs); i++ {
-		addr, err := netip.ParseAddr(ipAddrs[i])
-		if err != nil {
-			// Should not happen, invalid IP in proxy's IPAddresses slice should have been caught earlier,
-			// skip it to prevent a panic.
-			continue
-		}
-		if addr.Is4() {
-			return false
-		}
-	}
-	return true
-}
-
 func GlobalUnicastIP(ipAddrs []string) string {
 	for i := 0; i < len(ipAddrs); i++ {
 		addr, err := netip.ParseAddr(ipAddrs[i])

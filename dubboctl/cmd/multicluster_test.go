@@ -86,7 +86,7 @@ func TestBuildEastWestGatewayManifest(t *testing.T) {
 		port:        15443,
 		targetPort:  15080,
 		nodePort:    32443,
-		xdsAddress:  "http://192.168.15.164:32010",
+		xdsAddress:  "https://dubbod.remote.example:32012",
 	})
 	if err != nil {
 		t.Fatalf("buildEastWestGatewayManifest() error = %v", err)
@@ -97,7 +97,7 @@ func TestBuildEastWestGatewayManifest(t *testing.T) {
 	if gateway.Annotations["gateway.dubbo.apache.org/service-type"] != "NodePort" {
 		t.Fatalf("service type annotation = %q", gateway.Annotations["gateway.dubbo.apache.org/service-type"])
 	}
-	if gateway.Annotations["gateway.dubbo.apache.org/xds-address"] != "http://192.168.15.164:32010" {
+	if gateway.Annotations["gateway.dubbo.apache.org/xds-address"] != "https://dubbod.remote.example:32012" {
 		t.Fatalf("xds address annotation = %q", gateway.Annotations["gateway.dubbo.apache.org/xds-address"])
 	}
 	if len(gateway.Spec.Listeners) != 1 || gateway.Spec.Listeners[0].Port != 15443 {

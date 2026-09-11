@@ -23,7 +23,7 @@ import (
 	core "github.com/kdubbo/xds-api/core/v1"
 	"strconv"
 
-	networkutil "github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/util/network"
+	networkutil "github.com/apache/dubbo-kubernetes/pkg/util/net"
 	"github.com/apache/dubbo-kubernetes/pkg/util/protomarshal"
 	meshv1alpha1 "github.com/kdubbo/api/mesh/v1alpha1"
 )

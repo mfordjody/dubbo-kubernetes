@@ -23,6 +23,7 @@ import (
 
 	"github.com/kdubbo/api/annotation"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 const (
@@ -76,9 +77,14 @@ func InherentGRPCSecretName(podName string) string {
 }
 
 func InherentGRPCSecretNameForMeta(meta metav1.ObjectMeta) string {
-	name := meta.Name
-	if meta.GenerateName != "" {
-		name = meta.GenerateName
+	return InherentGRPCSecretName(meta.Name)
+}
+
+func inherentGRPCPodName(prefix string, requestUID types.UID) string {
+	const suffixLength = 16
+	if len(prefix) > 63-suffixLength {
+		prefix = prefix[:63-suffixLength]
 	}
-	return InherentGRPCSecretName(name)
+	sum := sha256.Sum256([]byte(requestUID))
+	return prefix + hex.EncodeToString(sum[:suffixLength/2])
 }

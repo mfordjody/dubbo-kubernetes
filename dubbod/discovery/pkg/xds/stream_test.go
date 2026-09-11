@@ -29,6 +29,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/mesh/meshwatcher"
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/collection"
 	"github.com/apache/dubbo-kubernetes/pkg/kube/krt"
+	"github.com/apache/dubbo-kubernetes/pkg/security"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
 	meshv1alpha1 "github.com/kdubbo/api/mesh/v1alpha1"
 	cluster "github.com/kdubbo/xds-api/cluster/v1"
@@ -133,10 +134,12 @@ func newInherentXDSTestServer(t *testing.T) (*DiscoveryServer, *Connection, *fak
 	env.SetPushContext(push)
 
 	server := NewDiscoveryServer(env, nil, nil)
+	server.Authenticators = []security.Authenticator{testAuthenticator{identities: []string{"spiffe://cluster.local/ns/app/sa/default"}}}
+	server.Authorize = allowTestWorkload
 	server.Generators = map[string]model.XdsResourceGenerator{
-		v1.ListenerType: staticResourceGenerator{resources: inherentListenerResources()},
-		v1.ClusterType:  staticResourceGenerator{resources: inherentClusterResources()},
-		v1.RouteType:    staticResourceGenerator{resources: inherentRouteResources()},
+		"grpc/" + v1.ListenerType: staticResourceGenerator{resources: inherentListenerResources()},
+		"grpc/" + v1.ClusterType:  staticResourceGenerator{resources: inherentClusterResources()},
+		"grpc/" + v1.RouteType:    staticResourceGenerator{resources: inherentRouteResources()},
 	}
 
 	stream := newFakeADSStream()
@@ -162,6 +165,37 @@ func newInherentXDSTestServer(t *testing.T) (*DiscoveryServer, *Connection, *fak
 
 type staticResourceGenerator struct {
 	resources model.Resources
+}
+
+func TestSotWEmptySnapshotPreservesSubscriptionAndACKDoesNotLoop(t *testing.T) {
+	server, con, stream := newInherentXDSTestServer(t)
+	server.Generators["grpc/"+v1.ListenerType] = staticResourceGenerator{resources: model.Resources{}}
+	push := &model.PushRequest{Push: con.proxy.LastPushContext, Full: true}
+	if err := server.pushXds(con, con.proxy.GetWatchedResource(v1.ListenerType), push); err != nil {
+		t.Fatal(err)
+	}
+	resp := stream.takeAllResponses(t, 1)[0]
+	if len(resp.Resources) != 0 || resp.Nonce == "" {
+		t.Fatalf("expected empty deletion snapshot with nonce, got %v", resp)
+	}
+	if !con.proxy.GetWatchedResource(v1.ListenerType).ResourceNames.Contains(testListenerName) {
+		t.Fatal("deleting a resource must preserve the client's subscription")
+	}
+	if err := server.processRequest(&discovery.DiscoveryRequest{TypeUrl: v1.ListenerType, ResourceNames: []string{testListenerName}, ResponseNonce: resp.Nonce, VersionInfo: resp.VersionInfo}, con); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-stream.sendCh:
+		t.Fatal("ACK of an empty snapshot triggered another response")
+	default:
+	}
+	server.Generators["grpc/"+v1.ListenerType] = staticResourceGenerator{resources: inherentListenerResources()}
+	if err := server.pushXds(con, con.proxy.GetWatchedResource(v1.ListenerType), push); err != nil {
+		t.Fatal(err)
+	}
+	if len(stream.takeAllResponses(t, 1)[0].Resources) == 0 {
+		t.Fatal("recreated resource was not published")
+	}
 }
 
 func (g staticResourceGenerator) Generate(*model.Proxy, *model.WatchedResource, *model.PushRequest) (model.Resources, model.XdsLogDetails, error) {

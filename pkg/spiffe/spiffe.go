@@ -292,6 +292,7 @@ func (v *PeerCertVerifier) VerifyPeerCert(rawCerts [][]byte, _ [][]*x509.Certifi
 	_, err = peerCert.Verify(x509.VerifyOptions{
 		Roots:         rootCertPool,
 		Intermediates: intCertPool,
+		KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 	})
 	return err
 }

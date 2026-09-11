@@ -16,7 +16,9 @@
 package bootstrap
 
 import (
+	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
@@ -33,8 +35,10 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/kind"
 	telemetryconfig "github.com/apache/dubbo-kubernetes/pkg/config/telemetry"
 	"github.com/apache/dubbo-kubernetes/pkg/grpcxds"
+	"github.com/apache/dubbo-kubernetes/pkg/kube"
 	"github.com/apache/dubbo-kubernetes/pkg/kube/controllers"
 	"github.com/apache/dubbo-kubernetes/pkg/kube/inject"
+	"github.com/apache/dubbo-kubernetes/pkg/kube/kclient"
 	"github.com/apache/dubbo-kubernetes/pkg/kube/krt"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
 	networking "github.com/kdubbo/api/networking/v1alpha3"
@@ -45,7 +49,46 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/fake"
 )
+
+func TestWorkloadControllerCannotOverwriteOrDeleteForeignCredentials(t *testing.T) {
+	pod, secret := testWorkloadSecret(t, "spiffe://cluster.local/ns/app/sa/default")
+	pod.Annotations = map[string]string{inject.InherentInjectTemplatesAnnoName: inject.InherentGRPCTemplateName}
+	secret.OwnerReferences[0].UID = "another-pod-uid"
+	client := credentialsTestClient{core: fake.NewClientset(pod, secret)}
+	c := &inherentGRPCWorkloadController{client: client, pods: credentialsTestPods{pod: pod}}
+	if err := c.reconcile(types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}); err == nil || !strings.Contains(err.Error(), "owned by another workload") {
+		t.Fatalf("expected ownership conflict, got %v", err)
+	}
+	if err := c.deleteSecretForPod(pod); err != nil {
+		t.Fatal(err)
+	}
+	got, err := client.Kube().CoreV1().Secrets(secret.Namespace).Get(context.Background(), secret.Name, metav1.GetOptions{})
+	if err != nil || got.OwnerReferences[0].UID != "another-pod-uid" {
+		t.Fatalf("foreign credentials changed or deleted: error=%v", err)
+	}
+}
+
+type credentialsTestClient struct {
+	kube.Client
+	core kubernetes.Interface
+}
+
+func (c credentialsTestClient) Kube() kubernetes.Interface { return c.core }
+
+type credentialsTestPods struct {
+	kclient.Client[*corev1.Pod]
+	pod *corev1.Pod
+}
+
+func (p credentialsTestPods) Get(name, namespace string) *corev1.Pod {
+	if p.pod.Name == name && p.pod.Namespace == namespace {
+		return p.pod
+	}
+	return nil
+}
 
 func TestShouldManageInherentGRPCPod(t *testing.T) {
 	tests := []struct {
@@ -380,7 +423,7 @@ func TestBuildWorkloadContextUsesInjectedRemoteValues(t *testing.T) {
 func TestBuildRuntimeTrafficConfigCapturesInherentSecurity(t *testing.T) {
 	hostname := host.Name("provider.grpc-app.svc.cluster.local")
 	svc := newInherentRuntimeTestService("provider", "grpc-app", string(hostname), 17070)
-	push := newInherentRuntimeTestPushContext(t, []config.Config{
+	push := newInherentRuntimeTestSnapshot(t, []config.Config{
 		newInherentStrictPeerAuthenticationConfig("grpc-app-strict-mtls", "grpc-app"),
 	}, []*discoverymodel.Service{svc})
 
@@ -399,6 +442,40 @@ func TestBuildRuntimeTrafficConfigCapturesInherentSecurity(t *testing.T) {
 	destination := routeConfig.Destinations[0]
 	if destination.Host != string(hostname) || destination.Weight != 100 || destination.TLSMode != "" {
 		t.Fatalf("destination = %+v, want default host weight 100 without outbound TLS policy", destination)
+	}
+}
+
+func TestInherentReconcilesAndRevokesPolicyWithoutXDSServer(t *testing.T) {
+	svc := newInherentRuntimeTestService("provider", "grpc-app", "provider.grpc-app.svc.cluster.local", 17070)
+	policy := newInherentStrictPeerAuthenticationConfig("strict", "grpc-app")
+	env, previous := newInherentRuntimeTestEnvironment(t, []config.Config{policy}, []*discoverymodel.Service{svc})
+	controller := &inherentGRPCWorkloadController{server: &Server{environment: env}}
+	if env.PushContext().InitDone.Load() {
+		t.Fatal("test initialized an xDS push context")
+	}
+	services, _ := controller.buildRuntimeTrafficConfig()
+	if len(services) != 1 || services[0].Ports[0].MTLSMode != "STRICT" {
+		t.Fatalf("initial application policy = %+v", services)
+	}
+	if err := env.Delete(gvk.PeerAuthentication, policy.Name, policy.Namespace, nil); err != nil {
+		t.Fatal(err)
+	}
+	notified := false
+	env.AddConfigHandler(func(change *discoverymodel.ConfigChange) {
+		notified = true
+		services, _ := controller.buildRuntimeTrafficConfig()
+		if len(services) != 1 || services[0].Ports[0].MTLSMode == "STRICT" {
+			t.Fatalf("consumer saw stale policy after publication: %+v", services)
+		}
+	})
+	current := env.ReconcileConfig(&discoverymodel.ConfigChange{
+		ConfigsUpdated: sets.New(discoverymodel.ConfigKey{Kind: kind.PeerAuthentication, Name: policy.Name, Namespace: policy.Namespace}),
+	})
+	if !notified || current == previous || env.ConfigSnapshot() != current {
+		t.Fatal("configuration change was not independently published")
+	}
+	if got := buildRuntimeServiceConfig(previous, nil, svc).Ports[0].MTLSMode; got != "STRICT" {
+		t.Fatalf("previous snapshot was mutated: %s", got)
 	}
 }
 
@@ -430,7 +507,7 @@ func TestBuildRuntimeTrafficConfigProjectsOnlyWorkloadPrincipalAuthorization(t *
 			}}}}},
 		},
 	}
-	push := newInherentRuntimeTestPushContext(t, []config.Config{workloadPolicy, jwtPolicy}, []*discoverymodel.Service{svc})
+	push := newInherentRuntimeTestSnapshot(t, []config.Config{workloadPolicy, jwtPolicy}, []*discoverymodel.Service{svc})
 
 	serviceConfig := buildRuntimeServiceConfig(push, nil, svc)
 	got := serviceConfig.Ports[0].AuthorizationPolicies
@@ -446,7 +523,7 @@ func TestBuildRuntimeTrafficConfigProjectsOnlyWorkloadPrincipalAuthorization(t *
 func TestBuildRuntimeTrafficConfigCapturesPermissivePeerAuthentication(t *testing.T) {
 	hostname := host.Name("provider.grpc-app.svc.cluster.local")
 	svc := newInherentRuntimeTestService("provider", "grpc-app", string(hostname), 17070)
-	push := newInherentRuntimeTestPushContext(t, []config.Config{
+	push := newInherentRuntimeTestSnapshot(t, []config.Config{
 		newInherentPeerAuthenticationConfig("grpc-app-permissive-mtls", "grpc-app", security.PeerAuthentication_MutualTLS_PERMISSIVE),
 	}, []*discoverymodel.Service{svc})
 
@@ -462,7 +539,7 @@ func TestBuildRuntimeTrafficConfigCapturesPermissivePeerAuthentication(t *testin
 func TestBuildRuntimeTrafficConfigCapturesFaultInjection(t *testing.T) {
 	hostname := host.Name("provider.grpc-app.svc.cluster.local")
 	svc := newInherentRuntimeTestService("provider", "grpc-app", string(hostname), 17070)
-	push := newInherentRuntimeTestPushContext(t, []config.Config{{
+	push := newInherentRuntimeTestSnapshot(t, []config.Config{{
 		Meta: config.Meta{
 			GroupVersionKind: gvk.FaultInjectionPolicy,
 			Name:             "provider-fault",
@@ -501,52 +578,52 @@ func TestBuildRuntimeTrafficConfigCapturesFaultInjection(t *testing.T) {
 func TestInherentGRPCRuntimeConfigNeedsUpdate(t *testing.T) {
 	tests := []struct {
 		name string
-		req  *discoverymodel.PushRequest
+		req  *discoverymodel.ConfigChange
 		want bool
 	}{
 		{
 			name: "full push",
-			req:  &discoverymodel.PushRequest{Full: true},
+			req:  &discoverymodel.ConfigChange{Full: true},
 			want: true,
 		},
 		{
 			name: "httproute",
-			req: &discoverymodel.PushRequest{
+			req: &discoverymodel.ConfigChange{
 				ConfigsUpdated: sets.New(discoverymodel.ConfigKey{Kind: kind.HTTPRoute, Name: "provider-routing", Namespace: "grpc-app"}),
 			},
 			want: true,
 		},
 		{
 			name: "fault injection policy",
-			req: &discoverymodel.PushRequest{
+			req: &discoverymodel.ConfigChange{
 				ConfigsUpdated: sets.New(discoverymodel.ConfigKey{Kind: kind.FaultInjectionPolicy, Name: "provider-fault", Namespace: "grpc-app"}),
 			},
 			want: true,
 		},
 		{
 			name: "peerauthentication",
-			req: &discoverymodel.PushRequest{
+			req: &discoverymodel.ConfigChange{
 				ConfigsUpdated: sets.New(discoverymodel.ConfigKey{Kind: kind.PeerAuthentication, Name: "strict", Namespace: "grpc-app"}),
 			},
 			want: true,
 		},
 		{
 			name: "requestauthentication",
-			req: &discoverymodel.PushRequest{
+			req: &discoverymodel.ConfigChange{
 				ConfigsUpdated: sets.New(discoverymodel.ConfigKey{Kind: kind.RequestAuthentication, Name: "jwt", Namespace: "grpc-app"}),
 			},
 			want: true,
 		},
 		{
 			name: "authorizationpolicy",
-			req: &discoverymodel.PushRequest{
+			req: &discoverymodel.ConfigChange{
 				ConfigsUpdated: sets.New(discoverymodel.ConfigKey{Kind: kind.AuthorizationPolicy, Name: "require-jwt", Namespace: "grpc-app"}),
 			},
 			want: true,
 		},
 		{
 			name: "unrelated configmap",
-			req: &discoverymodel.PushRequest{
+			req: &discoverymodel.ConfigChange{
 				ConfigsUpdated: sets.New(discoverymodel.ConfigKey{Kind: kind.ConfigMap, Name: "ui", Namespace: "dubbo-system"}),
 			},
 			want: false,
@@ -591,10 +668,10 @@ func TestHandleRuntimeConfigUpdateEnqueuesManagedPods(t *testing.T) {
 		controllers.WithMaxAttempts(1),
 	)
 
-	controller.handleRuntimeConfigUpdate(&discoverymodel.PushRequest{
+	controller.handleRuntimeConfigUpdate(&discoverymodel.ConfigChange{
 		ConfigsUpdated: sets.New(discoverymodel.ConfigKey{Kind: kind.ConfigMap, Name: "unrelated"}),
 	})
-	controller.handleRuntimeConfigUpdate(&discoverymodel.PushRequest{
+	controller.handleRuntimeConfigUpdate(&discoverymodel.ConfigChange{
 		ConfigsUpdated: sets.New(discoverymodel.ConfigKey{Kind: kind.Service, Name: "provider", Namespace: "team-a"}),
 	})
 
@@ -650,12 +727,12 @@ func TestNextRotationTime(t *testing.T) {
 	}
 }
 
-func newInherentRuntimeTestPushContext(t *testing.T, configs []config.Config, services []*discoverymodel.Service) *discoverymodel.PushContext {
+func newInherentRuntimeTestSnapshot(t *testing.T, configs []config.Config, services []*discoverymodel.Service) *discoverymodel.ConfigSnapshot {
 	_, push := newInherentRuntimeTestEnvironment(t, configs, services)
 	return push
 }
 
-func newInherentRuntimeTestEnvironment(t *testing.T, configs []config.Config, services []*discoverymodel.Service) (*discoverymodel.Environment, *discoverymodel.PushContext) {
+func newInherentRuntimeTestEnvironment(t *testing.T, configs []config.Config, services []*discoverymodel.Service) (*discoverymodel.Environment, *discoverymodel.ConfigSnapshot) {
 	t.Helper()
 
 	store := memory.Make(collections.DubboGatewayAPI())
@@ -673,9 +750,7 @@ func newInherentRuntimeTestEnvironment(t *testing.T, configs []config.Config, se
 	}, true))
 	env.Init()
 
-	push := discoverymodel.NewPushContext()
-	push.InitContext(env, nil, nil)
-	env.SetPushContext(push)
+	push := env.ReconcileConfig(nil)
 	return env, push
 }
 

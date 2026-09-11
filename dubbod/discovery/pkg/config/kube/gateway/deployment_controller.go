@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -737,7 +738,7 @@ func (d *DeploymentController) buildDxgateBootstrapConfig(gw gateway.Gateway, se
 	if systemNamespace == "" {
 		systemNamespace = constants.DubboSystemNamespace
 	}
-	xdsAddress := fmt.Sprintf("http://dubbod.%s.svc:26010", systemNamespace)
+	xdsAddress := fmt.Sprintf("https://dubbod.%s.svc:26012", systemNamespace)
 	if gw.Annotations[xdsAddressAnnotation] != "" {
 		xdsAddress = gw.Annotations[xdsAddressAnnotation]
 	}
@@ -752,6 +753,10 @@ func (d *DeploymentController) buildDxgateBootstrapConfig(gw gateway.Gateway, se
 func buildDxgateBootstrapConfig(xdsAddress string, listenerNames []string, clusterID, dnsDomain string) (string, string, error) {
 	if xdsAddress == "" {
 		return "", "", fmt.Errorf("dxgate bootstrap xDS address is empty")
+	}
+	endpoint, err := url.Parse(xdsAddress)
+	if err != nil || endpoint.Scheme != "https" || endpoint.Hostname() == "" {
+		return "", "", fmt.Errorf("dxgate ADS address must be an https URL with workload credentials")
 	}
 	if clusterID == "" {
 		clusterID = string(cluster.ID("Kubernetes"))

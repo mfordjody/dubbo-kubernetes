@@ -62,7 +62,7 @@ type DiscoveryServer struct {
 	Generators          map[string]model.XdsResourceGenerator
 	pushVersion         atomic.Uint64
 	Authenticators      []security.Authenticator
-	RuntimeConfigUpdate func(*model.PushRequest)
+	Authorize           func(*model.Proxy, []string) error
 }
 
 type DebounceOptions struct {
@@ -121,12 +121,12 @@ func (s *DiscoveryServer) Shutdown() {
 	s.pushQueue.ShutDown()
 }
 
-func (s *DiscoveryServer) initPushContext(req *model.PushRequest, oldPushContext *model.PushContext, version string) *model.PushContext {
+func (s *DiscoveryServer) initPushContext(req *model.PushRequest, version string) *model.PushContext {
 	startTime := time.Now()
 
 	push := model.NewPushContext()
 	push.PushVersion = version
-	push.InitContext(s.Env, oldPushContext, req)
+	push.ConfigSnapshot = s.Env.ReconcileConfig(req.ConfigChange())
 	s.dropCacheForRequest(req)
 	s.Env.SetPushContext(push)
 
@@ -149,7 +149,7 @@ func (s *DiscoveryServer) Push(req *model.PushRequest) {
 		req.Push = s.globalPushContext()
 		s.dropCacheForRequest(req)
 		s.AdsPushAll(req)
-		s.notifyRuntimeConfigUpdate(req)
+		s.Env.NotifyConfigChange(req.ConfigChange())
 		return
 	}
 
@@ -161,16 +161,9 @@ func (s *DiscoveryServer) Push(req *model.PushRequest) {
 	// PushContext is reset after a config change. Previous status is
 	// saved.
 	versionLocal := s.NextVersion()
-	push := s.initPushContext(req, oldPushContext, versionLocal)
+	push := s.initPushContext(req, versionLocal)
 	req.Push = push
 	s.AdsPushAll(req)
-	s.notifyRuntimeConfigUpdate(req)
-}
-
-func (s *DiscoveryServer) notifyRuntimeConfigUpdate(req *model.PushRequest) {
-	if s.RuntimeConfigUpdate != nil {
-		s.RuntimeConfigUpdate(req)
-	}
 }
 
 func debounce(ch chan *model.PushRequest, stopCh <-chan struct{}, opts DebounceOptions, pushFn func(req *model.PushRequest), updateSent *atomic.Int64) {
@@ -418,27 +411,17 @@ func (s *DiscoveryServer) Clients() []*Connection {
 }
 
 func (s *DiscoveryServer) ProxyUpdate(clusterID cluster.ID, ip string) {
-	var connection *Connection
-
 	for _, v := range s.Clients() {
-		// Check IPAddresses is not empty before accessing index 0
 		if len(v.proxy.IPAddresses) > 0 && v.proxy.Metadata.ClusterID == clusterID && v.proxy.IPAddresses[0] == ip {
-			connection = v
-			break
+			s.pushQueue.Enqueue(v, &model.PushRequest{
+				Full:   true,
+				Push:   s.globalPushContext(),
+				Start:  time.Now(),
+				Reason: model.NewReasonStats(model.ProxyUpdate),
+				Forced: true,
+			})
 		}
 	}
-
-	if connection == nil {
-		return
-	}
-
-	s.pushQueue.Enqueue(connection, &model.PushRequest{
-		Full:   true,
-		Push:   s.globalPushContext(),
-		Start:  time.Now(),
-		Reason: model.NewReasonStats(model.ProxyUpdate),
-		Forced: true,
-	})
 }
 
 func (s *DiscoveryServer) EDSUpdate(shard model.ShardKey, serviceName string, namespace string, dubboEndpoints []*model.DubboEndpoint) {

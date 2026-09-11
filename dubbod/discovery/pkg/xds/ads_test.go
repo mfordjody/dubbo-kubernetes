@@ -146,10 +146,10 @@ func TestDiscoveryPushQueuesAndNotifies(t *testing.T) {
 			server, con, _ := newInherentXDSTestServer(t)
 			server.addCon("inherent-1", con)
 
-			var notified *model.PushRequest
-			server.RuntimeConfigUpdate = func(req *model.PushRequest) {
-				notified = req
-			}
+			var notified *model.ConfigChange
+			server.Env.AddConfigHandler(func(change *model.ConfigChange) {
+				notified = change
+			})
 			req := &model.PushRequest{
 				Full:   full,
 				Reason: model.NewReasonStats(model.ConfigUpdate),
@@ -172,8 +172,8 @@ func TestDiscoveryPushQueuesAndNotifies(t *testing.T) {
 			if req.Push == nil || req.Start.IsZero() {
 				t.Fatalf("Push() left request without context or start time: %+v", req)
 			}
-			if notified != req {
-				t.Fatalf("RuntimeConfigUpdate received %p, want %p", notified, req)
+			if notified == nil || notified.Full != full || !notified.ConfigsUpdated.Equals(req.ConfigsUpdated) {
+				t.Fatalf("configuration notification = %+v, want change for %+v", notified, req)
 			}
 			if full && req.Push.PushVersion == "test-version" {
 				t.Fatalf("full Push() reused old push version %q", req.Push.PushVersion)

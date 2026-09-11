@@ -23,9 +23,6 @@ const (
 	ListenerType  = APITypePrefix + "listener.v1.Listener"
 	RouteType     = APITypePrefix + "route.v1.RouteConfiguration"
 	SecretType    = APITypePrefix + "extensions.transport_sockets.tls.v1.Secret"
-
-	HealthInfoType  = APITypePrefix + "dubbo.v1.HealthInformation"
-	ProxyConfigType = APITypePrefix + "dubbo.mesh.v1alpha1.ProxyConfig"
 )
 
 func GetShortType(typeURL string) string {
@@ -40,8 +37,6 @@ func GetShortType(typeURL string) string {
 		return "EDS"
 	case SecretType:
 		return "SDS"
-	case ProxyConfigType:
-		return "PCDS"
 	default:
 		return typeURL
 	}
@@ -59,8 +54,6 @@ func GetMetricType(typeURL string) string {
 		return "eds"
 	case SecretType:
 		return "sds"
-	case ProxyConfigType:
-		return "pcds"
 	default:
 		return typeURL
 	}

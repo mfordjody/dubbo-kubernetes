@@ -27,6 +27,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/features"
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/keycertbundle"
 	"github.com/apache/dubbo-kubernetes/pkg/config/constants"
+	commonfeatures "github.com/apache/dubbo-kubernetes/pkg/features"
 	"github.com/apache/dubbo-kubernetes/pkg/kube"
 	"github.com/apache/dubbo-kubernetes/pkg/kube/controllers"
 	"github.com/apache/dubbo-kubernetes/pkg/kube/inject"
@@ -92,7 +93,7 @@ func NewNamespaceController(kubeClient kube.Client, caBundleWatcher *keycertbund
 	}))
 
 	c.namespaces.AddEventHandler(controllers.FilteredObjectSpecHandler(c.queue.AddObject, func(o controllers.Object) bool {
-		if features.InformerWatchNamespace != "" && features.InformerWatchNamespace != o.GetName() {
+		if commonfeatures.InformerWatchNamespace != "" && commonfeatures.InformerWatchNamespace != o.GetName() {
 			// We are only watching one namespace, and its not this one
 			return false
 		}

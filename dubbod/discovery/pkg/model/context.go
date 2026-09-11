@@ -91,6 +91,9 @@ type Environment struct {
 	ConfigStore
 	mutex                sync.RWMutex
 	pushContext          *PushContext
+	configSnapshot       *ConfigSnapshot
+	configMutex          sync.Mutex
+	configHandlers       []func(*ConfigChange)
 	clusterLocalServices ClusterLocalProvider
 	DomainSuffix         string
 	EndpointIndex        *EndpointIndex
@@ -100,7 +103,7 @@ type Environment struct {
 
 type GatewayController interface {
 	ConfigStoreController
-	Reconcile(ctx *PushContext)
+	Reconcile(ctx *ConfigSnapshot)
 	SecretAllowed(ourKind config.GroupVersionKind, resourceName string, namespace string) bool
 }
 
@@ -111,10 +114,12 @@ func NewEnvironment() *Environment {
 	} else {
 		cache = DisabledCache{}
 	}
+	push := NewPushContext()
 	return &Environment{
-		pushContext:   NewPushContext(),
-		Cache:         cache,
-		EndpointIndex: NewEndpointIndex(cache),
+		pushContext:    push,
+		configSnapshot: push.ConfigSnapshot,
+		Cache:          cache,
+		EndpointIndex:  NewEndpointIndex(cache),
 	}
 }
 
@@ -148,6 +153,7 @@ func (e *Environment) SetPushContext(pc *PushContext) {
 	e.mutex.Lock()
 	defer e.mutex.Unlock()
 	e.pushContext = pc
+	e.configSnapshot = pc.ConfigSnapshot
 }
 
 func (e *Environment) Mesh() *meshv1alpha1.MeshConfig {
@@ -196,20 +202,19 @@ func (e *Environment) Init() {
 
 type Proxy struct {
 	sync.RWMutex
-	XdsResourceGenerator XdsResourceGenerator
-	LastPushContext      *PushContext
-	LastPushTime         time.Time
-	Type                 NodeType
-	WatchedResources     map[string]*WatchedResource
-	ID                   string
-	DNSDomain            string
-	Metadata             *NodeMetadata
-	IPAddresses          []string
-	XdsNode              *core.Node
-	ConfigNamespace      string
-	ServiceTargets       []ServiceTarget
-	ipMode               IPMode
-	GlobalUnicastIP      string
+	LastPushContext  *PushContext
+	LastPushTime     time.Time
+	Type             NodeType
+	WatchedResources map[string]*WatchedResource
+	ID               string
+	DNSDomain        string
+	Metadata         *NodeMetadata
+	IPAddresses      []string
+	XdsNode          *core.Node
+	ConfigNamespace  string
+	ServiceTargets   []ServiceTarget
+	ipMode           IPMode
+	GlobalUnicastIP  string
 }
 
 func (node *Proxy) GetWatchedResource(typeURL string) *WatchedResource {

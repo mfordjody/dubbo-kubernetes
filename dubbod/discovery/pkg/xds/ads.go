@@ -55,6 +55,7 @@ type Connection struct {
 	deltaReqChan chan *discovery.DeltaDiscoveryRequest
 	s            *DiscoveryServer
 	ids          []string
+	authExpiry   time.Time
 }
 
 type Event struct {
@@ -180,8 +181,14 @@ func (s *DiscoveryServer) initConnection(node *core.Node, con *Connection, ident
 	con.SetID(connectionID(proxy.ID))
 	con.node = node
 	con.proxy = proxy
+	con.ids = identities
 
-	// TODO authorize
+	if s.Authorize == nil {
+		return status.Error(codes.PermissionDenied, "xDS workload authorization is not configured")
+	}
+	if err := s.Authorize(proxy, identities); err != nil {
+		return status.Error(codes.PermissionDenied, err.Error())
+	}
 
 	s.addCon(con.ID(), con)
 	currentCount := s.adsClientCount()
@@ -223,15 +230,13 @@ func (s *DiscoveryServer) initializeProxy(con *Connection) error {
 
 	proxy.WatchedResources = map[string]*model.WatchedResource{}
 
-	// Based on node metadata and version, we can associate a different generator.
-	if proxy.Metadata.Generator != "" {
-		proxy.XdsResourceGenerator = s.Generators[proxy.Metadata.Generator]
-	}
-
 	return nil
 }
 
 func (s *DiscoveryServer) initProxyMetadata(node *core.Node) (*model.Proxy, error) {
+	if node == nil {
+		return nil, status.Error(codes.InvalidArgument, "xDS node is required")
+	}
 	meta, err := model.ParseMetadata(node.Metadata)
 	if err != nil {
 		return nil, status.New(codes.InvalidArgument, err.Error()).Err()
@@ -239,6 +244,13 @@ func (s *DiscoveryServer) initProxyMetadata(node *core.Node) (*model.Proxy, erro
 	proxy, err := model.ParseServiceNodeWithMetadata(node.Id, meta)
 	if err != nil {
 		return nil, status.New(codes.InvalidArgument, err.Error()).Err()
+	}
+	// Both supported runtime roles use the gRPC resource compiler.
+	if meta.Generator == "" {
+		meta.Generator = "grpc"
+	}
+	if meta.Generator != "grpc" {
+		return nil, status.Errorf(codes.InvalidArgument, "unsupported xDS generator %q", meta.Generator)
 	}
 	// Update the config namespace associated with this proxy
 	proxy.ConfigNamespace = model.GetProxyConfigNamespace(proxy)
@@ -302,11 +314,16 @@ func (s *DiscoveryServer) Stream(stream DiscoveryStream) error {
 		return status.Errorf(codes.ResourceExhausted, "request rate limit exceeded: %v", err)
 	}
 
-	// TODO authenticate
+	ids, err := s.authenticate(ctx)
+	if err != nil {
+		return status.Error(codes.Unauthenticated, err.Error())
+	}
 
 	s.globalPushContext().InitContext(s.Env, nil, nil)
 	con := newConnection(peerAddr, stream)
 	con.s = s
+	con.ids = ids
+	con.authExpiry = certificateExpiry(ctx)
 	return xds.Stream(con)
 }
 
@@ -355,9 +372,12 @@ func (s *DiscoveryServer) pushConnection(con *Connection, pushEv *Event) error {
 }
 
 func (s *DiscoveryServer) processRequest(req *discovery.DiscoveryRequest, con *Connection) error {
+	if err := s.authorizeConnection(con); err != nil {
+		return err
+	}
 	stype := v1.GetShortType(req.TypeUrl)
-	if req.TypeUrl == v1.HealthInfoType {
-		return nil
+	if s.findGenerator(req.TypeUrl, con) == nil {
+		return status.Errorf(codes.InvalidArgument, "unsupported xDS resource type %q", req.TypeUrl)
 	}
 
 	shouldRespond, delta := xds.ShouldRespond(con.proxy, con.ID(), req)
@@ -388,20 +408,6 @@ func (s *DiscoveryServer) processRequest(req *discovery.DiscoveryRequest, con *C
 
 	if !shouldRespond {
 		// Don't process ACK/ignored/expired nonce requests
-		return nil
-	}
-
-	// For Inherent gRPC, if client sends wildcard (empty ResourceNames) after receiving specific resources,
-	// this is likely an ACK and we should NOT push all resources again
-	// Check if this is a wildcard request after specific resources were sent
-	watchedResource := con.proxy.GetWatchedResource(req.TypeUrl)
-	if con.proxy.IsInherentGrpc() && len(req.ResourceNames) == 0 && watchedResource != nil && len(watchedResource.ResourceNames) > 0 && watchedResource.NonceSent != "" {
-		// This is a wildcard ACK after specific resources were sent
-		// ShouldRespond should have returned false, but we check here as safety net
-		// Update the WatchedResource to reflect the ACK, but don't push
-		log.Debugf("%s: Inherent gRPC wildcard ACK after specific resources (prev: %d resources, nonce: %s), skipping push",
-			stype, len(watchedResource.ResourceNames), watchedResource.NonceSent)
-		// ShouldRespond should have already handled this, but we ensure no push happens
 		return nil
 	}
 
@@ -446,12 +452,15 @@ func (s *DiscoveryServer) processRequest(req *discovery.DiscoveryRequest, con *C
 }
 
 func (s *DiscoveryServer) processDeltaRequest(req *discovery.DeltaDiscoveryRequest, con *Connection) error {
+	if err := s.authorizeConnection(con); err != nil {
+		return err
+	}
 	stype := v1.GetShortType(req.TypeUrl)
 	deltaLog.Debugf("%s: REQ %s resources sub:%d unsub:%d nonce:%s", stype,
 		con.ID(), len(req.ResourceNamesSubscribe), len(req.ResourceNamesUnsubscribe), req.ResponseNonce)
 
-	if req.TypeUrl == v1.HealthInfoType {
-		return nil
+	if s.findGenerator(req.TypeUrl, con) == nil {
+		return status.Errorf(codes.InvalidArgument, "unsupported xDS resource type %q", req.TypeUrl)
 	}
 
 	shouldRespond := shouldRespondDelta(con, req)

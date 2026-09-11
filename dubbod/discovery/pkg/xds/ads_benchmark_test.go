@@ -230,7 +230,8 @@ func newInherentPushBenchmarkFixture(tb testing.TB, scale inherentPushScale) *in
 	env.SetPushContext(push)
 
 	server := NewDiscoveryServer(env, nil, nil)
-	server.Generators[v1.EndpointType] = &EdsGenerator{
+	server.Authorize = allowTestWorkload
+	server.Generators["grpc/"+v1.EndpointType] = &EdsGenerator{
 		Cache:         model.DisabledCache{},
 		EndpointIndex: env.EndpointIndex,
 	}

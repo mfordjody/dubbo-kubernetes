@@ -27,3 +27,33 @@ func IsValidIPAddress(ip string) bool {
 	}
 	return ipa.IsValid()
 }
+
+func AllIPv4(ipAddrs []string) bool {
+	for i := 0; i < len(ipAddrs); i++ {
+		addr, err := netip.ParseAddr(ipAddrs[i])
+		if err != nil {
+			// Should not happen, invalid IP in proxy's IPAddresses slice should have been caught earlier,
+			// skip it to prevent a panic.
+			continue
+		}
+		if !addr.Is4() && addr.Is6() {
+			return false
+		}
+	}
+	return true
+}
+
+func AllIPv6(ipAddrs []string) bool {
+	for i := 0; i < len(ipAddrs); i++ {
+		addr, err := netip.ParseAddr(ipAddrs[i])
+		if err != nil {
+			// Should not happen, invalid IP in proxy's IPAddresses slice should have been caught earlier,
+			// skip it to prevent a panic.
+			continue
+		}
+		if addr.Is4() {
+			return false
+		}
+	}
+	return true
+}

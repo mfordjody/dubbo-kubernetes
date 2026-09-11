@@ -32,10 +32,8 @@ import (
 
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/activation"
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/features"
-	dubbogrpc "github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/grpc"
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/keycertbundle"
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/model"
-	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/networking/core"
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/server"
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/serviceregistry/aggregate"
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/serviceregistry/provider"
@@ -50,6 +48,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/collections"
 	"github.com/apache/dubbo-kubernetes/pkg/config/schema/kind"
 	"github.com/apache/dubbo-kubernetes/pkg/filewatcher"
+	dubbogrpc "github.com/apache/dubbo-kubernetes/pkg/grpc"
 	"github.com/apache/dubbo-kubernetes/pkg/introspection"
 	dubbokeepalive "github.com/apache/dubbo-kubernetes/pkg/keepalive"
 	kubelib "github.com/apache/dubbo-kubernetes/pkg/kube"
@@ -199,7 +198,7 @@ func NewServer(args *DubboArgs, initFuncs ...func(*Server)) (*Server, error) {
 	}
 
 	s.XDSServer = xds.NewDiscoveryServer(e, args.RegistryOptions.KubeOptions.ClusterAliases, args.KrtDebugger)
-	configGen := core.NewConfigGenerator(s.XDSServer.Cache)
+	s.initXDSAuthentication()
 
 	s.initReadinessProbes()
 
@@ -223,6 +222,7 @@ func NewServer(args *DubboArgs, initFuncs ...func(*Server)) (*Server, error) {
 	s.environment.Init()
 
 	caOpts := &caOptions{
+		Authenticators:   s.XDSServer.Authenticators,
 		TrustDomain:      s.environment.Mesh().TrustDomain,
 		Namespace:        args.Namespace,
 		ExternalCAType:   ra.CaExternalType(externalCaType),
@@ -241,7 +241,8 @@ func NewServer(args *DubboArgs, initFuncs ...func(*Server)) (*Server, error) {
 		return nil, err
 	}
 
-	InitGenerators(s.XDSServer, configGen)
+	InitGenerators(s.XDSServer)
+	s.XDSServer.Generators["grpc/"+sec_model.SecretType] = workloadSecretGenerator{lookup: s.lookupXDSWorkloadSecret}
 
 	if err := s.initManagement(); err != nil {
 		return nil, fmt.Errorf("error initializing management API: %v", err)

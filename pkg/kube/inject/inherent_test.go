@@ -97,7 +97,7 @@ func TestInstallerGRPCEngineTemplateInjectsDirectXDSConnection(t *testing.T) {
 	assertDirectXDSConnection(t, mergedPod, "app", InherentGRPCSecretNameForMeta(pod.ObjectMeta))
 }
 
-func TestInstallerGRPCEngineTemplateUsesGenerateNameForDeploymentPods(t *testing.T) {
+func TestInstallerGRPCEngineTemplateAllocatesUniqueNameForDeploymentPods(t *testing.T) {
 	_, currentFile, _, ok := runtime.Caller(0)
 	if !ok {
 		t.Fatalf("runtime.Caller() failed")
@@ -136,6 +136,7 @@ func TestInstallerGRPCEngineTemplateUsesGenerateNameForDeploymentPods(t *testing
 	}
 	req := InjectionParameters{
 		pod:          pod,
+		requestUID:   "admission-1",
 		templates:    templates,
 		valuesConfig: valuesConfig,
 		meshConfig: &meshv1alpha1.MeshConfig{
@@ -156,9 +157,26 @@ func TestInstallerGRPCEngineTemplateUsesGenerateNameForDeploymentPods(t *testing
 	if len(mergedPod.Spec.Containers) != 1 {
 		t.Fatalf("containers = %d, want original application container only", len(mergedPod.Spec.Containers))
 	}
-	assertDirectXDSConnection(t, mergedPod, "nginx", InherentGRPCSecretNameForMeta(pod.ObjectMeta))
-	if got := mergedPod.Spec.Volumes[0].Secret.SecretName; got == InherentGRPCSecretName("") {
-		t.Fatalf("secret name = %q, want generateName-based secret", got)
+	assertDirectXDSConnection(t, mergedPod, "nginx", InherentGRPCSecretNameForMeta(mergedPod.ObjectMeta))
+	if mergedPod.Name == "" || !strings.HasPrefix(mergedPod.Name, pod.GenerateName) {
+		t.Fatalf("Pod name = %q, want allocated name with deployment prefix", mergedPod.Name)
+	}
+	patch, err := injectPod(req)
+	if err != nil || !strings.Contains(string(patch), `"path":"/metadata/name"`) {
+		t.Fatalf("injection must patch the allocated Pod name: patch=%s error=%v", patch, err)
+	}
+	other := pod.DeepCopy()
+	otherReq := req
+	otherReq.requestUID = "admission-2"
+	if err := postProcessPod(other, *injectedPod, otherReq); err != nil {
+		t.Fatal(err)
+	}
+	if InherentGRPCSecretNameForMeta(other.ObjectMeta) == InherentGRPCSecretNameForMeta(mergedPod.ObjectMeta) {
+		t.Fatal("replicas must not share credentials")
+	}
+	name := mergedPod.Name
+	if err := postProcessPod(mergedPod, *injectedPod, otherReq); err != nil || mergedPod.Name != name {
+		t.Fatalf("reinvocation must preserve Pod identity: name=%q error=%v", mergedPod.Name, err)
 	}
 }
 
@@ -540,9 +558,9 @@ func TestInherentGRPCSecretNameFitsKubernetesLengthLimit(t *testing.T) {
 	}
 }
 
-func TestInherentGRPCSecretNameForMetaPrefersGenerateName(t *testing.T) {
+func TestInherentGRPCSecretNameForMetaUsesPodName(t *testing.T) {
 	meta := metav1.ObjectMeta{Name: "nginx-95575cc5d-kh98x", GenerateName: "nginx-95575cc5d-"}
-	if got, want := InherentGRPCSecretNameForMeta(meta), InherentGRPCSecretName(meta.GenerateName); got != want {
+	if got, want := InherentGRPCSecretNameForMeta(meta), InherentGRPCSecretName(meta.Name); got != want {
 		t.Fatalf("secret name = %q, want %q", got, want)
 	}
 }
