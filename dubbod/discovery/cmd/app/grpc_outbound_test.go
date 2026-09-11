@@ -56,6 +56,15 @@ func TestAutoDiscoverServiceTargetSingleService(t *testing.T) {
 	}
 }
 
+func TestADSDialRequiresWorkloadBootstrap(t *testing.T) {
+	if _, _, _, err := adsDialConfig(&grpcOutboundOptions{}); err == nil || !strings.Contains(err.Error(), "authenticated ADS requires") {
+		t.Fatalf("expected missing credentials error, got %v", err)
+	}
+	if _, _, _, err := adsDialConfig(&grpcOutboundOptions{bootstrapPath: t.TempDir() + "/bootstrap.json", insecure: true}); err == nil {
+		t.Fatalf("missing explicit bootstrap must not silently downgrade: %v", err)
+	}
+}
+
 func TestAutoDiscoverServiceTargetMultipleServices(t *testing.T) {
 	_, _, err := autoDiscoverServiceTarget([]string{
 		"NGINX_SERVICE_HOST=10.96.12.34",

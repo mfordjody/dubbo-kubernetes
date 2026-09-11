@@ -234,6 +234,10 @@ func buildEastWestGatewayManifest(args eastWestGatewayArgs) (*gatewayv1.Gateway,
 	if strings.TrimSpace(args.xdsAddress) == "" {
 		return nil, fmt.Errorf("xds-address is required")
 	}
+	endpoint, err := url.Parse(args.xdsAddress)
+	if err != nil || endpoint.Scheme != "https" || endpoint.Hostname() == "" {
+		return nil, fmt.Errorf("xds-address must be an https URL for authenticated ADS")
+	}
 	annotations := map[string]string{
 		"gateway.dubbo.apache.org/eastwest":     "true",
 		"gateway.dubbo.apache.org/service-type": args.serviceType,

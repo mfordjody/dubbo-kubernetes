@@ -72,9 +72,10 @@ const (
 var inherentGRPCLog = log.RegisterScope("inherentgrpc", "Inherent gRPC workload controller")
 
 type inherentGRPCWorkloadController struct {
-	server *Server
-	client kubelib.Client
-	pods   kclient.Client[*corev1.Pod]
+	server  *Server
+	client  kubelib.Client
+	pods    kclient.Client[*corev1.Pod]
+	secrets kclient.Client[*corev1.Secret]
 	// managedPods keeps bundle/cert updates from scanning every Pod in the cluster.
 	managedPods kclient.RawIndexer
 	queue       controllers.Queue
@@ -125,22 +126,17 @@ func (s *Server) initInherentGRPCWorkloads() error {
 				return wrapped
 			})
 	}
-	if s.XDSServer != nil {
-		previous := s.XDSServer.RuntimeConfigUpdate
-		s.XDSServer.RuntimeConfigUpdate = func(req *discoverymodel.PushRequest) {
-			if previous != nil {
-				previous(req)
-			}
-			controller.handleRuntimeConfigUpdate(req)
-			if s.inherentGRPCRemoteControllers != nil {
-				for _, remote := range s.inherentGRPCRemoteControllers.All() {
-					if remote.controller != nil {
-						remote.controller.handleRuntimeConfigUpdate(req)
-					}
+	s.environment.AddConfigHandler(func(change *discoverymodel.ConfigChange) {
+		controller.handleRuntimeConfigUpdate(change)
+		if s.inherentGRPCRemoteControllers != nil {
+			for _, remote := range s.inherentGRPCRemoteControllers.All() {
+				if remote.controller != nil {
+					remote.controller.handleRuntimeConfigUpdate(change)
 				}
 			}
 		}
-	}
+	})
+
 	s.addStartFunc(inherentGRPCControllerName, func(stop <-chan struct{}) error {
 		go controller.Run(stop)
 		return nil
@@ -162,6 +158,9 @@ func newInherentGRPCWorkloadController(s *Server, client kubelib.Client) *inhere
 		pods: kclient.NewFiltered[*corev1.Pod](client, kclient.Filter{
 			ObjectFilter: client.ObjectFilter(),
 		}),
+		secrets: kclient.NewFiltered[*corev1.Secret](client, kclient.Filter{
+			ObjectFilter: client.ObjectFilter(),
+		}),
 		rotations: make(map[types.NamespacedName]time.Time),
 	}
 	c.managedPods = c.pods.Index(inherentGRPCManagedPodIndex, func(pod *corev1.Pod) []string {
@@ -181,13 +180,32 @@ func newInherentGRPCWorkloadController(s *Server, client kubelib.Client) *inhere
 		pod := controllers.Extract[*corev1.Pod](o)
 		return shouldManageInherentGRPCPod(pod)
 	}))
+	c.secrets.AddEventHandler(controllers.ObjectHandler(func(o controllers.Object) {
+		secret := controllers.Extract[*corev1.Secret](o)
+		if secret == nil {
+			return
+		}
+		for _, owner := range secret.OwnerReferences {
+			if owner.Kind != "Pod" || owner.APIVersion != "v1" {
+				continue
+			}
+			pod := c.pods.Get(owner.Name, secret.Namespace)
+			if pod != nil && pod.UID == owner.UID && secret.Name == inject.InherentGRPCSecretNameForMeta(pod.ObjectMeta) {
+				c.queue.AddObject(pod)
+				if s.XDSServer != nil {
+					s.XDSServer.ProxyUpdate(client.ClusterID(), pod.Status.PodIP)
+				}
+			}
+		}
+	}))
 
 	return c
 }
 
 func (c *inherentGRPCWorkloadController) Run(stop <-chan struct{}) {
 	c.pods.Start(stop)
-	if !kubelib.WaitForCacheSync(inherentGRPCControllerName, stop, c.pods.HasSynced) {
+	c.secrets.Start(stop)
+	if !kubelib.WaitForCacheSync(inherentGRPCControllerName, stop, c.pods.HasSynced, c.secrets.HasSynced) {
 		c.queue.ShutDownEarly()
 		return
 	}
@@ -202,7 +220,7 @@ func (c *inherentGRPCWorkloadController) Run(stop <-chan struct{}) {
 }
 
 func (c *inherentGRPCWorkloadController) HasSynced() bool {
-	return c.pods.HasSynced() && c.queue.HasSynced()
+	return c.pods.HasSynced() && c.secrets.HasSynced() && c.queue.HasSynced()
 }
 
 func (c *inherentGRPCWorkloadController) watchBundleChanges(stop <-chan struct{}) {
@@ -225,14 +243,14 @@ func (c *inherentGRPCWorkloadController) enqueueAllPods() {
 	}
 }
 
-func (c *inherentGRPCWorkloadController) handleRuntimeConfigUpdate(req *discoverymodel.PushRequest) {
+func (c *inherentGRPCWorkloadController) handleRuntimeConfigUpdate(req *discoverymodel.ConfigChange) {
 	if !inherentGRPCRuntimeConfigNeedsUpdate(req) {
 		return
 	}
 	c.enqueueAllPods()
 }
 
-func inherentGRPCRuntimeConfigNeedsUpdate(req *discoverymodel.PushRequest) bool {
+func inherentGRPCRuntimeConfigNeedsUpdate(req *discoverymodel.ConfigChange) bool {
 	if req == nil {
 		return false
 	}
@@ -245,7 +263,7 @@ func inherentGRPCRuntimeConfigNeedsUpdate(req *discoverymodel.PushRequest) bool 
 			return true
 		}
 	}
-	if req.Reason.Has(discoverymodel.EndpointUpdate) || req.Reason.Has(discoverymodel.HeadlessEndpointUpdate) || req.Reason.Has(discoverymodel.GlobalUpdate) {
+	if req.EndpointsChanged || req.Global {
 		return true
 	}
 	return false
@@ -306,7 +324,9 @@ func (c *inherentGRPCWorkloadController) reconcile(key types.NamespacedName) err
 	pod := c.pods.Get(key.Name, key.Namespace)
 	if pod == nil {
 		c.clearRotation(key)
-		return c.deleteSecret(key)
+		// Kubernetes garbage collection uses the Pod UID; deleting by name here
+		// could remove credentials of a replacement Pod before our cache catches up.
+		return nil
 	}
 	if !shouldManageInherentGRPCPod(pod) || pod.DeletionTimestamp != nil {
 		c.clearRotation(key)
@@ -314,12 +334,20 @@ func (c *inherentGRPCWorkloadController) reconcile(key types.NamespacedName) err
 	}
 	secrets := c.client.Kube().CoreV1().Secrets(pod.Namespace)
 	secretName := inject.InherentGRPCSecretNameForMeta(pod.ObjectMeta)
+	for _, volume := range pod.Spec.Volumes {
+		if volume.Name == inject.InherentXDSVolumeName && volume.Secret != nil && volume.Secret.SecretName != secretName {
+			return fmt.Errorf("pod %s/%s mounts legacy shared credentials; recreate the Pod to obtain its own Secret", pod.Namespace, pod.Name)
+		}
+	}
 	current, err := secrets.Get(context.Background(), secretName, metav1.GetOptions{})
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
 			return err
 		}
 		current = nil
+	}
+	if current != nil && !workloadSecretOwnedByPod(current, pod) {
+		return fmt.Errorf("refusing to replace credentials Secret %s/%s owned by another workload", pod.Namespace, secretName)
 	}
 
 	desired, expireAt, err := c.buildSecret(pod, current)
@@ -341,6 +369,18 @@ func (c *inherentGRPCWorkloadController) reconcile(key types.NamespacedName) err
 
 	c.scheduleRotation(key, expireAt)
 	return nil
+}
+
+func workloadSecretOwnedByPod(secret *corev1.Secret, pod *corev1.Pod) bool {
+	if secret.Namespace != pod.Namespace || pod.UID == "" {
+		return false
+	}
+	for _, owner := range secret.OwnerReferences {
+		if owner.APIVersion == "v1" && owner.Kind == "Pod" && owner.Name == pod.Name && owner.UID == pod.UID {
+			return true
+		}
+	}
+	return false
 }
 
 const inherentGRPCRuntimeConfigVersion = "dubbo.apache.org/inherent-grpc/v1"
@@ -833,7 +873,7 @@ func (c *inherentGRPCWorkloadController) buildRuntimeTrafficConfig() ([]inherent
 	if c.server == nil || c.server.environment == nil {
 		return nil, nil
 	}
-	push := c.server.environment.PushContext()
+	push := c.server.environment.ConfigSnapshot()
 	if push == nil || !push.InitDone.Load() {
 		return nil, nil
 	}
@@ -860,7 +900,7 @@ func (c *inherentGRPCWorkloadController) buildRuntimeTrafficConfig() ([]inherent
 	return serviceConfigs, routeConfigs
 }
 
-func buildRuntimeServiceConfig(push *discoverymodel.PushContext, endpointIndex *discoverymodel.EndpointIndex, svc *discoverymodel.Service) inherentGRPCServiceRuntimeConfig {
+func buildRuntimeServiceConfig(push *discoverymodel.ConfigSnapshot, endpointIndex *discoverymodel.EndpointIndex, svc *discoverymodel.Service) inherentGRPCServiceRuntimeConfig {
 	cfg := inherentGRPCServiceRuntimeConfig{
 		Host:      string(svc.Hostname),
 		Namespace: svc.Attributes.Namespace,
@@ -884,7 +924,7 @@ func buildRuntimeServiceConfig(push *discoverymodel.PushContext, endpointIndex *
 }
 
 func runtimeWorkloadAuthorizationPolicies(
-	push *discoverymodel.PushContext,
+	push *discoverymodel.ConfigSnapshot,
 	svc *discoverymodel.Service,
 ) []inherentGRPCAuthorizationPolicyRuntimeConfig {
 	if push == nil || svc == nil {
@@ -947,7 +987,7 @@ func runtimeWorkloadAuthorizationRule(
 	return projected, true
 }
 
-func runtimeFaultInjection(push *discoverymodel.PushContext, namespace, name, portName string) *inherentGRPCFaultRuntimeConfig {
+func runtimeFaultInjection(push *discoverymodel.ConfigSnapshot, namespace, name, portName string) *inherentGRPCFaultRuntimeConfig {
 	settings, found := push.FaultInjectionForService(namespace, name, portName)
 	if !found {
 		return nil
@@ -971,7 +1011,7 @@ func runtimeFaultInjection(push *discoverymodel.PushContext, namespace, name, po
 	return fault
 }
 
-func buildRuntimeRouteConfig(_ *discoverymodel.PushContext, endpointIndex *discoverymodel.EndpointIndex, svc *discoverymodel.Service, port int) inherentGRPCRouteRuntimeConfig {
+func buildRuntimeRouteConfig(_ *discoverymodel.ConfigSnapshot, endpointIndex *discoverymodel.EndpointIndex, svc *discoverymodel.Service, port int) inherentGRPCRouteRuntimeConfig {
 	return inherentGRPCRouteRuntimeConfig{
 		Host: string(svc.Hostname),
 		Port: port,
@@ -983,7 +1023,7 @@ func buildRuntimeRouteConfig(_ *discoverymodel.PushContext, endpointIndex *disco
 	}
 }
 
-func runtimeInboundMTLSMode(push *discoverymodel.PushContext, namespace string, port int) string {
+func runtimeInboundMTLSMode(push *discoverymodel.ConfigSnapshot, namespace string, port int) string {
 	if push == nil || push.AuthenticationPolicies == nil || port <= 0 {
 		return ""
 	}
@@ -1209,15 +1249,18 @@ func shouldManageInherentGRPCPod(pod *corev1.Pod) bool {
 	return false
 }
 
-func (c *inherentGRPCWorkloadController) deleteSecret(key types.NamespacedName) error {
-	err := c.client.Kube().CoreV1().Secrets(key.Namespace).Delete(context.Background(),
-		inject.InherentGRPCSecretName(key.Name), metav1.DeleteOptions{})
-	return controllers.IgnoreNotFound(err)
-}
-
 func (c *inherentGRPCWorkloadController) deleteSecretForPod(pod *corev1.Pod) error {
-	err := c.client.Kube().CoreV1().Secrets(pod.Namespace).Delete(context.Background(),
-		inject.InherentGRPCSecretNameForMeta(pod.ObjectMeta), metav1.DeleteOptions{})
+	secrets := c.client.Kube().CoreV1().Secrets(pod.Namespace)
+	secret, err := secrets.Get(context.Background(), inject.InherentGRPCSecretNameForMeta(pod.ObjectMeta), metav1.GetOptions{})
+	if err != nil {
+		return controllers.IgnoreNotFound(err)
+	}
+	if !workloadSecretOwnedByPod(secret, pod) {
+		return nil
+	}
+	err = secrets.Delete(context.Background(), secret.Name, metav1.DeleteOptions{
+		Preconditions: &metav1.Preconditions{UID: &secret.UID, ResourceVersion: &secret.ResourceVersion},
+	})
 	return controllers.IgnoreNotFound(err)
 }
 

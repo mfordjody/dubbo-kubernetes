@@ -23,19 +23,6 @@ import (
 )
 
 var (
-	MaxConcurrentStreams = env.Register(
-		"DUBBO_GPRC_MAXSTREAMS",
-		100000,
-		"Sets the maximum number of concurrent grpc streams.",
-	).Get()
-
-	// MaxRecvMsgSize The max receive buffer size of gRPC received channel of Dubbo in bytes.
-	MaxRecvMsgSize = env.Register(
-		"DUBBO_GPRC_MAXRECVMSGSIZE",
-		4*1024*1024,
-		"Sets the max receive buffer size of gRPC stream in bytes.",
-	).Get()
-
 	RequestLimit = func() float64 {
 		v := env.Register(
 			"DUBBO_MAX_REQUESTS_PER_SECOND",

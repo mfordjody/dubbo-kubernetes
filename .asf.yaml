@@ -19,7 +19,7 @@ notifications:
     pullrequests: notifications@dubbo.apache.org
 
 github:
-  homepage: "https://dsmlx.github.io"
+  homepage: "https://dubml.github.io"
   description: "Build a native mesh using gRPC and xDS"
   pull_requests:
     allow_auto_merge: true

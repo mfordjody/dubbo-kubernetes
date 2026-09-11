@@ -22,9 +22,9 @@ import (
 	"strings"
 	"time"
 
-	dubbogrpc "github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/grpc"
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/model"
 	v1 "github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/xds/v1"
+	dubbogrpc "github.com/apache/dubbo-kubernetes/pkg/grpc"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
 	"github.com/google/uuid"
 	discovery "github.com/kdubbo/xds-api/service/discovery/v1"
@@ -74,6 +74,7 @@ func (s *DiscoveryServer) StreamDeltas(stream DeltaDiscoveryStream) error {
 	s.globalPushContext().InitContext(s.Env, nil, nil)
 	con := newDeltaConnection(peerAddr, stream)
 	con.s = s
+	con.authExpiry = certificateExpiry(ctx)
 
 	go s.receiveDelta(con, ids)
 
@@ -139,10 +140,6 @@ func (s *DiscoveryServer) receiveDelta(con *Connection, identities []string) {
 			return
 		}
 		if firstRequest {
-			if req.TypeUrl == v1.HealthInfoType {
-				deltaLog.Warnf("%q %s send health check probe before normal xDS request", con.Peer(), con.ID())
-				continue
-			}
 			firstRequest = false
 			if req.Node == nil || req.Node.Id == "" {
 				con.ErrorCh() <- status.New(codes.InvalidArgument, "missing node information").Err()

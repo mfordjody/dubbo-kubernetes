@@ -27,15 +27,12 @@ var (
 			"Only works in kubernetes environment.").Get()
 	SharedMeshConfig = env.Register("SHARED_MESH_CONFIG", "",
 		"Additional config map to load for shared MeshConfig settings. The standard mesh config will take precedence.").Get()
-	InformerWatchNamespace = env.Register("DUBBO_WATCH_NAMESPACE", "",
-		"If set, limit Kubernetes watches to a single namespace. "+
-			"Warning: only a single namespace can be set.").Get()
+
 	ClusterName = env.Register("CLUSTER_ID", constants.DefaultClusterName,
 		"Defines the cluster and service registry that this Dubbod instance belongs to").Get()
 	EnableVtprotobuf = env.Register("ENABLE_VTPROTOBUF", true,
 		"If true, will use optimized vtprotobuf based marshaling. Requires a build with -tags=vtprotobuf.").Get()
-	KubernetesClientContentType = env.Register("DUBBO_KUBE_CLIENT_CONTENT_TYPE", "protobuf",
-		"The content type to use for Kubernetes clients. Defaults to protobuf. Valid options: [protobuf, json]").Get()
+
 	EnableCAServer = env.Register("ENABLE_CA_SERVER", true,
 		"If this is set to false, will not create CA server in dubbod.").Get()
 	// EnableCACRL ToDo (nilekh): remove this feature flag once it's stable

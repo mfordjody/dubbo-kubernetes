@@ -18,34 +18,19 @@ package bootstrap
 
 import (
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/model"
-	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/networking/apigen"
-	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/networking/core"
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/networking/grpcgen"
 	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/xds"
 	v1 "github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/xds/v1"
 )
 
-func InitGenerators(
-	s *xds.DiscoveryServer,
-	cg core.ConfigGenerator,
-) {
+func InitGenerators(s *xds.DiscoveryServer) {
 	env := s.Env
 	generators := map[string]model.XdsResourceGenerator{}
 	edsGen := &xds.EdsGenerator{Cache: s.Cache, EndpointIndex: env.EndpointIndex}
-	generators[v1.ClusterType] = &xds.CdsGenerator{ConfigGenerator: cg}
-	generators[v1.ListenerType] = &xds.LdsGenerator{ConfigGenerator: cg}
-	generators[v1.RouteType] = &xds.RdsGenerator{ConfigGenerator: cg}
-	generators[v1.EndpointType] = edsGen
-
-	generators["grpc"] = &grpcgen.GrpcConfigGenerator{}
+	grpcGenerator := &grpcgen.GrpcConfigGenerator{}
 	generators["grpc/"+v1.EndpointType] = edsGen
-	generators["grpc/"+v1.ListenerType] = generators["grpc"]
-	generators["grpc/"+v1.RouteType] = generators["grpc"]
-	generators["grpc/"+v1.ClusterType] = generators["grpc"]
-
-	generators["api"] = apigen.NewGenerator(env.ConfigStore)
-	generators["api/"+v1.EndpointType] = edsGen
-
-	generators["event"] = xds.NewStatusGen(s)
+	generators["grpc/"+v1.ListenerType] = grpcGenerator
+	generators["grpc/"+v1.RouteType] = grpcGenerator
+	generators["grpc/"+v1.ClusterType] = grpcGenerator
 	s.Generators = generators
 }

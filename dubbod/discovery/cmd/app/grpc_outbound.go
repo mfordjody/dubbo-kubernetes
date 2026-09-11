@@ -17,7 +17,6 @@ package app
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -48,7 +47,6 @@ import (
 	discovery "github.com/kdubbo/xds-api/service/discovery/v1"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -309,20 +307,19 @@ func adsDialConfig(opts *grpcOutboundOptions) (*corev1.Node, string, []grpc.Dial
 				creds = insecure.NewCredentials()
 			}
 			return bootstrap.Node, xdsresolver.DialAddress(bootstrap.ServerURI), []grpc.DialOption{grpc.WithTransportCredentials(creds)}, nil
-		} else if !os.IsNotExist(err) {
+		} else {
 			return nil, "", nil, err
 		}
+	}
+	if !opts.insecure {
+		return nil, "", nil, fmt.Errorf("authenticated ADS requires --bootstrap or GRPC_XDS_BOOTSTRAP with workload credentials")
 	}
 
 	node, err := buildADSNode(opts)
 	if err != nil {
 		return nil, "", nil, err
 	}
-	creds := grpc.WithTransportCredentials(insecure.NewCredentials())
-	if !opts.insecure && strings.HasSuffix(opts.xdsAddress, ":26012") {
-		creds = grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{MinVersion: tls.VersionTLS12}))
-	}
-	return node, opts.xdsAddress, []grpc.DialOption{creds}, nil
+	return node, opts.xdsAddress, []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}, nil
 }
 
 func buildADSNode(opts *grpcOutboundOptions) (*corev1.Node, error) {

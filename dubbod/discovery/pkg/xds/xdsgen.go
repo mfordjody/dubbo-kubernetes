@@ -68,6 +68,9 @@ func xdsNeedsPush(req *model.PushRequest, _ *model.Proxy) (needsPush, definitive
 }
 
 func (s *DiscoveryServer) pushXds(con *Connection, w *model.WatchedResource, req *model.PushRequest) error {
+	if err := s.authorizeConnection(con); err != nil {
+		return err
+	}
 	if w == nil {
 		return nil
 	}
@@ -76,22 +79,9 @@ func (s *DiscoveryServer) pushXds(con *Connection, w *model.WatchedResource, req
 		return nil
 	}
 
-	// For Inherent gRPC, handle wildcard (empty ResourceNames) requests correctly
-	// When client sends empty ResourceNames after receiving specific resources, it's likely an ACK
-	// We should NOT generate all resources, but instead return the last sent resources
-	// However, for initial wildcard requests, we need to extract resource names from parent resources
 	var requestedResourceNames sets.String
-	var useLastSentResources bool
 	if con.proxy.IsInherentGrpc() {
-		// Check if this is a wildcard request (empty ResourceNames) but we have previously sent resources
-		if len(w.ResourceNames) == 0 && w.NonceSent != "" {
-			// This is likely an ACK after receiving specific resources
-			// Use the last sent resources instead of generating all
-			useLastSentResources = true
-			// Get the last sent resource names from WatchedResource
-			// We'll populate this from the last sent resources after generation
-			log.Debugf("Inherent gRPC wildcard request with NonceSent=%s, will use last sent resources", w.NonceSent)
-		} else if len(w.ResourceNames) == 0 && w.NonceSent == "" {
+		if len(w.ResourceNames) == 0 {
 			// Initial wildcard request - need to extract resource names from parent resources
 			// For CDS: extract cluster names from LDS
 			// For EDS: extract cluster names from CDS
@@ -201,18 +191,7 @@ func (s *DiscoveryServer) pushXds(con *Connection, w *model.WatchedResource, req
 		}
 	}
 
-	// For Inherent gRPC wildcard requests with previous NonceSent, use last sent resources
-	var res model.Resources
-	var logdata model.XdsLogDetails
-	var err error
-	if useLastSentResources {
-		// Don't generate new resources, return empty and we'll handle it below
-		res = nil
-		logdata = model.DefaultXdsLogDetails
-		err = nil
-	} else {
-		res, logdata, err = gen.Generate(con.proxy, w, req)
-	}
+	res, logdata, err := gen.Generate(con.proxy, w, req)
 
 	info := ""
 	if len(logdata.AdditionalInfo) > 0 {
@@ -225,15 +204,7 @@ func (s *DiscoveryServer) pushXds(con *Connection, w *model.WatchedResource, req
 		return err
 	}
 
-	// For Inherent gRPC wildcard requests with previous NonceSent, return last sent resources
-	if useLastSentResources && res == nil {
-		// This is a wildcard ACK - client is acknowledging previous push
-		// We should NOT push again, as the client already has the resources
-		// The ShouldRespond logic should have prevented this, but we handle it here as safety
-		log.Debugf("Inherent gRPC wildcard ACK with NonceSent=%s, skipping push (client already has resources from previous push)", w.NonceSent)
-		return nil
-	}
-
+	// nil means no change; a non-nil empty slice is a deletion snapshot.
 	if res == nil {
 		return nil
 	}
@@ -256,26 +227,11 @@ func (s *DiscoveryServer) pushXds(con *Connection, w *model.WatchedResource, req
 				info += " filtered:" + strconv.Itoa(len(res)-len(filteredRes))
 				res = filteredRes
 			}
-			// If filtering resulted in 0 resources but client requested specific resources,
-			// this means the requested resources don't exist. Don't send empty response to avoid loop.
-			// Instead, log and return nil to prevent push.
-			if len(res) == 0 && len(requestedResourceNames) > 0 {
-				log.Warnf("Inherent gRPC requested %d resources but none matched after filtering (requested: %v, generated before filter: %d). Skipping push to avoid loop.",
-					len(requestedResourceNames), requestedResourceNames.UnsortedList(), len(filteredRes)+len(res))
-				return nil
-			}
 		} else if len(w.ResourceNames) == 0 {
 			// Wildcard request without previous NonceSent - this is initial request
 			// Allow generating all resources for initial connection
 			log.Debugf("Inherent gRPC initial wildcard request, generating all resources")
 		}
-	}
-
-	// Never send empty response for Inherent gRPC - this causes push loops
-	// If we have no resources to send, return nil instead of sending empty response
-	if len(res) == 0 {
-		log.Debugf("no resources to send for %s (proxy: %s), skipping push", w.TypeUrl, con.proxy.ID)
-		return nil
 	}
 
 	nonceValue := nonce(req.Push.PushVersion)
@@ -302,32 +258,7 @@ func (s *DiscoveryServer) pushXds(con *Connection, w *model.WatchedResource, req
 			return nil
 		}
 		wr.NonceSent = nonceValue
-		// Also update ResourceNames to match what we actually sent (for Inherent gRPC)
-		if con.proxy.IsInherentGrpc() && res != nil {
-			sentNames := sets.New[string]()
-			for _, r := range res {
-				sentNames.Insert(r.Name)
-			}
-			// Only update if we sent different resources than requested
-			if requestedResourceNames != nil {
-				// Compare sets by checking if they have the same size and all elements match
-				if sentNames.Len() != requestedResourceNames.Len() {
-					wr.ResourceNames = sentNames
-				} else {
-					// Check if all sent names are in requested names
-					allMatch := true
-					for name := range sentNames {
-						if !requestedResourceNames.Contains(name) {
-							allMatch = false
-							break
-						}
-					}
-					if !allMatch {
-						wr.ResourceNames = sentNames
-					}
-				}
-			}
-		}
+
 		return wr
 	})
 
@@ -527,6 +458,9 @@ func (s *DiscoveryServer) pushXds(con *Connection, w *model.WatchedResource, req
 }
 
 func (s *DiscoveryServer) pushDeltaXds(con *Connection, w *model.WatchedResource, req *model.PushRequest) error {
+	if err := s.authorizeConnection(con); err != nil {
+		return err
+	}
 	if w == nil {
 		return nil
 	}
@@ -626,21 +560,10 @@ func (s *DiscoveryServer) pushDeltaXds(con *Connection, w *model.WatchedResource
 }
 
 func (s *DiscoveryServer) findGenerator(typeURL string, con *Connection) model.XdsResourceGenerator {
-	if g, f := s.Generators[con.proxy.Metadata.Generator+"/"+typeURL]; f {
-		return g
+	if con == nil || con.proxy == nil || con.proxy.Metadata == nil {
+		return nil
 	}
-	if g, f := s.Generators[typeURL]; f {
-		return g
-	}
-
-	// XdsResourceGenerator is the default generator for this connection. We want to allow
-	// some types to use custom generators - for example EDS.
-	g := con.proxy.XdsResourceGenerator
-	if g == nil {
-		// TODO move this to just directly using the resource TypeUrl
-		g = s.Generators["api"] // default to "MCP" generators - any type supported by store
-	}
-	return g
+	return s.Generators[con.proxy.Metadata.Generator+"/"+typeURL]
 }
 
 func resourceNamesSet(res model.Resources) sets.String {

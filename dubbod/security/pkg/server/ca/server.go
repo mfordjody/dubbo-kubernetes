@@ -123,14 +123,14 @@ func (s *Server) CreateCertificate(ctx context.Context, request *pb.DubboCertifi
 
 func (s *Server) authenticate(ctx context.Context) (*security.Caller, error) {
 	if len(s.Authenticators) == 0 {
-		return nil, nil
+		return nil, status.Error(codes.Unauthenticated, "CA authentication is not configured")
 	}
 	authCtx := security.AuthContext{
 		GrpcContext: ctx,
 	}
 	for _, authenticator := range s.Authenticators {
 		caller, err := authenticator.Authenticate(authCtx)
-		if err == nil && caller != nil {
+		if err == nil && caller != nil && len(caller.Identities) > 0 {
 			return caller, nil
 		}
 	}

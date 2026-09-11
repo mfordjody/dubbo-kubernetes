@@ -103,22 +103,11 @@ func (m *Multicluster) initializeCluster(cluster *multicluster.Cluster, kubeCont
 	m.opts.ServiceController.AddRegistryAndRun(kubeRegistry, clusterStopCh)
 
 	go func() {
-		var shouldLead bool
-		if !configCluster {
-			shouldLead = m.checkShouldLead()
-			log.Infof("should join leader-election for cluster %s: %t", cluster.ID, shouldLead)
-		}
-
-		if m.distributeCACert && (shouldLead || configCluster) {
+		if m.distributeCACert {
 			// Block server exit on graceful termination of the leader controller.
 			m.s.RunComponentAsyncAndWait("namespace controller", func(_ <-chan struct{}) error {
 				election := leaderelection.
 					NewLeaderElectionMulticluster(options.SystemNamespace, m.serverID, leaderelection.NamespaceController, m.revision, !configCluster, client)
-				// For config cluster (single-node deployment), disable leader election even if globally enabled
-				// because there's only one instance and no need for election.
-				if configCluster {
-					election.SetEnabled(false)
-				}
 				election.AddRunFunction(func(leaderStop <-chan struct{}) {
 					log.Infof("starting namespace controller for cluster %s", cluster.ID)
 					nc := NewNamespaceController(client, m.caBundleWatcher)
@@ -135,9 +124,4 @@ func (m *Multicluster) initializeCluster(cluster *multicluster.Cluster, kubeCont
 			})
 		}
 	}()
-}
-
-func (m *Multicluster) checkShouldLead() bool {
-	var res bool
-	return res
 }

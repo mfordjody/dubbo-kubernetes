@@ -22,10 +22,10 @@ import (
 )
 
 type Context struct {
-	ps      *model.PushContext
+	ps      *model.ConfigSnapshot
 	cluster cluster.ID
 }
 
-func NewGatewayContext(ps *model.PushContext, cluster cluster.ID) Context {
+func NewGatewayContext(ps *model.ConfigSnapshot, cluster cluster.ID) Context {
 	return Context{ps, cluster}
 }

@@ -92,6 +92,7 @@ type ValuesConfig struct {
 
 type InjectionParameters struct {
 	pod                 *corev1.Pod
+	requestUID          types.UID
 	deployMeta          types.NamespacedName
 	typeMeta            metav1.TypeMeta
 	templates           map[string]*template.Template
@@ -286,6 +287,7 @@ func (wh *Webhook) injectPod(ar *kube.AdmissionReview, path string) *kube.Admiss
 	deploy, typeMeta := kube.GetDeployMetaFromPod(&pod)
 	params := InjectionParameters{
 		pod:                 &pod,
+		requestUID:          req.UID,
 		deployMeta:          deploy,
 		typeMeta:            typeMeta,
 		templates:           wh.Config.Templates,
@@ -464,11 +466,15 @@ func addApplicationContainerConfig(pod *corev1.Pod, req InjectionParameters) err
 		discoveryAddress = req.proxyConfig.GetDiscoveryAddress()
 	}
 
-	meta := pod.ObjectMeta
-	if req.pod != nil {
-		meta = req.pod.ObjectMeta
+	if pod.Name == "" {
+		if pod.GenerateName == "" || req.requestUID == "" {
+			return fmt.Errorf("inherent credentials require a Pod name or an admission request UID and generateName")
+		}
+		// Admission runs before Kubernetes assigns a generated Pod name. Allocate
+		// it here so the immutable volume reference is unique to this Pod.
+		pod.Name = inherentGRPCPodName(pod.GenerateName, req.requestUID)
 	}
-	secretName := InherentGRPCSecretNameForMeta(meta)
+	secretName := InherentGRPCSecretNameForMeta(pod.ObjectMeta)
 	desiredVolume := corev1.Volume{
 		Name: InherentXDSVolumeName,
 		VolumeSource: corev1.VolumeSource{

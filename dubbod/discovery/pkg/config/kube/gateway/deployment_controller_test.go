@@ -386,7 +386,7 @@ func TestBuildDxgateRuntimeConfigExternalNameBackendTLS(t *testing.T) {
 
 func TestBuildDxgateBootstrapConfig(t *testing.T) {
 	raw, hash, err := buildDxgateBootstrapConfig(
-		"http://dubbod.dubbo-system.svc:26010",
+		"https://dubbod.dubbo-system.svc:26012",
 		[]string{"public-dubbo.app.svc.cluster.local:80"},
 		"Kubernetes",
 		"cluster.local",
@@ -402,7 +402,7 @@ func TestBuildDxgateBootstrapConfig(t *testing.T) {
 	if err := json.Unmarshal([]byte(raw), &cfg); err != nil {
 		t.Fatal(err)
 	}
-	if cfg.XDSAddress != "http://dubbod.dubbo-system.svc:26010" {
+	if cfg.XDSAddress != "https://dubbod.dubbo-system.svc:26012" {
 		t.Fatalf("unexpected xDS address: %s", cfg.XDSAddress)
 	}
 	if diff := cmp.Diff([]string{"public-dubbo.app.svc.cluster.local:80"}, cfg.ListenerNames); diff != "" {
@@ -410,6 +410,17 @@ func TestBuildDxgateBootstrapConfig(t *testing.T) {
 	}
 	if cfg.ClusterID != "Kubernetes" || cfg.DNSDomain != "cluster.local" {
 		t.Fatalf("unexpected bootstrap identity: %#v", cfg)
+	}
+}
+
+func TestManagedGatewayRequiresSecureADS(t *testing.T) {
+	controller := &DeploymentController{systemNamespace: "dubbo-system"}
+	raw, _, err := controller.buildDxgateBootstrapConfig(gatewayv1.Gateway{}, "gateway", nil)
+	if err != nil || !strings.Contains(raw, "https://dubbod.dubbo-system.svc:26012") {
+		t.Fatalf("managed gateway must default to authenticated ADS: %s, %v", raw, err)
+	}
+	if _, _, err := buildDxgateBootstrapConfig("http://dubbod.dubbo-system.svc:26010", nil, "", ""); err == nil {
+		t.Fatal("managed gateway must reject plaintext ADS")
 	}
 }
 
@@ -423,7 +434,7 @@ func TestDeploymentControllerBuildDxgateBootstrapConfigUsesXDSAddressAnnotation(
 			Name:      "eastwest",
 			Namespace: "dubbo-system",
 			Annotations: map[string]string{
-				xdsAddressAnnotation: "http://192.168.15.164:32010",
+				xdsAddressAnnotation: "https://dubbod.remote.example:32012",
 			},
 		},
 	}, "dxgate-gateway", []corev1.ServicePort{{Name: "http-eastwest", Port: 15443, TargetPort: intstr.FromInt(15080)}})
@@ -435,7 +446,7 @@ func TestDeploymentControllerBuildDxgateBootstrapConfigUsesXDSAddressAnnotation(
 	if err := json.Unmarshal([]byte(raw), &cfg); err != nil {
 		t.Fatal(err)
 	}
-	if cfg.XDSAddress != "http://192.168.15.164:32010" {
+	if cfg.XDSAddress != "https://dubbod.remote.example:32012" {
 		t.Fatalf("xdsAddress = %q, want annotation", cfg.XDSAddress)
 	}
 	if cfg.ClusterID != "remote" {
@@ -676,7 +687,7 @@ func TestKubeGatewayTemplateRendersDxgateResources(t *testing.T) {
 		Ports:               []corev1.ServicePort{{Name: "http", Port: 80, TargetPort: intstr.FromInt(15080)}},
 		ServiceType:         corev1.ServiceTypeLoadBalancer,
 		Revision:            "default",
-		BootstrapConfig:     "{\n  \"xds_address\": \"http://dubbod.dubbo-system.svc:26010\",\n  \"listener_names\": [\n    \"public-dubbo.app.svc.cluster.local:80\"\n  ],\n  \"cluster_id\": \"Kubernetes\",\n  \"dns_domain\": \"cluster.local\"\n}\n",
+		BootstrapConfig:     "{\n  \"xds_address\": \"https://dubbod.dubbo-system.svc:26012\",\n  \"listener_names\": [\n    \"public-dubbo.app.svc.cluster.local:80\"\n  ],\n  \"cluster_id\": \"Kubernetes\",\n  \"dns_domain\": \"cluster.local\"\n}\n",
 		BootstrapConfigHash: "abc123",
 		DxgateImage:         "kdubbo/dxgate:test",
 		SystemNamespace:     "dubbo-system",
@@ -703,7 +714,7 @@ func TestKubeGatewayTemplateRendersDxgateResources(t *testing.T) {
 	if strings.Contains(strings.Join(rendered, "\n---\n"), "{{") {
 		t.Fatalf("hardcoded gateway template still contains template delimiters:\n%s", strings.Join(rendered, "\n---\n"))
 	}
-	if !strings.Contains(rendered[0], "bootstrap.json") || !strings.Contains(rendered[0], `"xds_address": "http://dubbod.dubbo-system.svc:26010"`) {
+	if !strings.Contains(rendered[0], "bootstrap.json") || !strings.Contains(rendered[0], `"xds_address": "https://dubbod.dubbo-system.svc:26012"`) {
 		t.Fatalf("configmap did not render dxgate bootstrap:\n%s", rendered[0])
 	}
 	if !strings.Contains(rendered[1], "automountServiceAccountToken: true") ||

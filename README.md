@@ -1,4 +1,4 @@
-# Apache Kdubbo - dubbo-mesh
+# Apache Kdubbo - Dubbo Mesh 
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/apache/dubbo-kubernetes.svg)](https://pkg.go.dev/github.com/apache/dubbo-kubernetes)
 [![Go Report Card](https://goreportcard.com/badge/github.com/apache/dubbo-kubernetes)](https://goreportcard.com/report/github.com/apache/dubbo-kubernetes)
@@ -14,13 +14,14 @@ Dubbo service mesh enables workloads to join natively, receive policies from the
 > Releases `0.4.6–0.4.9` will be in the **Beta** phase.
 > 
 > Release `0.5.0` will be the first **RC** version.
+> 
+> Release `0.6.0` will be the first **GA** version.
 
 Dubbo’s control plane provides an abstraction layer over the underlying cluster management platform.
 
 Dubbo component composition:
 
 - **dubbod** — Dubbo xDS control plane. It provides service discovery, configuration and certificate issuance.
-- **Application runtime** — The original workload consumes the injected xDS bootstrap and policies natively; no proxy container is added.
 - **dxgate** — Dubbo delegated gateway for Gateway API. It consumes routing configuration from dubbod over xDS and proxies north-south traffic into the mesh.
 
 ## Repositories
@@ -33,11 +34,11 @@ Projects are distributed across the code directory repositories:
 
 - [client-go](https://github.com/kdubbo/client-go). — Defines the Kubernetes clients automatically generated for Dubbo control plane resources.
 
-- [dubboctl](./cli). — Provides dubboctl command line tools for control plane management and other operations.
+- [dubboctl](https://github.com/kdubbo/dubboctl). — Provides dubboctl command line tools for control plane management and other operations.
 
-- [dubbod](./dubbod) — The main code directory for the Dubbo control plane.
+- [dubbod](https://github.com/kdubbo/dubbod) — The main code directory for the Dubbo control plane.
 
-- [operator](./operator). — Provides user friendly options for operating the service mesh.
+- [operator](https://github.com/kdubbo/operator). — Provides user friendly options for operating the service mesh.
 
 - [dxgate](https://github.com/kdubbo/dxgate) — Provides the delegated gateway that serves Gateway API traffic at the mesh edge.
 

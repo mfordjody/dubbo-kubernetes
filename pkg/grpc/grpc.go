@@ -21,7 +21,7 @@ import (
 	"math"
 	"strings"
 
-	"github.com/apache/dubbo-kubernetes/dubbod/discovery/pkg/features"
+	"github.com/apache/dubbo-kubernetes/pkg/features"
 	dubbokeepalive "github.com/apache/dubbo-kubernetes/pkg/keepalive"
 	"github.com/apache/dubbo-kubernetes/pkg/util/sets"
 	middleware "github.com/grpc-ecosystem/go-grpc-middleware"

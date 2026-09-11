@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/apache/dubbo-kubernetes/dubbod/security/pkg/pki/util"
 	"github.com/apache/dubbo-kubernetes/pkg/security"
@@ -63,10 +64,19 @@ func (cca *ClientCertAuthenticator) authenticateGrpc(ctx context.Context) (*secu
 		return nil, fmt.Errorf("unsupported auth type: %q", authType)
 	}
 
-	tlsInfo := peer.AuthInfo.(credentials.TLSInfo)
+	tlsInfo, ok := peer.AuthInfo.(credentials.TLSInfo)
+	if !ok {
+		return nil, fmt.Errorf("no verified TLS information is available")
+	}
 	chains := tlsInfo.State.VerifiedChains
 	if len(chains) == 0 || len(chains[0]) == 0 {
 		return nil, fmt.Errorf("no verified chain is found")
+	}
+	now := time.Now()
+	for _, cert := range chains[0] {
+		if now.Before(cert.NotBefore) || !now.Before(cert.NotAfter) {
+			return nil, fmt.Errorf("client certificate chain is outside its validity period")
+		}
 	}
 
 	ids, err := util.ExtractIDs(chains[0][0].Extensions)
